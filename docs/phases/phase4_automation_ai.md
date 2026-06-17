@@ -76,6 +76,28 @@ Schema::create('scheduled_posts', function (Blueprint $table) {
 
 ---
 
+---
+
+## 🎨 Chỉ dẫn UI/UX cho Post Scheduler & Auto-Reply Rules (Antigravity Kit)
+
+Các module độc lập này cần sự trực quan cao để Admin thiết lập chính xác các chiến dịch nội dung và phản hồi:
+
+### 1. Module Lên Lịch Bài Đăng (Post Scheduler UX)
+*   **Bố cục Soạn thảo & Xem trước (Split Pane Layout):**
+    *   *Bên trái:* Form điền thông tin (Nội dung văn bản, khu vực kéo thả ảnh tải lên `drag-and-drop file uploader`, ô chọn ngày giờ và danh sách chọn Fanpage).
+    *   *Bên phải:* **Khung xem trước thời gian thực (Real-time Mockup Preview):** Thiết kế giả lập một bài đăng Facebook hoàn chỉnh (hiển thị Avatar Page, tên Page, dòng chữ "Được tài trợ / Sponsored" hoặc thời gian, nội dung văn bản đang gõ, ảnh đã tải lên co giãn chuẩn tỉ lệ, kèm theo thanh nút bấm Like/Comment/Share giả lập). Giúp Admin thấy trước chính xác những gì người dùng sẽ thấy trên Facebook Feed.
+*   **Datetime Picker an toàn:**
+    *   Sử dụng Shadcn Calendar Popover.
+    *   Chặn không cho chọn ngày/giờ trong quá khứ (`disable past dates & times`) để tránh lỗi Cron job đăng bài bị quá hạn.
+
+### 2. Giao diện Cấu hình Luật Auto-Reply
+*   **Thiết kế Dạng Thẻ / Bảng Dữ Liệu (Card-based / Data Table):**
+    *   Hiển thị danh sách từ khóa dưới dạng các **Badges** màu xanh nhạt hoặc xám dịu để dễ phân biệt trực quan.
+    *   Cung cấp thanh Switch toggle trạng thái Kích hoạt (`is_active`) trực tiếp trên mỗi dòng/thẻ của luật mà không bắt buộc admin phải vào trang chỉnh sửa chi tiết.
+    *   Hiệu ứng phản hồi micro-animation khi bật/tắt Switch thành công (`transition-all duration-200`).
+
+---
+
 ## 🧪 Kiểm định & Verify ở cuối Phase
 1.  **Verify AI Chat:** Khách hàng nhắn tin hỏi han linh tinh trên Fanpage $\rightarrow$ Kiểm tra DB và Messenger xem có nhận được câu trả lời thông minh sinh ra từ Gemini API sau vài giây không.
 2.  **Verify Lên lịch đăng bài:** Tạo một bài viết hẹn giờ đăng sau 2 phút. Đảm bảo:

@@ -67,6 +67,33 @@
 
 ---
 
+---
+
+## 🎨 Chỉ dẫn UI/UX & Hiệu năng cho Live Chat Hub (Antigravity Kit)
+
+Live Chat Hub là trái tim của ứng dụng Zeflyo. Giao diện này cần tối ưu hóa trải nghiệm tương tác trực tiếp và tốc độ phản hồi cực nhanh:
+
+### 1. Bố cục 3 Cột Chuẩn (Responsive Pancake Layout)
+*   **Cột 1 (Sidebar hội thoại - `320px` đến `360px`):**
+    *   Hiển thị danh sách khách hàng gọn gàng. Khi có tin nhắn mới chưa đọc, Badge đếm số tin nổi lên có hiệu ứng `pulse` nhẹ của màu nhấn (`#F97316`).
+    *   Trạng thái đang hoạt động (Active conversation) có viền trái dày `4px` màu xanh primary (`#2563EB`).
+*   **Cột 2 (Khung chat chính - Flexible):**
+    *   Bong bóng tin nhắn khách hàng (Căn trái): Nền màu xám dịu (`#F1F5F9` ở Light / `#334155` ở Dark), chữ đen/trắng tương ứng.
+    *   Bong bóng tin nhắn Shop/Admin (Căn phải): Nền màu xanh chủ đạo (`#2563EB`), chữ trắng.
+    *   Hỗ trợ tự động cuộn mượt mà (Smooth scroll) xuống dưới cùng thông qua `behavior: 'smooth'` khi có tin mới trượt vào.
+*   **Cột 3 (Thông tin phụ - `280px` đến `320px`):**
+    *   Hiển thị thông tin khách hàng, thẻ gắn nhãn (Tags) và Switch bật/tắt tự động hóa AI cho khách hàng cụ thể này.
+
+### 2. Tối ưu hiệu năng React (React Performance Rules)
+*   **Message Bubble Memoization:** Sử dụng `React.memo` cho các component hiển thị bong bóng tin nhắn đơn lẻ để tránh re-render không cần thiết khi Admin đang gõ tin nhắn nháp (draft) hoặc khi nhận tin nhắn mới từ khách hàng khác.
+*   **Virtual List (Khi danh sách lớn):** Nếu danh sách hội thoại có hơn 100 cuộc hội thoại hoạt động, Tiến cần tích hợp `@tanstack/react-virtual` để chỉ render các thẻ hội thoại hiển thị trên màn hình, giúp giảm tải DOM và tránh tình trạng giật lag.
+*   **WebSocket Status Indicator:** Thiết kế 1 điểm chấm sáng nhỏ (indicator) thể hiện trạng thái kết nối WebSocket ở góc tiêu đề chính:
+    *   *Màu xanh lá (Connected):* Đã kết nối ổn định.
+    *   *Màu vàng (Connecting):* Đang kết nối lại (kèm hiệu ứng xoay tròn nhỏ `animate-spin`).
+    *   *Màu đỏ (Disconnected):* Mất kết nối.
+
+---
+
 ## 🧪 Kiểm định & Verify ở cuối Phase
 1.  **Kết nối WebSocket:** F12 trên Next.js Client, tab Network/WS báo trạng thái `101 Switching Protocols` (kết nối WebSocket mở thành công).
 2.  **Đồng bộ real-time:** Mở 2 màn hình cạnh nhau: 1 bên là Messenger Facebook thật của Khách hàng, 1 bên là Dashboard Next.js của Admin:

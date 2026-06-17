@@ -77,6 +77,43 @@ Schema::create('fanpages', function (Blueprint $table) {
 
 ---
 
+---
+
+## 🎨 Hướng dẫn UI/UX & Design System (Antigravity Kit)
+
+Để đảm bảo sản phẩm đạt tiêu chuẩn cao cấp, hiện đại và thu hút người dùng ngay từ lần đầu truy cập, Tiến (Frontend) cần áp dụng các bộ quy tắc sau khi dựng giao diện:
+
+### 1. Phong cách thiết kế (Style Pattern)
+*   **Phong cách:** **Clean SaaS / Soft UI Evolution**
+*   **Đặc điểm:** Các phần tử giao diện có các góc bo mềm mại (`rounded-xl` đến `rounded-3xl`), sử dụng bóng đổ tinh tế (`shadow-sm` đến `shadow-md`), hạn chế viền đen cứng mà sử dụng viền xám nhạt (`border-slate-100` hoặc `border-slate-800`).
+*   **Độ mượt mà:** Bắt buộc cấu hình hiệu ứng chuyển tiếp (transition) từ `150ms` đến `300ms` với hàm easing `ease-in-out` cho tất cả các trạng thái hover/focus của nút và các thẻ tương tác.
+
+### 2. Bảng màu sắc (Color Palette)
+*   **Primary (Màu chủ đạo):** `#2563EB` (Royal Blue) - Thể hiện sự chuyên nghiệp và an toàn công nghệ.
+*   **Secondary (Màu phụ):** `#475569` (Slate Gray) - Dùng cho các tiêu đề phụ, icon và mô tả.
+*   **CTA / Accent (Màu nhấn):** `#F97316` (Orange Amber) - Dùng duy nhất cho các nút hành động quan trọng (ví dụ: Nút "Kích hoạt tự động", "Bật chatbot").
+*   **Background (Màu nền):** 
+    *   *Light Mode:* `#F8FAFC` (Slate White)
+    *   *Dark Mode:* `#0F172A` (Slate Dark)
+*   **Text (Chữ):**
+    *   *Light Mode:* `#0F172A` (Slate Dark)
+    *   *Dark Mode:* `#F8FAFC` (Slate White)
+
+### 3. Font chữ & Typography
+*   **Heading Font (Tiêu đề):** **Outfit** (tạo cảm giác hiện đại, sang trọng).
+*   **Body Font (Nội dung):** **Inter** (tối ưu hóa khả năng đọc dữ liệu số, bảng biểu).
+*   **Cách tích hợp (Google Fonts):**
+    ```html
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Outfit:wght@400..900&display=swap');
+    ```
+
+### 4. Lỗi thiết kế cần tránh (Anti-patterns)
+*   🚫 **Không** sử dụng màu đen tuyệt đối `#000000` làm nền ở Dark mode (dùng màu Slate `#0F172A` hoặc `#1E293B`).
+*   🚫 **Không** lạm dụng các dải màu gradient màu hồng/tím quá sặc sỡ làm mất đi độ chuyên nghiệp của công cụ quản trị.
+*   🚫 **Không** sử dụng Emoji làm icon điều hướng (Sử dụng bộ thư viện SVG chuẩn như **Lucide Icons**).
+
+---
+
 ## 🧪 Kiểm định & Verify ở cuối Phase
 1.  **Chạy local:** Cả team kéo code về, chạy `docker-compose up -d`, chạy các migrations thành công.
 2.  **Đăng nhập thử nghiệm:** Click nút đăng nhập FB trên giao diện Next.js -> Login thành công -> Lưu thành công Page Access Token vào DB ở dạng mã hóa.
