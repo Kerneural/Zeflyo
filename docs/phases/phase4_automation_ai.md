@@ -1,4 +1,4 @@
-# Phase 4: Gemini AI Integration & Module Độc Lập (Ngày 10 - 11)
+# Phase 4: Gemini AI Integration & Module Độc Lập (Ngày 4 - 5)
 
 ## 🎯 Mục tiêu
 *   Tích hợp Google Gemini API để tự động sinh bài viết và tự động phản hồi khách hàng theo ngữ cảnh.

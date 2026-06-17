@@ -1,4 +1,4 @@
-# Phase 5: Deploy AWS, CI/CD & Security Auditing (Ngày 12 - 14)
+# Phase 5: Deploy AWS, CI/CD & Security Auditing (Ngày 6 - 7)
 
 ## 🎯 Mục tiêu
 *   Triển khai dự án Zeflyo tự động lên đám mây AWS sử dụng hạ tầng dạng mã (Terraform) và CI/CD (GitHub Actions).

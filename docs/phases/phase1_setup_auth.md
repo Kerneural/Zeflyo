@@ -1,4 +1,4 @@
-# Phase 1: Setup Môi Trường & Core Authentication (Ngày 1 - 3)
+# Phase 1: Setup Môi Trường & Core Authentication (Ngày 1)
 
 ## 🎯 Mục tiêu
 *   Thiết lập môi trường Docker local đồng nhất cho toàn bộ team.

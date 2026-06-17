@@ -1,4 +1,4 @@
-# Phase 2: Webhooks & Hàng Đợi Bất Đồng Bộ (Ngày 4 - 6)
+# Phase 2: Webhooks & Hàng Đợi Bất Đồng Bộ (Ngày 2)
 
 ## 🎯 Mục tiêu
 *   Nhận thông báo bình luận/tin nhắn thời gian thực từ Facebook Developer Console về máy local.

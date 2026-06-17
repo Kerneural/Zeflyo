@@ -1,4 +1,4 @@
-# Phase 3: Live Chat Hub & WebSockets Real-Time (Ngày 7 - 9)
+# Phase 3: Live Chat Hub & WebSockets Real-Time (Ngày 3)
 
 ## 🎯 Mục tiêu
 *   Thiết lập kênh truyền thông tin thời gian thực (WebSockets) để tự động đẩy tin nhắn mới về màn hình của Admin.
