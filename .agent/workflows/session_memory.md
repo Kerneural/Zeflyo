@@ -1,63 +1,52 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> *Last Checkpoint: 2026-06-17 | Status: Phase 1 (Backend & Frontend) — 100% COMPLETE*
+> *Last Checkpoint: 2026-06-17 | Status: Phase 2 (Webhooks & Queue) — 100% COMPLETE*
 
 ---
 
 ## ✅ ĐÃ HOÀN THÀNH TRONG SESSION NÀY
 
-### [Phase 1] Backend (Khoa) — **100% DONE**
-- **Docker Compose** (`docker-compose.yaml`) đang chạy local ổn định với các containers:
-  - `app_zeflyo` — Laravel 11 + Octane (RoadRunner, port 8000)
-  - `nginx_zeflyo` — Nginx reverse proxy (port 80)
-  - `db_zeflyo` (PostgreSQL 16, port 5432)
-  - `redis_zeflyo` (Redis, port 6379)
-  - `soketi_zeflyo` (Soketi WebSocket, port 6001/9601)
-- **Database Migrations:** Đã thực thi hoàn chỉnh. Đã kiểm tra 11 tables hoạt động trơn tru trong DB (bao gồm bảng `fanpages` và `personal_access_tokens`).
-- **FacebookAuthController:**
-  - Endpoint `POST /api/auth/facebook/callback` hoàn tất và kiểm định thành công.
-  - Phản hồi đúng chuẩn lỗi `400 Bad Request` khi gửi access token không hợp lệ từ client.
-- **Fanpage Management backend:**
-  - Đã thêm `FanpageController` với các endpoint:
-    - `GET /api/fanpages`: Lấy danh sách Fanpage của user đang đăng nhập.
-    - `POST /api/fanpages/{fanpage}/toggle`: Bật/tắt tự động hóa của từng Fanpage trong DB.
-  - Cập nhật định tuyến bảo mật Sanctum trong `routes/api.php`.
-  - Reload thành công Laravel Octane workers.
+### [Phase 1] Backend & Frontend Setup — **100% DONE**
+- **Docker Compose** local ổn định (Nginx, App, Postgres, Redis, Soketi).
+- **Laravel 11 & Next.js v16+** templates, setup và cấu hình Socialite Login.
+- **Onboarding Automation:** Đã tạo file `setup.sh` và viết lại `README.md` giúp team startup dự án chỉ bằng 1 lệnh duy nhất. Sửa lỗi thiếu `intl` extension bằng cách cập nhật Dockerfile.
+- **Fanpage Management API:** Endpoint đồng bộ danh sách Fanpage và bật/tắt tự động hóa live database.
 
-### [Phase 1] Frontend (Tiến) — **100% DONE**
-- **Khởi tạo Next.js:** Đã setup Next.js v16+ (App Router) dùng TypeScript và Tailwind CSS v4 trực tiếp trên host machine (thư mục `frontend/`).
-- **UI/UX Premium Design:**
-  - Ambient glowing circles cho không gian sâu, thiết kế Dark mode hiện đại.
-  - Cấu trúc Glassmorphic Panels (`.glass-panel`, `.glass-card`) hỗ trợ làm mờ nền sâu và viền mảnh sang trọng.
-  - Micro-animations mượt mà (`float` khi có thông báo, hover translate).
-  - Tích hợp custom Facebook SVG Logo tương thích mọi trình duyệt.
-- **Chức năng chính của Page (`src/app/page.tsx`):**
-  - **Trạng thái Login:** Tích hợp nút đăng nhập Facebook chính thức qua SDK Web, đồng thời hỗ trợ **Mock Developer Mode** cho phép demo và thử nghiệm cục bộ nhanh mà không cần token thật.
-  - **Trạng thái Dashboard:**
-    - Liệt kê các Fanpage của user kèm trạng thái "AI Agent Live" hoặc "Offline".
-    - Hỗ trợ bật/tắt tự động hóa bằng nút switch đồng bộ trực tiếp với database của Backend.
-    - Bản tin sự kiện thời gian thực (Live Activity Feed) thể hiện lịch sử trả lời tin nhắn tự động.
-  - **Server connection settings:** Bảng cấu hình tùy chỉnh động Endpoint Backend API và Facebook App ID.
+### [Phase 2] Webhooks & Queue Setup — **100% DONE**
+- **Database Migrations & Models:**
+  - Tạo mới bảng `customers` (lưu thông tin PSID, tên, ảnh của khách hàng) và bảng `interactions` (lưu tin nhắn/bình luận, ID bài đăng, chiều người gửi).
+  - Khởi tạo models `Customer.php` và `Interaction.php` định nghĩa đầy đủ fillable và các mối quan hệ `belongsTo` / `hasMany`.
+- **FacebookWebhookController:**
+  - Tạo các endpoint `GET /api/webhook/facebook` (handshake verification) và `POST /api/webhook/facebook` (nhận payload tin nhắn/comment).
+  - Tích hợp cấu hình `FACEBOOK_WEBHOOK_VERIFY_TOKEN` bảo mật.
+  - Phản hồi `200 OK` ngay lập tức dưới 0.05s để đáp ứng giới hạn 3s của Meta.
+- **ProcessFacebookWebhookJob:**
+  - Tạo Queue Job bóc tách payload thô trong background worker.
+  - Phân loại: Tin nhắn Messenger (`messaging`) và bình luận bài viết (`feed`).
+  - Hỗ trợ gọi Facebook API tự động đồng bộ tên và ảnh đại diện khách hàng từ PSID bất đồng bộ để tránh nghẽn luồng chính.
+- **Kiểm thử Pipeline:**
+  - Test GET verification: Thành công ✅.
+  - Test POST payload: Thành công đẩy vào Queue DB `jobs` table ✅.
+  - Test chạy Worker: Xử lý thành công lưu bản ghi `Customer` và `Interaction` vào Postgres Database ✅.
 
 ---
 
-## ❌ CHƯA BẮT ĐẦU (Kế hoạch Phase 2)
+## ❌ CHƯA BẮT ĐẦU (Kế hoạch Phase 3)
 
-- **Phase 2: Post Scheduler & AI Auto-reply Setup**
-  - Setup Laravel Queue worker để lắng nghe tin nhắn từ Webhook.
-  - Xây dựng DB schema cho bài đăng (Posts) và console command phục vụ scheduler.
-  - Xây dựng UI lập lịch gửi bài viết (Tiến).
+- **Phase 3: Live Chat Hub & WebSockets Real-Time**
+  - Cấu hình Soketi broadcast server.
+  - Tích hợp Laravel Echo phát tin nhắn mới đến Client Next.js.
+  - Xây dựng giao diện Hộp thư tập trung (Live Chat Hub) để nhắn tin trực tiếp.
 
 ---
 
 ## 🔜 NEXT SESSION — VIỆC CẦN LÀM NGAY (Ưu tiên theo thứ tự)
 
-1. **Khởi chạy ứng dụng và demo cho khách hàng:**
-   - Chạy backend Docker: `docker compose up -d`
-   - Chạy frontend: `cd frontend && npm run dev`
-   - Truy cập `http://localhost:3000` và trải nghiệm **Mock Dev Mode**.
-2. **Khởi tạo Webhook Endpoint ở Backend:**
-   - Tạo router nhận event từ Meta Webhook (`GET` để xác thực webhook token, `POST` để nhận payload tin nhắn).
-   - Tích hợp Redis Queue để xử lý bất đồng bộ các tin nhắn đến.
+1.  **Cấu hình Soketi Broadcasting:**
+    *   Cấu hình file `config/broadcasting.php` sử dụng driver `pusher` trỏ vào container `soketi:6001`.
+    *   Tạo Event `MessageReceived` ở Laravel phát tin nhắn mới nhận được trong Queue Job.
+2.  **Thiết kế Chat UI:**
+    *   Tiến lo phần UI hiển thị danh sách hội thoại và khung chat trên Next.js.
+    *   Khoa viết API gửi tin nhắn trả lời (`POST /api/messages/send`) gọi Graph API gửi ngược lại Messenger của khách hàng.
 
 ---
 
@@ -74,38 +63,37 @@
 
 ```
 Zeflyo/
-├── docker-compose.yaml          ✅ Đang chạy
-├── backend/                     ✅ Laravel 11 (Octane + Sanctum + Socialite)
-│   ├── routes/api.php           ✅ POST callback, GET fanpages, POST toggle
+├── docker-compose.yaml          # Quản lý 5 containers
+├── backend/                     # Laravel 11 Backend
+│   ├── routes/api.php           # Định tuyến Webhook và API
 │   ├── app/
-│   │   ├── Models/User.php      ✅ HasApiTokens + fanpages relation
-│   │   ├── Models/Fanpage.php   ✅ access_token encrypted cast
-│   │   ├── Http/Controllers/Auth/FacebookAuthController.php ✅
-│   │   └── Http/Controllers/FanpageController.php           ✅ Index & Toggle
+│   │   ├── Models/Customer.php      # Model khách hàng tương tác
+│   │   ├── Models/Interaction.php   # Model tin nhắn / comment
+│   │   ├── Jobs/ProcessFacebookWebhookJob.php           # Queue Job xử lý thô
+│   │   └── Http/Controllers/Webhook/FacebookWebhookController.php # Endpoint Webhook
 │   └── database/migrations/
-│       └── 2026_06_16_*_create_fanpages_table.php ✅ Đã chạy migrate
-└── frontend/                    ✅ Next.js App
-    ├── src/app/globals.css      ✅ Cấu hình CSS theme dark, glow, glass
-    └── src/app/page.tsx         ✅ Trình bày UI Login, Mock Mode, và Dashboard
+│       ├── 2026_06_17_060236_create_customers_table.php    # Migration bảng khách
+│       └── 2026_06_17_060244_create_interactions_table.php # Migration bảng tương tác
+└── frontend/                    # Next.js App
+    ├── src/app/globals.css      # CSS styles (Theme dark, ambient glows, glassmorphism)
+    └── src/app/page.tsx         # Dashboard chính (Xử lý Mock & Real Auth, Event feeds)
 ```
 
 ---
 
-## 📋 TASK CHECKLIST PHASE 1
+## 📋 TASK CHECKLIST PHASE 1 & 2
 
+### Phase 1 (Đã Xong)
 - [x] Docker Compose local (5 containers)
-- [x] README / Local setup guide (Dành cho Phase 2 setup)
-- [ ] Terraform AWS skeleton (Dành cho Phase 2 setup)
-- [x] Laravel 11 khởi tạo trong `backend/`
-- [x] Cài `sanctum`, `socialite`, `octane`
-- [x] Cấu hình DB PostgreSQL trong `.env`
-- [x] FacebookAuthController (logic đầy đủ)
-- [x] Fanpage model + migration
-- [x] API route `POST /api/auth/facebook/callback`
-- [x] Chạy `php artisan migrate` thành công
-- [x] Tạo `FanpageController` bật/tắt tự động hóa
-- [x] Test API với invalid token thành công
-- [x] Frontend Next.js khởi tạo
-- [x] Frontend: Login screen (với Mock Mode và Real SDK)
-- [x] Frontend: Dashboard Fanpage selection screen (bật/tắt live database)
-- [x] Đã compile và build Frontend Next.js thành công 100% không lỗi TypeScript.
+- [x] README / Local setup guide / setup.sh tự động hóa
+- [x] Laravel 11 & Next.js v16+ templates
+- [x] Facebook Login Socialite + Fanpage toggle API
+- [x] Chạy migration và build thành công 100% không lỗi
+
+### Phase 2 (Đã Xong)
+- [x] Tạo migrations và models `Customer` & `Interaction`
+- [x] Chạy migration tạo 2 bảng Postgres
+- [x] FacebookWebhookController (GET verify handshake, POST receiver)
+- [x] ProcessFacebookWebhookJob (phân loại messaging/feed, đồng bộ profile)
+- [x] Cấu hình verify token bảo mật `.env`
+- [x] Smoke test thành công cả 2 luồng và chạy queue worker lưu DB chuẩn xác

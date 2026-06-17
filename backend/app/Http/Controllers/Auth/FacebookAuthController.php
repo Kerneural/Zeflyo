@@ -102,4 +102,23 @@ class FacebookAuthController extends Controller
             'message' => 'Login successful',
         ]);
     }
+
+    public function demoLogin(Request $request)
+    {
+        $user = User::firstOrCreate(
+            ['email' => 'demo@zeflyo.io'],
+            [
+                'name' => 'Demo User',
+                'avatar' => null,
+            ]
+        );
+
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+            'message' => 'Demo Login successful',
+        ]);
+    }
 }

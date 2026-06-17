@@ -17,7 +17,8 @@ import {
   HelpCircle,
   ExternalLink,
   ChevronRight,
-  Database
+  Database,
+  MessageSquare
 } from "lucide-react";
 
 // Inline Facebook SVG Icon (since Lucide removed brand icons)
@@ -292,6 +293,36 @@ export default function App() {
     showNotification("success", "Logged into mock developer mode!");
   };
 
+  const handleDevLogin = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/demo`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        setToken(data.token);
+        setUser(data.user);
+        localStorage.setItem("zeflyo_token", data.token);
+        localStorage.setItem("zeflyo_user", JSON.stringify(data.user));
+        showNotification("success", "Authenticated successfully in Backend Developer Mode!");
+      } else {
+        showNotification("error", data.error || "Failed to authenticate with demo user.");
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "Connection error. Make sure your backend server is running.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const togglePageAutomation = async (pageId: number, fbPageId: string) => {
     setActionLoading(pageId);
     
@@ -406,23 +437,32 @@ export default function App() {
 
         <div className="flex items-center gap-4">
           {user && (
-            <div className="flex items-center gap-3 bg-zinc-900/50 border border-white/5 py-1.5 px-3 rounded-full backdrop-blur-md">
-              <div className="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-400">
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  user.name.charAt(0)
-                )}
-              </div>
-              <span className="text-sm text-zinc-300 font-medium hidden sm:inline">{user.name}</span>
-              <button 
-                onClick={handleLogout}
-                className="p-1 text-zinc-500 hover:text-red-400 rounded-full transition-colors"
-                title="Sign Out"
+            <>
+              <a 
+                href="/chat"
+                className="flex items-center gap-2 py-1.5 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs sm:text-sm font-semibold transition-all border border-blue-500/20 shadow-lg shadow-blue-500/10 active:scale-95 cursor-pointer"
               >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+                <MessageSquare className="w-4 h-4" />
+                <span>Live Chat Hub</span>
+              </a>
+              <div className="flex items-center gap-3 bg-zinc-900/50 border border-white/5 py-1.5 px-3 rounded-full backdrop-blur-md">
+                <div className="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-400">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    user.name.charAt(0)
+                  )}
+                </div>
+                <span className="text-sm text-zinc-300 font-medium hidden sm:inline">{user.name}</span>
+                <button 
+                  onClick={handleLogout}
+                  className="p-1 text-zinc-500 hover:text-red-400 rounded-full transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </>
           )}
         </div>
       </header>
@@ -476,6 +516,15 @@ export default function App() {
                 >
                   <Database className="w-4 h-4 text-zinc-400" />
                   Mock Dev Mode (Demo Sandbox)
+                </button>
+
+                {/* Dev Login (Real Backend) button */}
+                <button
+                  onClick={handleDevLogin}
+                  className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 font-medium active:scale-[0.98] transition-all border border-indigo-500/20 cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-indigo-400" />
+                  Dev Login (Real Backend)
                 </button>
               </div>
 

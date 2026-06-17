@@ -1,0 +1,215 @@
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
+
+use App\Models\Fanpage;
+use App\Models\Customer;
+use App\Models\Interaction;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class ProcessFacebookWebhookJob implements ShouldQueue
+{
+    use Queueable;
+
+    protected array $payload;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(array $payload)
+    {
+        $this->payload = $payload;
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        Log::info('Processing Facebook Webhook Job...', ['payload_keys' => array_keys($this->payload)]);
+
+        // Verify the object type is 'page'
+        if (($this->payload['object'] ?? '') !== 'page') {
+            Log::warning('Unsupported webhook object type:', ['object' => $this->payload['object'] ?? null]);
+            return;
+        }
+
+        $entries = $this->payload['entry'] ?? [];
+
+        foreach ($entries as $entry) {
+            $fbPageId = $entry['id'] ?? null;
+            if (!$fbPageId) continue;
+
+            // Find the corresponding Fanpage in our database
+            $fanpage = Fanpage::where('fb_page_id', $fbPageId)->first();
+
+            if (!$fanpage) {
+                Log::warning("Received webhook event for untracked Fanpage: {$fbPageId}");
+                continue;
+            }
+
+            // Only process events if automation is active for this page
+            if (!$fanpage->is_active) {
+                Log::info("Automation is disabled for Fanpage: {$fanpage->name} ({$fbPageId}). Skipping.");
+                continue;
+            }
+
+            // 1. Process Messenger Messages
+            if (isset($entry['messaging'])) {
+                $this->processMessaging($entry['messaging'], $fanpage);
+            }
+
+            // 2. Process Page Feed Changes (Comments)
+            if (isset($entry['changes'])) {
+                $this->processChanges($entry['changes'], $fanpage);
+            }
+        }
+    }
+
+    /**
+     * Process Messenger messaging events.
+     */
+    protected function processMessaging(array $messagingEvents, Fanpage $fanpage): void
+    {
+        foreach ($messagingEvents as $event) {
+            // We only care about message text events from customers
+            $senderId = $event['sender']['id'] ?? null;
+            $recipientId = $event['recipient']['id'] ?? null;
+            
+            // If sender is the page itself, it's an outgoing response (we can log it as page response)
+            $isFromCustomer = ($senderId !== $fanpage->fb_page_id);
+            
+            $message = $event['message'] ?? null;
+            if (!$message || !isset($message['text'])) {
+                continue;
+            }
+
+            $fbMessageId = $message['mid'] ?? null;
+            $text = $message['text'];
+
+            // Find or create customer
+            $customerPsid = $isFromCustomer ? $senderId : $recipientId;
+            if (!$customerPsid) continue;
+
+            $customer = $this->getOrCreateCustomer($customerPsid, $fanpage);
+
+            // Save interaction in DB
+            $interaction = Interaction::updateOrCreate(
+                ['fb_item_id' => $fbMessageId],
+                [
+                    'customer_id' => $customer->id,
+                    'fanpage_id' => $fanpage->id,
+                    'type' => 'message',
+                    'content' => $text,
+                    'is_from_customer' => $isFromCustomer,
+                ]
+            );
+
+            // Broadcast the new message event in real-time
+            broadcast(new \App\Events\MessageReceived($interaction, $customer))->toOthers();
+
+            Log::info("Saved Messenger interaction in DB. From Customer: " . ($isFromCustomer ? 'Yes' : 'No'));
+        }
+    }
+
+    /**
+     * Process page feed changes (Comments).
+     */
+    protected function processChanges(array $changes, Fanpage $fanpage): void
+    {
+        foreach ($changes as $change) {
+            if (($change['field'] ?? '') !== 'feed') continue;
+
+            $value = $change['value'] ?? null;
+            if (!$value || ($value['item'] ?? '') !== 'comment' || ($value['verb'] ?? '') !== 'add') {
+                continue;
+            }
+
+            $commentId = $value['comment_id'] ?? null;
+            $postId = $value['post_id'] ?? null;
+            $message = $value['message'] ?? null;
+            $from = $value['from'] ?? null;
+
+            if (!$commentId || !$message || !$from) continue;
+
+            $senderId = $from['id'] ?? null;
+            $senderName = $from['name'] ?? 'Guest';
+
+            // Ignore if comment is made by the page itself to prevent infinite loops
+            $isFromCustomer = ($senderId !== $fanpage->fb_page_id);
+            if (!$isFromCustomer) continue;
+
+            // Get or create customer
+            $customer = $this->getOrCreateCustomer($senderId, $fanpage, $senderName);
+
+            // Save interaction in DB
+            $interaction = Interaction::updateOrCreate(
+                ['fb_item_id' => $commentId],
+                [
+                    'customer_id' => $customer->id,
+                    'fanpage_id' => $fanpage->id,
+                    'type' => 'comment',
+                    'fb_post_id' => $postId,
+                    'content' => $message,
+                    'is_from_customer' => true,
+                ]
+            );
+
+            // Broadcast the new comment event in real-time
+            broadcast(new \App\Events\MessageReceived($interaction, $customer))->toOthers();
+
+            Log::info("Saved Fanpage Comment interaction in DB: {$senderName} - \"{$message}\"");
+        }
+    }
+
+    /**
+     * Get existing customer or create a new one, fetching Facebook profile info asynchronously.
+     */
+    protected function getOrCreateCustomer(string $psid, Fanpage $fanpage, string $defaultName = 'Facebook User'): Customer
+    {
+        $customer = Customer::where('fanpage_id', $fanpage->id)
+            ->where('fb_customer_id', $psid)
+            ->first();
+
+        if ($customer) {
+            return $customer;
+        }
+
+        // If not exists, create customer and fetch profile from Meta Graph API
+        $name = $defaultName;
+        $avatarUrl = null;
+
+        try {
+            // Page access token is auto-decrypted via Eloquent cast
+            $pageToken = $fanpage->access_token;
+            
+            $response = Http::get("https://graph.facebook.com/v20.0/{$psid}", [
+                'fields' => 'first_name,last_name,profile_pic',
+                'access_token' => $pageToken
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $firstName = $data['first_name'] ?? '';
+                $lastName = $data['last_name'] ?? '';
+                $name = trim("{$firstName} {$lastName}") ?: $defaultName;
+                $avatarUrl = $data['profile_pic'] ?? null;
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch customer profile info from Meta Graph API for PSID: {$psid}", [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return Customer::create([
+            'fanpage_id' => $fanpage->id,
+            'fb_customer_id' => $psid,
+            'name' => $name,
+            'avatar_url' => $avatarUrl
+        ]);
+    }
+}
