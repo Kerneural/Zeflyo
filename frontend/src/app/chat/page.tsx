@@ -14,7 +14,9 @@ import {
   Loader2,
   Shield,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  Sun,
+  Moon
 } from "lucide-react";
 import { getEchoInstance } from "@/lib/echo";
 
@@ -103,6 +105,18 @@ export default function ChatHub() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [activeFanpage, setActiveFanpage] = useState<Fanpage | null>(null);
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("zeflyo_theme", nextTheme);
+    if (nextTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  };
   
   // Chat state
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -137,9 +151,17 @@ export default function ChatHub() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
 
     if (savedToken) setToken(savedToken);
     if (savedApiBase) setApiBaseUrl(savedApiBase);
+
+    setTheme(savedTheme as "dark" | "light");
+    if (savedTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
 
     // Try to load connected pages to select active one
     if (savedPages) {
@@ -777,6 +799,15 @@ export default function ChatHub() {
 
         {/* WebSocket connection status indicator */}
         <div className="flex items-center gap-4">
+          {/* Theme Switcher */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-9 h-9 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-xl transition-all border border-white/5 cursor-pointer active:scale-95 shadow-sm"
+            title="Toggle Light/Dark theme"
+          >
+            {theme === "dark" ? <Sun className="w-4.5 h-4.5 text-amber-400" /> : <Moon className="w-4.5 h-4.5 text-indigo-400" />}
+          </button>
+
           {activeFanpage && (
             <div className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-xl px-3 py-1.5 text-sm">
               <span className="font-medium text-[#f4f4f5]">{activeFanpage.name}</span>

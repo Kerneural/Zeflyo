@@ -14,7 +14,9 @@ import {
   Sparkles,
   ToggleLeft,
   ToggleRight,
-  HelpCircle
+  HelpCircle,
+  Sun,
+  Moon
 } from "lucide-react";
 
 interface Fanpage {
@@ -41,6 +43,18 @@ export default function AutoReplyRules() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [rules, setRules] = useState<AutoReplyRule[]>([]);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("zeflyo_theme", nextTheme);
+    if (nextTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  };
   const [selectedPageFilter, setSelectedPageFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   
@@ -63,9 +77,17 @@ export default function AutoReplyRules() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
 
     if (savedToken) setToken(savedToken);
     if (savedApiBase) setApiBaseUrl(savedApiBase);
+
+    setTheme(savedTheme as "dark" | "light");
+    if (savedTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
 
     // Initial mock page list
     if (savedPages) {
@@ -364,13 +386,25 @@ export default function AutoReplyRules() {
           </div>
         </div>
 
-        <button 
-          onClick={() => openModal()}
-          className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/15 transition-all cursor-pointer self-start md:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Thêm luật phản hồi</span>
-        </button>
+        <div className="flex items-center gap-3 self-start md:self-auto">
+          {/* Theme Switcher */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-11 h-11 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 rounded-xl transition-all border border-zinc-800 cursor-pointer active:scale-95 shadow-sm"
+            title="Toggle Light/Dark theme"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+          </button>
+          
+          <button 
+            onClick={() => openModal()}
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/15 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Thêm luật phản hồi</span>
+          </button>
+        </div>
       </header>
 
       {/* Control Panel: Filters & Search */}

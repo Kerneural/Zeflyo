@@ -20,7 +20,9 @@ import {
   Database,
   MessageSquare,
   Calendar,
-  Globe
+  Globe,
+  Sun,
+  Moon
 } from "lucide-react";
 
 // Inline Facebook SVG Icon (since Lucide removed brand icons)
@@ -159,6 +161,7 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [lang, setLang] = useState<"en" | "vi">("vi"); // Default to Vietnamese
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   
   // Custom API configuration
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
@@ -177,12 +180,20 @@ export default function App() {
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedAppId = localStorage.getItem("zeflyo_fb_app_id");
     const savedLang = localStorage.getItem("zeflyo_lang");
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
 
     if (savedToken) setToken(savedToken);
     if (savedUser) setUser(JSON.parse(savedUser));
     if (savedApiBase) setApiBaseUrl(savedApiBase);
     if (savedAppId) setAppId(savedAppId);
     if (savedLang === "en" || savedLang === "vi") setLang(savedLang);
+    
+    setTheme(savedTheme as "dark" | "light");
+    if (savedTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
 
     // Default appId if not set
     const initialAppId = savedAppId || "802422055100000"; // Placeholder test app id
@@ -246,6 +257,17 @@ export default function App() {
     setLang(nextLang);
     localStorage.setItem("zeflyo_lang", nextLang);
     document.documentElement.lang = nextLang;
+  };
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("zeflyo_theme", nextTheme);
+    if (nextTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
   };
 
   const fetchFanpages = async () => {
@@ -533,6 +555,15 @@ export default function App() {
           >
             <Globe className="w-3.5 h-3.5 text-blue-400" />
             <span>{lang === "en" ? "EN" : "VI"}</span>
+          </button>
+
+          {/* Theme Switcher */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-8 h-8 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+            title="Toggle Light/Dark theme"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
           </button>
 
           {user && (

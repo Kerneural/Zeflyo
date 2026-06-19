@@ -15,7 +15,9 @@ import {
   Loader2,
   Trash2,
   Sparkles,
-  Plus
+  Plus,
+  Sun,
+  Moon
 } from "lucide-react";
 
 interface Fanpage {
@@ -44,6 +46,18 @@ export default function PostScheduler() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("zeflyo_theme", nextTheme);
+    if (nextTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  };
   
   // Form State
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
@@ -67,9 +81,17 @@ export default function PostScheduler() {
     const savedToken = localStorage.getItem("zeflyo_token");
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
+    const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
 
     if (savedToken) setToken(savedToken);
     if (savedApiBase) setApiBaseUrl(savedApiBase);
+
+    setTheme(savedTheme as "dark" | "light");
+    if (savedTheme === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
 
     // Initial page load
     if (savedPages) {
@@ -372,6 +394,15 @@ export default function PostScheduler() {
             <p className="text-sm text-zinc-400">Lên lịch soạn thảo và tự động đăng bài lên nhiều Fanpage cùng lúc</p>
           </div>
         </div>
+
+        {/* Theme Switcher */}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center w-10 h-10 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 rounded-xl transition-all border border-zinc-800 cursor-pointer active:scale-95 shadow-sm"
+          title="Toggle Light/Dark theme"
+        >
+          {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+        </button>
       </header>
 
       {/* Main Layout Grid */}
