@@ -1,5 +1,5 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-06-19 | Status: Phase 4 Automation (Scheduler & Rules) — 100% COMPLETE
+> Last Checkpoint: 2026-06-19 | Status: Phase 3 (Chat Hub Refactored) & Phase 4 (Scheduler & Rules) — 100% COMPLETE
 
 ---
 
@@ -14,10 +14,21 @@
     *   Thiết kế giao diện quản lý rules Next.js `/rules` sử dụng layout Cards tinh gọn, badges từ khóa màu sắc, nút Switch Toggle trạng thái hoạt động tức thì với micro-animations và modal CRUD.
     *   Xác thực biên dịch build Next.js thành công 100% không phát sinh lỗi typescript, và viết feature test **[AutomationTest.php](file:///d:/ThucTapDN/Zeflyo/backend/tests/Feature/AutomationTest.php)** chạy thành công trên PHPUnit/Docker.
 
+*   **[Phase 3] Live Chat Hub Refactoring & WebSockets:**
+    *   Tái cấu trúc giao diện `chat/page.tsx` thành thiết kế Premium 3 cột Pancake Glassmorphism.
+    *   Tích hợp bộ xương tải trang (Skeleton Loaders) khi chuyển đổi và nạp cuộc hội thoại mới.
+    *   Tách biệt và tối ưu hiệu năng render bong bóng chat bằng `React.memo` (component `MessageBubble`).
+    *   Cải tiến ô nhập liệu sang dạng `<textarea>` hỗ trợ phím tắt gửi tin bằng `Enter` (không nhảy dòng) và `Shift + Enter` để xuống dòng.
+    *   Thiết kế nút gạt "AI Auto-Reply" cao cấp, hiển thị loader nhỏ xoay tròn ngay bên trong switch dot khi trạng thái đang đồng bộ với Backend.
+    *   Nâng cấp cơ chế Responsive: Tự động ẩn cột 3 ở màn hình di động, hiển thị cột 1 (sidebar) và cột 2 (khung chat) dưới dạng trượt slide kèm nút Back quay lại danh sách cuộc trò chuyện.
+    *   Bổ sung hiệu ứng viền trái nổi bật (`border-blue-600`) cho đoạn hội thoại đang chọn và chấm tròn thông báo tin nhắn chưa đọc nhấp nháy cam (`animate-pulse shadow-orange-500/20`).
+    *   Refine trạng thái kết nối WebSocket Indicator trên Header bằng hiệu ứng màu sắc và glow tương ứng.
+
 ## 🧠 Semantic Context Essence (Tinh túy kiến thức & Quyết định thiết kế)
 *   *Fallback Mock Token:* Khi sử dụng `mock_page_token_123` làm access token cho các fanpage, backend sẽ bỏ qua việc gọi API Facebook thật để tránh lỗi xác thực token, thay vào đó giả lập thành công trong nhật ký log của container.
 *   *Instant State Toggle:* Để tăng trải nghiệm cao cấp, switch toggle trên giao diện `/rules` thực hiện cập nhật tức thời trên React state và gửi request ngầm cập nhật database, tự động revert state nếu request backend thất bại.
-*   *Explicit Nullable types:* Tránh các cảnh báo deprecation trên PHP 8.4 bằng cách khai báo rõ ràng các tham số tùy chọn nullable dạng `?string $postId = null`.
+*   *Textarea Keyboard Shortcuts:* Sử dụng `<textarea>` thay cho `<input type="text">` cho phép hỗ trợ đa dòng hoàn chỉnh và tối ưu trải nghiệm gõ phản hồi nhanh từ bàn phím.
+*   *Mobile Column Sliding:* Sử dụng state `mobileView` giúp chuyển đổi hiển thị trượt giữa các cột giúp giao diện gọn gàng trên thiết bị di động.
 
 ## 🔜 Next Steps (3 hành động kỹ thuật trực tiếp kế tiếp)
 - [ ] **Step 1:** Thiết lập API Key Google Gemini 1.5 Flash trong file cấu hình `.env` và `config/services.php`.
