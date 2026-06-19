@@ -22,7 +22,13 @@ import {
   Copy,
   Home,
   MessageSquare,
-  Sliders
+  Sliders,
+  Activity,
+  Bell,
+  Power,
+  RefreshCw,
+  LogOut,
+  HelpCircle
 } from "lucide-react";
 
 interface Fanpage {
@@ -58,7 +64,22 @@ export default function PostScheduler() {
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [activeTab, setActiveTab] = useState<"setup" | "list">("setup");
+  const [activeTab, setActiveTab] = useState<"setup" | "list" | "automation">("setup");
+  
+  interface UserProfile {
+    id: number;
+    name: string;
+    email: string;
+    avatar: string | null;
+  }
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [lang, setLang] = useState<"en" | "vi">("vi");
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [logs, setLogs] = useState<Array<{ id: string; page: string; event: string; time: string; status: "success" | "pending" | "info" }>>([
+    { id: "1", page: "Zeflyo Fashion", event: "Webhook handshake verified", time: "2 minutes ago", status: "success" },
+    { id: "2", page: "Zeflyo Food & Beverage", event: "Auto-reply sent: 'Hi! Thank you for contacting...'", time: "5 minutes ago", status: "success" },
+    { id: "3", page: "Tech Support", event: "AI Agent assigned to customer thread", time: "12 minutes ago", status: "info" }
+  ]);
 
   // Form State
   const [setupName, setSetupName] = useState<string>("");
@@ -88,9 +109,13 @@ export default function PostScheduler() {
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
     const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedUser = localStorage.getItem("zeflyo_user");
+    const savedLang = localStorage.getItem("zeflyo_lang");
 
     if (savedToken) setToken(savedToken);
     if (savedApiBase) setApiBaseUrl(savedApiBase);
+    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedLang === "en" || savedLang === "vi") setLang(savedLang as "en" | "vi");
 
     setTheme(savedTheme as "dark" | "light");
     if (savedTheme === "light") {
@@ -117,8 +142,8 @@ export default function PostScheduler() {
   // Fetch from Backend if real mode
   useEffect(() => {
     if (token) {
+      fetchFanpagesList();
       if (!token.startsWith("mock_")) {
-        fetchRealFanpages();
         fetchScheduledPosts();
       } else {
         // Load mock scheduled posts
@@ -146,6 +171,20 @@ export default function PostScheduler() {
     }
   };
 
+  const toggleLanguage = () => {
+    const nextLang = lang === "en" ? "vi" : "en";
+    setLang(nextLang);
+    localStorage.setItem("zeflyo_lang", nextLang);
+    document.documentElement.lang = nextLang;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("zeflyo_token");
+    localStorage.removeItem("zeflyo_user");
+    localStorage.removeItem("zeflyo_mock_pages");
+    window.location.href = "/";
+  };
+
   const showNotification = (type: "success" | "error", message: string) => {
     if (type === "success") {
       setSuccessMsg(message);
@@ -156,7 +195,36 @@ export default function PostScheduler() {
     }
   };
 
-  const fetchRealFanpages = async () => {
+  const fetchFanpagesList = async () => {
+    if (!token) return;
+
+    if (token.startsWith("mock_")) {
+      const savedMockPages = localStorage.getItem("zeflyo_mock_pages");
+      if (savedMockPages) {
+        try {
+          const pagesList = JSON.parse(savedMockPages);
+          setFanpages(pagesList);
+          if (pagesList.length > 0 && selectedPages.length === 0) {
+            setSelectedPages([pagesList[0].id]);
+          }
+        } catch (e) {
+          console.error("Failed to parse mock pages", e);
+        }
+      } else {
+        const defaultMockPages = [
+          { id: 1, user_id: 99, fb_page_id: "109849204982312", name: "Zeflyo Fashion Store", avatar_url: null, is_active: true },
+          { id: 2, user_id: 99, fb_page_id: "304958230495823", name: "Zeflyo Food & Beverage", avatar_url: null, is_active: false },
+          { id: 3, user_id: 99, fb_page_id: "495829348572934", name: "Tech Support Portal", avatar_url: null, is_active: false }
+        ];
+        setFanpages(defaultMockPages);
+        localStorage.setItem("zeflyo_mock_pages", JSON.stringify(defaultMockPages));
+        if (selectedPages.length === 0) {
+          setSelectedPages([1]);
+        }
+      }
+      return;
+    }
+
     try {
       const response = await fetch(`${apiBaseUrl}/api/fanpages`, {
         headers: {
@@ -174,6 +242,58 @@ export default function PostScheduler() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const togglePageAutomation = async (pageId: number, fbPageId: string) => {
+    setActionLoading(pageId);
+    
+    if (token && token.startsWith("mock_")) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const updatedPages = fanpages.map(p => {
+        if (p.id === pageId) {
+          const newState = !p.is_active;
+          const newLog = {
+            id: Math.random().toString(),
+            page: p.name,
+            event: newState ? "Automation activated (polling/webhook status UP)" : "Automation paused",
+            time: "Just now",
+            status: (newState ? "success" : "pending") as any
+          };
+          setLogs(prev => [newLog, ...prev.slice(0, 9)]);
+          return { ...p, is_active: newState };
+        }
+        return p;
+      });
+      setFanpages(updatedPages);
+      localStorage.setItem("zeflyo_mock_pages", JSON.stringify(updatedPages));
+      showNotification("success", "Cập nhật trạng thái Fanpage thành công");
+      setActionLoading(null);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/fanpages/${pageId}/toggle`, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setFanpages(fanpages.map(p => p.id === pageId ? { ...p, is_active: data.fanpage.is_active } : p));
+        showNotification("success", "Cập nhật trạng thái Fanpage thành công");
+      } else {
+        showNotification("error", data.error || "Không có quyền truy cập vào Fanpage này");
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "Lỗi kết nối. Hãy chắc chắn rằng máy chủ backend đang chạy.");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -450,11 +570,11 @@ export default function PostScheduler() {
   const activePost = queue[activeQueueIndex] || { content: "", imageUrl: "" };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] flex relative overflow-hidden font-sans">
+    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       
       {/* Background Glow Elements */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
 
       {/* Sidebar Navigation */}
       <aside className="hidden lg:flex w-72 bg-[#18181b] border-r border-zinc-800 flex-col relative z-20 transition-all duration-300">
@@ -515,6 +635,16 @@ export default function PostScheduler() {
               >
                 Quản lý lịch đăng
               </button>
+              <button 
+                onClick={() => setActiveTab("automation")}
+                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === "automation" 
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/10" 
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+                }`}
+              >
+                Kích hoạt tự động hóa
+              </button>
             </div>
           </div>
 
@@ -537,17 +667,52 @@ export default function PostScheduler() {
           </a>
         </nav>
 
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-zinc-850 flex items-center justify-between">
-          <a href="/" className="text-zinc-500 hover:text-zinc-300 text-xs flex items-center gap-1.5 font-semibold">
-            <ArrowLeft className="w-4 h-4" /> Về trang chủ
-          </a>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-8 h-8 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-800 cursor-pointer active:scale-95 shadow-sm"
-          >
-            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
-          </button>
+        {/* Sidebar Footer with user info & toggles */}
+        <div className="p-4 border-t border-zinc-850 flex flex-col gap-4">
+          {/* User profile row */}
+          {user && (
+            <div className="flex items-center justify-between bg-zinc-950/40 border border-zinc-850/50 p-2.5 rounded-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-450 flex-shrink-0">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    user.name.charAt(0)
+                  )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs text-zinc-200 font-bold truncate block">{user.name}</span>
+                  <span className="text-[10px] text-zinc-500 truncate block">{user.email || "user@zeflyo.io"}</span>
+                </div>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                title="Đăng xuất"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Utility actions */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+              title="Switch Language / Đổi ngôn ngữ"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-455" />
+              <span>{lang === "en" ? "EN" : "VI"}</span>
+            </button>
+            
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -565,16 +730,23 @@ export default function PostScheduler() {
 
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => setActiveTab(activeTab === "setup" ? "list" : "setup")}
+              onClick={() => setActiveTab(activeTab === "setup" ? "list" : activeTab === "list" ? "automation" : "setup")}
               className="px-3 py-1.5 bg-blue-600/10 border border-blue-500/20 text-blue-400 rounded-lg text-xs font-semibold"
             >
-              {activeTab === "setup" ? "Xem danh sách" : "Thiết lập lịch"}
+              {activeTab === "setup" ? "Xem danh sách" : activeTab === "list" ? "Tự động hóa" : "Thiết lập lịch"}
             </button>
             <button
               onClick={toggleTheme}
               className="flex items-center justify-center w-8 h-8 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl"
             >
               {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-zinc-450 hover:text-red-400 cursor-pointer"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </header>
@@ -585,12 +757,16 @@ export default function PostScheduler() {
           {/* Header title */}
           <div className="flex flex-col gap-1.5 border-b border-zinc-850 pb-5">
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-wider text-zinc-150 uppercase">
-              {activeTab === "setup" ? "THIẾT LẬP LỊCH ĐĂNG CHO BÀI VIẾT CÓ SẴN" : "QUẢN LÝ LỊCH ĐĂNG BÀI VIẾT"}
+              {activeTab === "setup" ? "THIẾT LẬP LỊCH ĐĂNG CHO BÀI VIẾT CÓ SẴN" : 
+               activeTab === "list" ? "QUẢN LÝ LỊCH ĐĂNG BÀI VIẾT" : 
+               "KÍCH HOẠT TỰ ĐỘNG HÓA AI"}
             </h1>
             <p className="text-xs text-zinc-500">
               {activeTab === "setup" 
                 ? "Lên lịch hàng loạt bài viết tự động theo khung giờ cố định hoặc lặp lại hàng tuần" 
-                : "Quản lý và theo dõi trạng thái các bài viết đã hẹn giờ đăng lên Fanpage"}
+                : activeTab === "list"
+                ? "Quản lý và theo dõi trạng thái các bài viết đã hẹn giờ đăng lên Fanpage"
+                : "Lựa chọn và bật/tắt tự động hóa AI cho các Fanpage đã kết nối Zeflyo."}
             </p>
           </div>
 
@@ -1016,7 +1192,7 @@ export default function PostScheduler() {
 
               </div>
             </div>
-          ) : (
+          ) : activeTab === "list" ? (
             /* Tab list of scheduled posts */
             <div className="flex flex-col gap-6 animate-fade-in">
               <div className="glass-panel rounded-2xl p-6 lg:p-8">
@@ -1120,9 +1296,183 @@ export default function PostScheduler() {
                 )}
               </div>
             </div>
+          ) : (
+            /* Tab automation activation */
+            <div className="flex flex-col gap-8 animate-fade-in">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                
+                {/* Left section: Main controls and Active Fanpages */}
+                <div className="xl:col-span-8 flex flex-col gap-6">
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-base font-bold text-zinc-200">Danh sách Fanpage kết nối</h2>
+                      <p className="text-zinc-500 text-xs mt-1">Lựa chọn và bật/tắt tự động hóa AI cho các Fanpage đã kết nối Zeflyo.</p>
+                    </div>
+                    <button
+                      onClick={fetchFanpagesList}
+                      className="self-start sm:self-center flex items-center gap-2 py-1.5 px-3 text-xs font-semibold bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 rounded-xl transition-all active:scale-95 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Làm mới danh sách
+                    </button>
+                  </div>
+
+                  {fanpages.length === 0 ? (
+                    <div className="glass-panel rounded-2xl p-10 text-center flex flex-col items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-zinc-900/80 border border-zinc-805 flex items-center justify-center text-zinc-500">
+                        <Sliders className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-zinc-200">Không tìm thấy Trang nào</h3>
+                        <p className="text-zinc-500 text-xs max-w-sm mt-1">Chúng tôi không tìm thấy bất kỳ Fanpage Facebook nào được liên kết với tài khoản này. Hãy xác minh trong Meta Developer Console.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {fanpages.map((page) => (
+                        <div key={page.id} className="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4">
+                          
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-zinc-800 to-zinc-700 border border-zinc-850 flex items-center justify-center font-bold text-white text-lg relative overflow-hidden shadow-inner">
+                              {page.avatar_url ? (
+                                <img src={page.avatar_url} alt={page.name} className="w-full h-full object-cover" />
+                              ) : (
+                                page.name.charAt(0)
+                              )}
+                              <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-blue-500 border border-zinc-900 m-0.5" />
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-zinc-250 truncate" title={page.name}>{page.name}</h4>
+                              <span className="text-[10px] text-zinc-500 font-mono select-all">ID: {page.fb_page_id}</span>
+                              
+                              <div className="flex items-center gap-1.5 mt-2">
+                                <span className={`w-1.5 h-1.5 rounded-full ${page.is_active ? "bg-green-500 animate-pulse" : "bg-zinc-650"}`} />
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${page.is_active ? "text-green-400" : "text-zinc-500"}`}>
+                                  {page.is_active ? "AI Agent Hoạt động" : "Ngoại tuyến"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card Action footer */}
+                          <div className="pt-3 border-t border-zinc-850 flex items-center justify-between">
+                            <span className="text-[10px] text-zinc-500">Sẵn sàng nhận diện & phản hồi</span>
+                            
+                            <button
+                              disabled={actionLoading === page.id}
+                              onClick={() => togglePageAutomation(page.id, page.fb_page_id)}
+                              className={`flex items-center gap-2 py-1 px-3 rounded-lg text-xs font-semibold select-none transition-all cursor-pointer ${
+                                page.is_active 
+                                  ? "bg-green-500/10 hover:bg-green-500/20 text-green-300 border border-green-500/30" 
+                                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-850"
+                              }`}
+                            >
+                              {actionLoading === page.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : page.is_active ? (
+                                <>
+                                  <Power className="w-3.5 h-3.5 text-green-400" />
+                                  Hoạt động
+                                </>
+                              ) : (
+                                <>
+                                  <Power className="w-3.5 h-3.5 text-zinc-500" />
+                                  Đã tắt
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right section: Webhook status and logs */}
+                <div className="xl:col-span-4 flex flex-col gap-6">
+                  
+                  {/* Webhook Connection status panel */}
+                  <div className="glass-panel rounded-2xl p-5 flex flex-col gap-4">
+                    <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                      <span className="text-xs uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
+                        <Activity className="w-4 h-4 text-blue-500" />
+                        Trạng thái Cổng kết nối
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-mono">v20.0 SSL</span>
+                    </div>
+                    
+                    <div className="flex flex-col gap-3">
+                      <div className="flex justify-between items-center bg-zinc-950/40 p-2.5 rounded-lg border border-zinc-850">
+                        <span className="text-xs text-zinc-450">Bộ nhận Webhook</span>
+                        <span className="text-xs text-green-455 font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          Đang lắng nghe (200 OK)
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center bg-zinc-950/40 p-2.5 rounded-lg border border-zinc-850">
+                        <span className="text-xs text-zinc-455">Hàng đợi Redis Horizon</span>
+                        <span className="text-xs text-green-455 font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          Hoạt động (0 jobs)
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center bg-zinc-950/40 p-2.5 rounded-lg border border-zinc-850">
+                        <span className="text-xs text-zinc-455">Phát sóng WebSocket</span>
+                        <span className="text-xs text-blue-400 font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                          Soketi Trực tuyến
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Activity Logs Panel */}
+                  <div className="glass-panel rounded-2xl p-5 flex flex-col gap-4 min-h-[300px]">
+                    <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                      <span className="text-xs uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
+                        <Bell className="w-4 h-4 text-violet-500" />
+                        Hoạt động Thời gian thực
+                      </span>
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                    </div>
+
+                    <div className="flex flex-col gap-3 overflow-y-auto max-h-[320px] pr-1">
+                      {logs.map((log) => (
+                        <div key={log.id} className="p-3 bg-zinc-950/30 rounded-xl border border-zinc-850 hover:bg-zinc-900/10 transition-colors flex flex-col gap-1">
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-350 truncate">{log.page}</span>
+                            <span className="text-[10px] text-zinc-550 shrink-0">{log.time}</span>
+                          </div>
+                          <p className="text-xs text-zinc-455 leading-relaxed">{log.event}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
           )}
 
         </div>
+
+        {/* Footer Branding */}
+        <footer className="w-full py-6 text-center text-xs text-zinc-650 border-t border-zinc-850 z-10 bg-[#09090b]/80 backdrop-blur-md mt-auto">
+          <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© {new Date().getFullYear()} Zeflyo Omnichannel Hub. All rights reserved.</p>
+            <div className="flex gap-4 items-center">
+              <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5" /> Phase 1 Setup Verified</span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5"><Sliders className="w-3.5 h-3.5" /> Multi-Tenant Architecture</span>
+            </div>
+          </div>
+        </footer>
         
       </div>
 

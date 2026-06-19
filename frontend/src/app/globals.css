@@ -41,12 +41,38 @@ body {
   50% { opacity: 0.35; transform: scale(1.05); }
 }
 
+@keyframes pulse-glow-delayed {
+  0%, 100% { opacity: 0.3; transform: scale(1.05) translate(0px, 0px); }
+  50% { opacity: 0.15; transform: scale(0.9) translate(15px, -15px); }
+}
+
+@keyframes gradientBg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 8s ease-in-out infinite;
+}
+
+.animate-pulse-glow-delayed {
+  animation: pulse-glow-delayed 12s ease-in-out infinite;
+}
+
+.animated-gradient {
+  background: linear-gradient(-45deg, #09090b, #0e0a1b, #070d1d, #120921, #09090b);
+  background-size: 400% 400%;
+  animation: gradientBg 18s ease infinite;
+}
+
+.light .animated-gradient {
+  background: linear-gradient(-45deg, #f1f5f9, #e2e8f0, #e0e7ff, #fae8ff, #f1f5f9) !important;
+  background-size: 400% 400% !important;
 }
 
 /* Glassmorphism utility */

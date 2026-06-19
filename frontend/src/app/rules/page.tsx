@@ -16,7 +16,15 @@ import {
   ToggleRight,
   HelpCircle,
   Sun,
-  Moon
+  Moon,
+  Home,
+  Calendar,
+  MessageSquare,
+  Sliders,
+  Globe,
+  LogOut,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 
 interface Fanpage {
@@ -44,6 +52,15 @@ export default function AutoReplyRules() {
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [rules, setRules] = useState<AutoReplyRule[]>([]);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  
+  interface UserProfile {
+    id: number;
+    name: string;
+    email: string;
+    avatar: string | null;
+  }
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [lang, setLang] = useState<"en" | "vi">("vi");
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -54,6 +71,20 @@ export default function AutoReplyRules() {
     } else {
       document.documentElement.classList.remove("light");
     }
+  };
+
+  const toggleLanguage = () => {
+    const nextLang = lang === "en" ? "vi" : "en";
+    setLang(nextLang);
+    localStorage.setItem("zeflyo_lang", nextLang);
+    document.documentElement.lang = nextLang;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("zeflyo_token");
+    localStorage.removeItem("zeflyo_user");
+    localStorage.removeItem("zeflyo_mock_pages");
+    window.location.href = "/";
   };
   const [selectedPageFilter, setSelectedPageFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -78,9 +109,13 @@ export default function AutoReplyRules() {
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
     const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedUser = localStorage.getItem("zeflyo_user");
+    const savedLang = localStorage.getItem("zeflyo_lang");
 
     if (savedToken) setToken(savedToken);
     if (savedApiBase) setApiBaseUrl(savedApiBase);
+    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedLang === "en" || savedLang === "vi") setLang(savedLang as "en" | "vi");
 
     setTheme(savedTheme as "dark" | "light");
     if (savedTheme === "light") {
@@ -364,48 +399,166 @@ export default function AutoReplyRules() {
   });
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] p-6 lg:p-12 relative overflow-hidden">
+    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-950/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-950/10 blur-[120px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
 
-      {/* Header */}
-      <header className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 relative z-10">
-        <div className="flex items-center gap-4">
-          <a 
+      {/* Sidebar Navigation */}
+      <aside className="hidden lg:flex w-72 bg-[#18181b] border-r border-zinc-800 flex-col relative z-20 transition-all duration-300">
+        {/* Sidebar Header / Logo */}
+        <div className="p-6 border-b border-zinc-850 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <span className="font-extrabold text-white text-base">Z</span>
+          </div>
+          <span className="text-lg font-bold tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
+            ZEFLYO
+          </span>
+        </div>
+
+        {/* User Stats Card */}
+        <div className="p-4 mx-4 mt-6 bg-[#09090b]/40 rounded-2xl border border-green-500/20 text-center flex flex-col gap-1 shadow-inner">
+          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Tổng điểm</span>
+          <span className="text-3xl font-extrabold text-emerald-400">200</span>
+        </div>
+
+        {/* Sidebar Navigation Menu */}
+        <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-3 custom-scrollbar">
+          {/* Trang chủ */}
+          <a
             href="/"
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 transition-all"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
           >
-            <ArrowLeft className="w-5 h-5 text-zinc-400" />
+            <Home className="w-4 h-4 text-zinc-500" />
+            <span>Trang chủ</span>
           </a>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent flex items-center gap-2">
-              Auto-Reply Rules <Sparkles className="w-5 h-5 text-indigo-400" />
-            </h1>
-            <p className="text-sm text-zinc-400">Thiết lập luật tự động phản hồi bình luận và tin nhắn Messenger theo từ khóa</p>
+
+          {/* Lên lịch đăng bài */}
+          <a
+            href="/scheduler"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <Calendar className="w-4 h-4 text-zinc-500" />
+            <span>Lên lịch đăng bài</span>
+          </a>
+
+          {/* Hộp thư tập trung */}
+          <a
+            href="/chat"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <MessageSquare className="w-4 h-4 text-zinc-500" />
+            <span>Hộp thư tập trung</span>
+          </a>
+
+          {/* Luật Auto-reply (Active) */}
+          <a
+            href="/rules"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-zinc-900 text-zinc-200 transition-all text-xs font-bold uppercase tracking-wider shadow-sm"
+          >
+            <Sliders className="w-4 h-4 text-blue-500" />
+            <span>Luật Auto-Reply</span>
+          </a>
+        </nav>
+
+        {/* Sidebar Footer with user info & toggles */}
+        <div className="p-4 border-t border-zinc-850 flex flex-col gap-4">
+          {/* User profile row */}
+          {user && (
+            <div className="flex items-center justify-between bg-zinc-950/40 border border-zinc-850/50 p-2.5 rounded-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-450 flex-shrink-0">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    user.name.charAt(0)
+                  )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs text-zinc-200 font-bold truncate block">{user.name}</span>
+                  <span className="text-[10px] text-zinc-500 truncate block">{user.email || "user@zeflyo.io"}</span>
+                </div>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                title="Đăng xuất"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Utility actions */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+              title="Switch Language / Đổi ngôn ngữ"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-455" />
+              <span>{lang === "en" ? "EN" : "VI"}</span>
+            </button>
+            
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
           </div>
         </div>
+      </aside>
 
-        <div className="flex items-center gap-3 self-start md:self-auto">
-          {/* Theme Switcher */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-11 h-11 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 rounded-xl transition-all border border-zinc-800 cursor-pointer active:scale-95 shadow-sm"
-            title="Toggle Light/Dark theme"
-          >
-            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
-          </button>
+      {/* Main Content Workspace */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto relative z-10">
+        
+        {/* Mobile Header */}
+        <header className="w-full bg-[#18181b]/50 border-b border-zinc-800 px-6 py-4 flex items-center justify-between lg:hidden">
+          <div className="flex items-center gap-3">
+            <a href="/" className="p-2 rounded-xl bg-zinc-900 border border-zinc-805 text-zinc-400">
+              <ArrowLeft className="w-4 h-4" />
+            </a>
+            <span className="font-bold text-sm tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">ZEFLYO</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-zinc-450 hover:text-red-400 cursor-pointer"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Content Pane */}
+        <div className="flex-1 p-6 lg:p-10 max-w-7xl w-full mx-auto flex flex-col gap-6">
           
-          <button 
-            onClick={() => openModal()}
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/15 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Thêm luật phản hồi</span>
-          </button>
-        </div>
-      </header>
+          {/* Header title */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-850 pb-5">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-wider text-zinc-150 uppercase flex items-center gap-2">
+                Auto-Reply Rules <Sparkles className="w-5 h-5 text-indigo-400" />
+              </h1>
+              <p className="text-xs text-zinc-550 mt-1">Thiết lập luật tự động phản hồi bình luận và tin nhắn Messenger theo từ khóa</p>
+            </div>
+            
+            <button 
+              onClick={() => openModal()}
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/15 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Thêm luật phản hồi</span>
+            </button>
+          </div>
 
       {/* Control Panel: Filters & Search */}
       <section className="max-w-7xl mx-auto glass-panel rounded-2xl p-4 lg:p-6 mb-8 relative z-10 flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -654,6 +807,21 @@ export default function AutoReplyRules() {
           <span>{errorMsg}</span>
         </div>
       )}
+        </div>
+
+        {/* Footer Branding */}
+        <footer className="w-full py-6 text-center text-xs text-zinc-650 border-t border-zinc-850 z-10 bg-[#09090b]/80 backdrop-blur-md mt-auto">
+          <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© {new Date().getFullYear()} Zeflyo Omnichannel Hub. All rights reserved.</p>
+            <div className="flex gap-4 items-center">
+              <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5" /> Phase 1 Setup Verified</span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5"><Sliders className="w-3.5 h-3.5" /> Multi-Tenant Architecture</span>
+            </div>
+          </div>
+        </footer>
+
+      </div>
     </div>
   );
 }

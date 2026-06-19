@@ -22,7 +22,9 @@ import {
   Calendar,
   Globe,
   Sun,
-  Moon
+  Moon,
+  Home,
+  ArrowLeft
 } from "lucide-react";
 
 // Inline Facebook SVG Icon (since Lucide removed brand icons)
@@ -366,8 +368,8 @@ export default function App() {
     const mockToken = "mock_token_" + Math.random().toString(36).substring(2);
     const mockUser: UserProfile = {
       id: 99,
-      name: "Alex Dev (Demo User)",
-      email: "alex.dev@zeflyo.io",
+      name: "Đức Tiến",
+      email: "ductien@zeflyo.io",
       avatar: null
     };
 
@@ -515,11 +517,11 @@ export default function App() {
   const t = translations[lang];
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] flex flex-col relative overflow-hidden font-sans">
+    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       
-      {/* Glow effects */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none" />
+      {/* Background Glow Elements */}
+      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
 
       {errorMsg && (
         <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg border border-red-500/20 bg-red-500/10 text-red-200 backdrop-blur-md transition-all shadow-lg animate-float">
@@ -535,98 +537,47 @@ export default function App() {
         </div>
       )}
 
-      {/* Navigation Header */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/10">
-            <span className="font-extrabold text-white text-lg tracking-wider">Z</span>
-          </div>
-          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            ZEFLYO <span className="text-[10px] uppercase font-semibold text-blue-500 tracking-widest px-1.5 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 ml-1">v1.0</span>
-          </span>
+      {loading ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 min-h-screen py-20 relative z-10">
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+          <p className="text-zinc-400 text-sm">{t.syncServices}</p>
         </div>
-
-        <div className="flex items-center gap-3">
-          {/* Language Switcher */}
-          <button
-            onClick={toggleLanguage}
-            className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
-            title="Switch Language / Đổi ngôn ngữ"
-          >
-            <Globe className="w-3.5 h-3.5 text-blue-400" />
-            <span>{lang === "en" ? "EN" : "VI"}</span>
-          </button>
-
-          {/* Theme Switcher */}
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-8 h-8 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
-            title="Toggle Light/Dark theme"
-          >
-            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
-          </button>
-
-          {user && (
-            <>
-              <a 
-                href="/scheduler"
-                className="flex items-center gap-2 py-1.5 px-3.5 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs sm:text-sm font-semibold transition-all border border-zinc-850 active:scale-95 cursor-pointer"
-              >
-                <Calendar className="w-4 h-4 text-blue-400" />
-                <span className="hidden md:inline">{lang === "en" ? "Scheduler" : "Lên lịch đăng bài"}</span>
-              </a>
-              <a 
-                href="/rules"
-                className="flex items-center gap-2 py-1.5 px-3.5 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs sm:text-sm font-semibold transition-all border border-zinc-850 active:scale-95 cursor-pointer"
-              >
-                <Sliders className="w-4 h-4 text-indigo-400" />
-                <span className="hidden md:inline">{lang === "en" ? "Auto-Reply Rules" : "Luật Auto-Reply"}</span>
-              </a>
-              <a 
-                href="/chat"
-                className="flex items-center gap-2 py-1.5 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs sm:text-sm font-semibold transition-all border border-blue-500/20 shadow-lg shadow-blue-500/10 active:scale-95 cursor-pointer"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Live Chat Hub</span>
-              </a>
-              <div className="flex items-center gap-3 bg-zinc-900/50 border border-white/5 py-1.5 px-3 rounded-full backdrop-blur-md">
-                <div className="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-400">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    user.name.charAt(0)
-                  )}
-                </div>
-                <span className="text-sm text-zinc-300 font-medium hidden sm:inline">{user.name}</span>
-                <button 
-                  onClick={handleLogout}
-                  className="p-1 text-zinc-500 hover:text-red-400 rounded-full transition-colors"
-                  title={t.signOut}
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 flex flex-col justify-center items-center z-10">
-        
-        {loading ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-20">
-            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-            <p className="text-zinc-400 text-sm">{t.syncServices}</p>
+      ) : !token ? (
+        /* Login Screen (Centered in the viewport) */
+        <div className="flex-1 flex flex-col justify-center items-center p-6 relative z-10 min-h-screen">
+          
+          {/* Top small language/theme bar for login */}
+          <div className="absolute top-6 right-6 flex items-center gap-3">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-400" />
+              <span>{lang === "en" ? "EN" : "VI"}</span>
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
           </div>
-        ) : !token ? (
-          /* Login Screen */
+
           <div className="w-full max-w-md flex flex-col gap-6">
             <div className="text-center flex flex-col gap-2">
-              <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white to-zinc-300 bg-clip-text text-transparent">
+              {/* Logo */}
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/10">
+                  <span className="font-extrabold text-white text-lg tracking-wider">Z</span>
+                </div>
+                <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
+                  ZEFLYO
+                </span>
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-b from-white to-zinc-300 bg-clip-text text-transparent">
                 {t.title}
               </h1>
-              <p className="text-zinc-400 text-sm max-w-sm mx-auto">
+              <p className="text-zinc-400 text-xs max-w-sm mx-auto leading-normal">
                 {t.subtitle}
               </p>
             </div>
@@ -648,9 +599,9 @@ export default function App() {
                 </button>
 
                 <div className="relative flex py-2 items-center">
-                  <div className="flex-grow border-t border-white/5"></div>
+                  <div className="flex-grow border-t border-zinc-800"></div>
                   <span className="flex-shrink mx-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest">{t.devUtilities}</span>
-                  <div className="flex-grow border-t border-white/5"></div>
+                  <div className="flex-grow border-t border-zinc-800"></div>
                 </div>
 
                 {/* Mock Dev login button */}
@@ -716,187 +667,345 @@ export default function App() {
             </div>
 
             <div className="flex justify-center items-center gap-4 text-xs text-zinc-500">
-              <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-blue-500" /> {t.authSecure}</span>
+              <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-blue-500" /> {t.authSecure}</span>
               <span>•</span>
-              <span className="flex items-center gap-1"><ExternalLink className="w-3 h-3 text-violet-500" /><a href="https://developers.facebook.com" target="_blank" className="hover:text-zinc-400">{t.metaConsole}</a></span>
+              <span className="flex items-center gap-1">
+                <ExternalLink className="w-3.5 h-3.5 text-violet-500" />
+                <a href="https://developers.facebook.com" target="_blank" className="hover:text-zinc-400">{t.metaConsole}</a>
+              </span>
             </div>
           </div>
-        ) : (
-          /* Dashboard Fanpage list screen */
-          <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Left section: Main controls and Active Fanpages */}
-            <div className="lg:col-span-2 flex flex-col gap-6">
-              
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-extrabold text-white tracking-tight">{t.activateAutomations}</h2>
-                  <p className="text-zinc-400 text-xs mt-1">{t.activateSub}</p>
-                </div>
-                <button
-                  onClick={fetchFanpages}
-                  className="self-start sm:self-center flex items-center gap-2 py-1.5 px-3 text-xs font-medium bg-zinc-900 border border-white/5 hover:bg-zinc-800/80 rounded-xl transition-all text-zinc-300 active:scale-95 cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  {t.refreshList}
-                </button>
+          
+        </div>
+      ) : (
+        /* Left Sidebar Layout (Authenticated) */
+        <>
+          {/* Sidebar Navigation */}
+          <aside className="hidden lg:flex w-72 bg-[#18181b] border-r border-zinc-800 flex-col relative z-20 transition-all duration-300">
+            {/* Sidebar Header / Logo */}
+            <div className="p-6 border-b border-zinc-850 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <span className="font-extrabold text-white text-base">Z</span>
               </div>
+              <span className="text-lg font-bold tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
+                ZEFLYO
+              </span>
+            </div>
 
-              {fanpages.length === 0 ? (
-                <div className="glass-panel rounded-2xl p-10 text-center flex flex-col items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-zinc-900/80 border border-white/5 flex items-center justify-center text-zinc-500">
-                    <Sliders className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-zinc-200">{t.noPages}</h3>
-                    <p className="text-zinc-400 text-xs max-w-sm mt-1">{t.noPagesSub}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {fanpages.map((page) => (
-                    <div key={page.id} className="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4">
-                      
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-zinc-800 to-zinc-700 border border-white/10 flex items-center justify-center font-bold text-white text-lg relative overflow-hidden shadow-inner">
-                          {page.avatar_url ? (
-                            <img src={page.avatar_url} alt={page.name} className="w-full h-full object-cover" />
-                          ) : (
-                            page.name.charAt(0)
-                          )}
-                          <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-blue-500 border border-zinc-900 m-0.5" />
-                        </div>
+            {/* User Stats Card */}
+            <div className="p-4 mx-4 mt-6 bg-[#09090b]/40 rounded-2xl border border-green-500/20 text-center flex flex-col gap-1 shadow-inner">
+              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Tổng điểm</span>
+              <span className="text-3xl font-extrabold text-emerald-400">200</span>
+            </div>
 
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-zinc-200 truncate" title={page.name}>{page.name}</h4>
-                          <span className="text-[10px] text-zinc-500 font-mono select-all">ID: {page.fb_page_id}</span>
-                          
-                          <div className="flex items-center gap-1.5 mt-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${page.is_active ? "bg-green-500 animate-pulse" : "bg-zinc-600"}`} />
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${page.is_active ? "text-green-400" : "text-zinc-500"}`}>
-                              {page.is_active ? t.aiAgentLive : t.offline}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+            {/* Sidebar Navigation Menu */}
+            <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-3 custom-scrollbar">
+              {/* Trang chủ (Active) */}
+              <a
+                href="/"
+                className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-zinc-900 text-zinc-200 transition-all text-xs font-bold uppercase tracking-wider shadow-sm"
+              >
+                <Home className="w-4 h-4 text-blue-500" />
+                <span>Trang chủ</span>
+              </a>
 
-                      {/* Card Action footer */}
-                      <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                        <span className="text-[10px] text-zinc-500">{t.logReady}</span>
-                        
-                        <button
-                          disabled={actionLoading === page.id}
-                          onClick={() => togglePageAutomation(page.id, page.fb_page_id)}
-                          className={`flex items-center gap-2 py-1 px-3 rounded-lg text-xs font-semibold select-none transition-all cursor-pointer ${
-                            page.is_active 
-                              ? "bg-green-500/10 hover:bg-green-500/20 text-green-300 border border-green-500/30" 
-                              : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-white/5"
-                          }`}
-                        >
-                          {actionLoading === page.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : page.is_active ? (
-                            <>
-                              <Power className="w-3.5 h-3.5 text-green-400" />
-                              {t.active}
-                            </>
-                          ) : (
-                            <>
-                              <Power className="w-3.5 h-3.5 text-zinc-500" />
-                              {t.deactivated}
-                            </>
-                          )}
-                        </button>
-                      </div>
+              {/* Lên lịch đăng bài */}
+              <a
+                href="/scheduler"
+                className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+              >
+                <Calendar className="w-4 h-4 text-zinc-500" />
+                <span>Lên lịch đăng bài</span>
+              </a>
 
+              {/* Hộp thư tập trung */}
+              <a
+                href="/chat"
+                className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+              >
+                <MessageSquare className="w-4 h-4 text-zinc-500" />
+                <span>Hộp thư tập trung</span>
+              </a>
+
+              {/* Luật Auto-reply */}
+              <a
+                href="/rules"
+                className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+              >
+                <Sliders className="w-4 h-4 text-zinc-500" />
+                <span>Luật Auto-Reply</span>
+              </a>
+            </nav>
+
+            {/* Sidebar Footer with user info & toggles */}
+            <div className="p-4 border-t border-zinc-850 flex flex-col gap-4">
+              {/* User profile row */}
+              {user && (
+                <div className="flex items-center justify-between bg-zinc-950/40 border border-zinc-850/50 p-2.5 rounded-xl">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-450 flex-shrink-0">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        user.name.charAt(0)
+                      )}
                     </div>
-                  ))}
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs text-zinc-200 font-bold truncate block">{user.name}</span>
+                      <span className="text-[10px] text-zinc-500 truncate block">{user.email || "user@zeflyo.io"}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={handleLogout}
+                    className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                    title={t.signOut}
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
                 </div>
               )}
-            </div>
 
-            {/* Right section: System logs, Webhook status, API health */}
-            <div className="flex flex-col gap-6">
-              
-              {/* Webhook Connection status panel */}
-              <div className="glass-panel rounded-2xl p-5 flex flex-col gap-4">
-                <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                  <span className="text-xs uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
-                    <Activity className="w-4 h-4 text-blue-500" />
-                    {t.gatewayStatus}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 font-mono">v20.0 SSL</span>
-                </div>
+              {/* Utility actions */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={toggleLanguage}
+                  className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+                  title="Switch Language / Đổi ngôn ngữ"
+                >
+                  <Globe className="w-3.5 h-3.5 text-blue-455" />
+                  <span>{lang === "en" ? "EN" : "VI"}</span>
+                </button>
                 
-                <div className="flex flex-col gap-3">
-                  <div className="flex justify-between items-center bg-zinc-900/40 p-2.5 rounded-lg border border-white/5">
-                    <span className="text-xs text-zinc-400">{t.webhookReceiver}</span>
-                    <span className="text-xs text-green-400 font-semibold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                      {t.listening}
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-zinc-900/40 p-2.5 rounded-lg border border-white/5">
-                    <span className="text-xs text-zinc-400">{t.redisQueue}</span>
-                    <span className="text-xs text-green-400 font-semibold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                      {t.activeJobs}
-                    </span>
-                  </div>
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center w-8 h-8 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+                >
+                  {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+                </button>
+              </div>
+            </div>
+          </aside>
 
-                  <div className="flex justify-between items-center bg-zinc-900/40 p-2.5 rounded-lg border border-white/5">
-                    <span className="text-xs text-zinc-400">{t.websocketBroadcasting}</span>
-                    <span className="text-xs text-blue-400 font-semibold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      {t.soketiOnline}
-                    </span>
-                  </div>
+          {/* Main Content Workspace */}
+          <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto relative z-10">
+            
+            {/* Mobile Header */}
+            <header className="w-full bg-[#18181b]/50 border-b border-zinc-800 px-6 py-4 flex items-center justify-between lg:hidden">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center">
+                  <span className="font-extrabold text-white text-xs">Z</span>
                 </div>
+                <span className="font-bold text-sm tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">ZEFLYO</span>
               </div>
 
-              {/* Activity Logs Panel */}
-              <div className="glass-panel rounded-2xl p-5 flex flex-col gap-4 flex-1 min-h-[300px]">
-                <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                  <span className="text-xs uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
-                    <Bell className="w-4 h-4 text-violet-500" />
-                    {t.liveActivity}
-                  </span>
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleLanguage}
+                  className="flex items-center justify-center gap-1 py-1 px-2.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg text-xs font-semibold"
+                >
+                  {lang === "en" ? "EN" : "VI"}
+                </button>
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center w-8 h-8 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl"
+                >
+                  {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="p-2 text-zinc-450 hover:text-red-400"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </header>
+
+            {/* Content Pane */}
+            <div className="flex-1 p-6 lg:p-10 max-w-7xl w-full mx-auto flex flex-col gap-6">
+              
+              {/* Header title */}
+              <div className="flex flex-col gap-1.5 border-b border-zinc-850 pb-5">
+                <h1 className="text-xl sm:text-2xl font-extrabold tracking-wider text-zinc-150 uppercase">
+                  {t.activateAutomations}
+                </h1>
+                <p className="text-xs text-zinc-550">
+                  {t.activateSub}
+                </p>
+              </div>
+
+              {/* Two-Column Workspace */}
+              <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                
+                {/* Left Column: Active Fanpages List */}
+                <div className="xl:col-span-8 flex flex-col gap-6">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-base font-bold text-zinc-200">Danh sách Fanpage kết nối</h2>
+                    <button
+                      onClick={fetchFanpages}
+                      className="flex items-center gap-2 py-1.5 px-3 text-xs font-semibold bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 rounded-xl transition-all active:scale-95 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      {t.refreshList}
+                    </button>
+                  </div>
+
+                  {fanpages.length === 0 ? (
+                    <div className="glass-panel rounded-2xl p-10 text-center flex flex-col items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-zinc-900/80 border border-zinc-805 flex items-center justify-center text-zinc-500">
+                        <Sliders className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-zinc-200">{t.noPages}</h3>
+                        <p className="text-zinc-555 text-xs max-w-sm mt-1">{t.noPagesSub}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {fanpages.map((page) => (
+                        <div key={page.id} className="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4">
+                          
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-zinc-800 to-zinc-700 border border-zinc-850 flex items-center justify-center font-bold text-white text-lg relative overflow-hidden shadow-inner">
+                              {page.avatar_url ? (
+                                <img src={page.avatar_url} alt={page.name} className="w-full h-full object-cover" />
+                              ) : (
+                                page.name.charAt(0)
+                              )}
+                              <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-blue-500 border border-zinc-900 m-0.5" />
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-zinc-250 truncate" title={page.name}>{page.name}</h4>
+                              <span className="text-[10px] text-zinc-500 font-mono select-all">ID: {page.fb_page_id}</span>
+                              
+                              <div className="flex items-center gap-1.5 mt-2">
+                                <span className={`w-1.5 h-1.5 rounded-full ${page.is_active ? "bg-green-500 animate-pulse" : "bg-zinc-650"}`} />
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${page.is_active ? "text-green-400" : "text-zinc-500"}`}>
+                                  {page.is_active ? t.aiAgentLive : t.offline}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card Action footer */}
+                          <div className="pt-3 border-t border-zinc-850 flex items-center justify-between">
+                            <span className="text-[10px] text-zinc-500">{t.logReady}</span>
+                            
+                            <button
+                              disabled={actionLoading === page.id}
+                              onClick={() => togglePageAutomation(page.id, page.fb_page_id)}
+                              className={`flex items-center gap-2 py-1 px-3 rounded-lg text-xs font-semibold select-none transition-all cursor-pointer ${
+                                page.is_active 
+                                  ? "bg-green-500/10 hover:bg-green-500/20 text-green-300 border border-green-500/30" 
+                                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-850"
+                              }`}
+                            >
+                              {actionLoading === page.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : page.is_active ? (
+                                <>
+                                  <Power className="w-3.5 h-3.5 text-green-400" />
+                                  {t.active}
+                                </>
+                              ) : (
+                                <>
+                                  <Power className="w-3.5 h-3.5 text-zinc-500" />
+                                  {t.deactivated}
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex flex-col gap-3 overflow-y-auto max-h-[320px] pr-1">
-                  {logs.map((log) => (
-                    <div key={log.id} className="p-3 bg-zinc-900/30 rounded-xl border border-white/5 hover:bg-zinc-900/50 transition-colors flex flex-col gap-1">
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-xs font-bold text-zinc-200 truncate">{log.page}</span>
-                        <span className="text-[10px] text-zinc-500 shrink-0">{log.time}</span>
-                      </div>
-                      <p className="text-xs text-zinc-400">{log.event}</p>
+                {/* Right Column: Webhook Gateway & Live Activity Logs */}
+                <div className="xl:col-span-4 flex flex-col gap-6">
+                  
+                  {/* Webhook Connection status panel */}
+                  <div className="glass-panel rounded-2xl p-5 flex flex-col gap-4">
+                    <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                      <span className="text-xs uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
+                        <Activity className="w-4 h-4 text-blue-500" />
+                        {t.gatewayStatus}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-mono">v20.0 SSL</span>
                     </div>
-                  ))}
+                    
+                    <div className="flex flex-col gap-3">
+                      <div className="flex justify-between items-center bg-zinc-950/40 p-2.5 rounded-lg border border-zinc-850">
+                        <span className="text-xs text-zinc-455">{t.webhookReceiver}</span>
+                        <span className="text-xs text-green-455 font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          {t.listening}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center bg-zinc-950/40 p-2.5 rounded-lg border border-zinc-850">
+                        <span className="text-xs text-zinc-455">{t.redisQueue}</span>
+                        <span className="text-xs text-green-455 font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          {t.activeJobs}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center bg-zinc-950/40 p-2.5 rounded-lg border border-zinc-850">
+                        <span className="text-xs text-zinc-455">{t.websocketBroadcasting}</span>
+                        <span className="text-xs text-blue-400 font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                          {t.soketiOnline}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Activity Logs Panel */}
+                  <div className="glass-panel rounded-2xl p-5 flex flex-col gap-4 min-h-[300px]">
+                    <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                      <span className="text-xs uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
+                        <Bell className="w-4 h-4 text-violet-500" />
+                        {t.liveActivity}
+                      </span>
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                    </div>
+
+                    <div className="flex flex-col gap-3 overflow-y-auto max-h-[320px] pr-1">
+                      {logs.map((log) => (
+                        <div key={log.id} className="p-3 bg-zinc-950/30 rounded-xl border border-zinc-850 hover:bg-zinc-900/10 transition-colors flex flex-col gap-1">
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-350 truncate">{log.page}</span>
+                            <span className="text-[10px] text-zinc-550 shrink-0">{log.time}</span>
+                          </div>
+                          <p className="text-xs text-zinc-455 leading-relaxed">{log.event}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
+
               </div>
 
             </div>
 
+            {/* Footer Branding */}
+            <footer className="w-full py-6 text-center text-xs text-zinc-650 border-t border-zinc-850 z-10 bg-[#09090b]/80 backdrop-blur-md mt-auto">
+              <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p>© {new Date().getFullYear()} Zeflyo Omnichannel Hub. All rights reserved.</p>
+                <div className="flex gap-4 items-center">
+                  <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5" /> Phase 1 Setup Verified</span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1.5"><Sliders className="w-3.5 h-3.5" /> Multi-Tenant Architecture</span>
+                </div>
+              </div>
+            </footer>
+
           </div>
-        )}
-
-      </main>
-
-      {/* Footer Branding */}
-      <footer className="w-full py-6 text-center text-xs text-zinc-600 border-t border-white/5 z-10 bg-[#09090b]/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Zeflyo Omnichannel Hub. All rights reserved.</p>
-          <div className="flex gap-4 items-center">
-            <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5" /> Phase 1 Setup Verified</span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5"><Sliders className="w-3.5 h-3.5" /> Multi-Tenant Architecture</span>
-          </div>
-        </div>
-      </footer>
-
+        </>
+      )}
     </div>
   );
 }

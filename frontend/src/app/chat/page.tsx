@@ -16,7 +16,15 @@ import {
   MessageSquare,
   AlertCircle,
   Sun,
-  Moon
+  Moon,
+  Home,
+  Calendar,
+  Sliders,
+  Globe,
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+  HelpCircle
 } from "lucide-react";
 import { getEchoInstance } from "@/lib/echo";
 
@@ -106,6 +114,15 @@ export default function ChatHub() {
   const [activeFanpage, setActiveFanpage] = useState<Fanpage | null>(null);
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  
+  interface UserProfile {
+    id: number;
+    name: string;
+    email: string;
+    avatar: string | null;
+  }
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [lang, setLang] = useState<"en" | "vi">("vi");
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -116,6 +133,20 @@ export default function ChatHub() {
     } else {
       document.documentElement.classList.remove("light");
     }
+  };
+
+  const toggleLanguage = () => {
+    const nextLang = lang === "en" ? "vi" : "en";
+    setLang(nextLang);
+    localStorage.setItem("zeflyo_lang", nextLang);
+    document.documentElement.lang = nextLang;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("zeflyo_token");
+    localStorage.removeItem("zeflyo_user");
+    localStorage.removeItem("zeflyo_mock_pages");
+    window.location.href = "/";
   };
   
   // Chat state
@@ -152,9 +183,19 @@ export default function ChatHub() {
     const savedApiBase = localStorage.getItem("zeflyo_api_base");
     const savedPages = localStorage.getItem("zeflyo_mock_pages");
     const savedTheme = localStorage.getItem("zeflyo_theme") || "dark";
+    const savedUser = localStorage.getItem("zeflyo_user");
+    const savedLang = localStorage.getItem("zeflyo_lang");
 
-    if (savedToken) setToken(savedToken);
+    if (!savedToken) {
+      // Redirect to login if not authenticated
+      window.location.href = "/";
+      return;
+    }
+
+    setToken(savedToken);
     if (savedApiBase) setApiBaseUrl(savedApiBase);
+    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedLang === "en" || savedLang === "vi") setLang(savedLang as "en" | "vi");
 
     setTheme(savedTheme as "dark" | "light");
     if (savedTheme === "light") {
@@ -164,16 +205,43 @@ export default function ChatHub() {
     }
 
     // Try to load connected pages to select active one
+    let loadedPages = false;
     if (savedPages) {
       try {
         const pages: Fanpage[] = JSON.parse(savedPages);
         setFanpages(pages);
         if (pages.length > 0) {
           setActiveFanpage(pages[0]);
+          loadedPages = true;
         }
       } catch (e) {
         console.error("Failed to parse pages", e);
       }
+    }
+
+    // Fallback seed mock pages if in Mock Mode but pages are missing
+    if (savedToken.startsWith("mock_") && !loadedPages) {
+      const mockPages: Fanpage[] = [
+        {
+          id: 1,
+          user_id: 99,
+          fb_page_id: "109849204982312",
+          name: "Zeflyo Fashion Store",
+          avatar_url: null,
+          is_active: true,
+        },
+        {
+          id: 2,
+          user_id: 99,
+          fb_page_id: "304958230495823",
+          name: "Zeflyo Food & Beverage",
+          avatar_url: null,
+          is_active: false,
+        }
+      ];
+      setFanpages(mockPages);
+      setActiveFanpage(mockPages[0]);
+      localStorage.setItem("zeflyo_mock_pages", JSON.stringify(mockPages));
     }
     
     // Clear initial space query
@@ -317,10 +385,15 @@ export default function ChatHub() {
         if (pages.length > 0) {
           const targetPage = pages.find((p: Fanpage) => p.fb_page_id === "1028776643660761") || pages[0];
           setActiveFanpage(targetPage);
+        } else {
+          setLoadingConvs(false);
         }
+      } else {
+        setLoadingConvs(false);
       }
     } catch (err) {
       console.error("Failed to fetch real fanpages", err);
+      setLoadingConvs(false);
     }
   };
 
@@ -773,29 +846,158 @@ export default function ChatHub() {
   );
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] flex flex-col relative overflow-hidden font-sans">
+    <div className="min-h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
       
       {/* Dynamic Background Glowing Blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[120px] animate-pulse-glow" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px] animate-pulse-glow" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
 
-      {/* Header */}
-      <header className="glass-panel w-full border-b border-white/5 px-6 py-4 flex items-center justify-between z-10">
-        <div className="flex items-center gap-4">
-          <a 
+      {/* Sidebar Navigation */}
+      <aside className="hidden lg:flex w-72 bg-[#18181b] border-r border-zinc-800 flex-col relative z-20 transition-all duration-300">
+        {/* Sidebar Header / Logo */}
+        <div className="p-6 border-b border-zinc-850 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <span className="font-extrabold text-white text-base">Z</span>
+          </div>
+          <span className="text-lg font-bold tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
+            ZEFLYO
+          </span>
+        </div>
+
+        {/* User Stats Card */}
+        <div className="p-4 mx-4 mt-6 bg-[#09090b]/40 rounded-2xl border border-green-500/20 text-center flex flex-col gap-1 shadow-inner">
+          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Tổng điểm</span>
+          <span className="text-3xl font-extrabold text-emerald-400">200</span>
+        </div>
+
+        {/* Sidebar Navigation Menu */}
+        <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-3 custom-scrollbar">
+          {/* Trang chủ */}
+          <a
             href="/"
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <Home className="w-4 h-4 text-zinc-500" />
+            <span>Trang chủ</span>
           </a>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-blue-500" />
-              Live Chat Hub
-            </h1>
-            <p className="text-xs text-[#a1a1aa] mt-0.5">Quản lý tin nhắn đa kênh thời gian thực</p>
+
+          {/* Lên lịch đăng bài */}
+          <a
+            href="/scheduler"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <Calendar className="w-4 h-4 text-zinc-500" />
+            <span>Lên lịch đăng bài</span>
+          </a>
+
+          {/* Hộp thư tập trung (Active) */}
+          <a
+            href="/chat"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-zinc-900 text-zinc-200 transition-all text-xs font-bold uppercase tracking-wider shadow-sm"
+          >
+            <MessageSquare className="w-4 h-4 text-blue-500" />
+            <span>Hộp thư tập trung</span>
+          </a>
+
+          {/* Luật Auto-reply */}
+          <a
+            href="/rules"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
+          >
+            <Sliders className="w-4 h-4 text-zinc-500" />
+            <span>Luật Auto-Reply</span>
+          </a>
+        </nav>
+
+        {/* Sidebar Footer with user info & toggles */}
+        <div className="p-4 border-t border-zinc-850 flex flex-col gap-4">
+          {/* User profile row */}
+          {user && (
+            <div className="flex items-center justify-between bg-zinc-950/40 border border-zinc-850/50 p-2.5 rounded-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-450 flex-shrink-0">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    user.name.charAt(0)
+                  )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs text-zinc-200 font-bold truncate block">{user.name}</span>
+                  <span className="text-[10px] text-zinc-500 truncate block">{user.email || "user@zeflyo.io"}</span>
+                </div>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                title="Đăng xuất"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Utility actions */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+              title="Switch Language / Đổi ngôn ngữ"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-455" />
+              <span>{lang === "en" ? "EN" : "VI"}</span>
+            </button>
+            
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
           </div>
         </div>
+      </aside>
+
+      {/* Main Content Workspace */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden relative z-10">
+        
+        {/* Mobile Header */}
+        <header className="w-full bg-[#18181b]/50 border-b border-zinc-800 px-6 py-4 flex items-center justify-between lg:hidden z-20">
+          <div className="flex items-center gap-3">
+            <a href="/" className="p-2 rounded-xl bg-zinc-900 border border-zinc-805 text-zinc-400">
+              <ArrowLeft className="w-4 h-4" />
+            </a>
+            <span className="font-bold text-sm tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">ZEFLYO</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-zinc-450 hover:text-red-400 cursor-pointer"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Header */}
+        <header className="glass-panel w-full border-b border-white/5 px-6 py-4 flex items-center justify-between z-10">
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-blue-500" />
+                Live Chat Hub
+              </h1>
+              <p className="text-xs text-[#a1a1aa] mt-0.5">Quản lý tin nhắn đa kênh thời gian thực</p>
+            </div>
+          </div>
 
         {/* WebSocket connection status indicator */}
         <div className="flex items-center gap-4">
@@ -873,7 +1075,23 @@ export default function ChatHub() {
 
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto divide-y divide-white/5 custom-scrollbar">
-            {loadingConvs ? (
+            {!activeFanpage ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center px-5 gap-3">
+                <div className="w-10 h-10 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-zinc-300">Không tìm thấy Fanpage hoạt động</span>
+                  <p className="text-[10px] text-zinc-500 leading-normal mt-1">
+                    Hãy đảm bảo:
+                  </p>
+                  <ul className="text-[10px] text-zinc-500 text-left list-disc pl-4 mt-1 space-y-1">
+                    <li>Địa chỉ Backend API là HTTPS (ở Trang chủ).</li>
+                    <li>Đăng nhập thành công và có ít nhất 1 Fanpage kết nối.</li>
+                  </ul>
+                </div>
+              </div>
+            ) : loadingConvs ? (
               <div className="flex flex-col items-center justify-center py-20 text-[#a1a1aa] gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                 <span className="text-sm">Đang tải cuộc hội thoại...</span>
@@ -882,6 +1100,7 @@ export default function ChatHub() {
               <div className="flex flex-col items-center justify-center py-20 text-[#a1a1aa] px-4 text-center">
                 <MessageSquare className="w-10 h-10 text-white/10 mb-3" />
                 <span className="text-sm">Không tìm thấy cuộc hội thoại nào</span>
+                <span className="text-[10px] text-zinc-500 mt-2 block">Hãy gửi tin nhắn giả lập bên phải để bắt đầu cuộc hội thoại.</span>
               </div>
             ) : (
               filteredConversations.map((c) => {
@@ -1145,6 +1364,12 @@ export default function ChatHub() {
                 )}
               </button>
 
+              {!activeFanpage && (
+                <p className="text-[10px] text-yellow-500/90 text-center leading-relaxed mt-2 bg-yellow-500/5 border border-yellow-500/10 p-2 rounded-xl">
+                  ⚠️ Hãy cấu hình **Địa chỉ Backend API** thành HTTPS (Ví dụ: `https://c74a7c0939d2ee.lhr.life`) ở Trang chủ để tải được Fanpage trước khi gửi giả lập.
+                </p>
+              )}
+
               {simSuccess && (
                 <div className="p-2.5 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] text-center font-medium">
                   ✅ Gửi thành công! Tin nhắn vừa xuất hiện trong chat.
@@ -1155,6 +1380,19 @@ export default function ChatHub() {
         </section>
       </main>
 
+      {/* Footer Branding */}
+      <footer className="w-full py-4 text-center text-xs text-zinc-650 border-t border-zinc-850 z-10 bg-[#09090b]/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© {new Date().getFullYear()} Zeflyo Omnichannel Hub. All rights reserved.</p>
+          <div className="flex gap-4 items-center">
+            <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5" /> Phase 1 Setup Verified</span>
+            <span>•</span>
+            <span className="flex items-center gap-1.5"><Sliders className="w-3.5 h-3.5" /> Multi-Tenant Architecture</span>
+          </div>
+        </div>
+      </footer>
+
+      </div>
     </div>
   );
 }
