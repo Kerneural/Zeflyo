@@ -18,6 +18,18 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    // User profile and password APIs
+    Route::get('/user/profile', [\App\Http\Controllers\UserController::class, 'getProfile']);
+    Route::put('/user/profile', [\App\Http\Controllers\UserController::class, 'updateProfile']);
+    Route::put('/user/password', [\App\Http\Controllers\UserController::class, 'updatePassword']);
+
+    // File Upload API
+    Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'upload']);
+
+    // Subscription & Plans APIs
+    Route::get('/plans', [\App\Http\Controllers\SubscriptionController::class, 'getPlans']);
+    Route::get('/user/subscription', [\App\Http\Controllers\SubscriptionController::class, 'getSubscription']);
+
     Route::get('/fanpages', [FanpageController::class, 'index']);
     Route::post('/fanpages/{fanpage}/toggle', [FanpageController::class, 'toggleActive']);
 
