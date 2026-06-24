@@ -11,41 +11,38 @@ import {
   ChevronUp 
 } from "lucide-react";
 
+interface PlanFeature {
+  labelVi: string;
+  labelEn: string;
+  type?: "regular" | "warning" | "error"; // regular: check, warning: alert icon/color, error: red X
+}
+
 interface Plan {
   id: string;
-  name: string;
-  price: number | null;
-  currency: string | null;
-  period: string | null;
+  nameVi: string;
+  nameEn: string;
+  priceMonthly: number | null;
+  price3Months: number | null;
+  priceYearly: number | null;
+  total3MonthsVi: string;
+  total3MonthsEn: string;
+  totalYearlyVi: string;
+  totalYearlyEn: string;
+  features: PlanFeature[];
   recommended?: boolean;
   contact?: boolean;
 }
 
 export default function PricingPage() {
-  const [token, setToken] = useState<string | null>(null);
-  const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [lang, setLang] = useState<"en" | "vi">("vi");
-
-  // Plan data states
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [subscription, setSubscription] = useState<{ plan: string; expires_at: string | null }>({
-    plan: "free",
-    expires_at: null
-  });
-
-  // Action states
-  const [loading, setLoading] = useState(true);
+  const [cycle, setCycle] = useState<"monthly" | "3months" | "yearly">("monthly");
+  const [loading, setLoading] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [targetPlanName, setTargetPlanName] = useState("");
   const [showComparison, setShowComparison] = useState(false);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("zeflyo_token");
-    const savedApiBase = localStorage.getItem("zeflyo_api_base") || "http://localhost";
     const savedLang = localStorage.getItem("zeflyo_lang") || "vi";
-
-    if (savedToken) setToken(savedToken);
-    if (savedApiBase) setApiBaseUrl(savedApiBase);
     setLang(savedLang as "en" | "vi");
 
     const handleLangChange = () => {
@@ -59,204 +56,291 @@ export default function PricingPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (token) {
-      fetchPlansAndSubscription();
-    }
-  }, [token, apiBaseUrl]);
-
-  const fetchPlansAndSubscription = async () => {
-    if (!token) return;
-    setLoading(true);
-
-    if (token.startsWith("mock_")) {
-      setTimeout(() => {
-        setPlans([
-          { id: "free",     name: "Free",     price: 0,       currency: "VND", period: "month" },
-          { id: "pro",      name: "Pro",      price: 299000,  currency: "VND", period: "month", recommended: true },
-          { id: "business", name: "Business", price: null,    currency: null,  period: null,    contact: true }
-        ]);
-        setSubscription({ plan: "free", expires_at: null });
-        setLoading(false);
-      }, 500);
-      return;
-    }
-
-    try {
-      const [plansRes, subRes] = await Promise.all([
-        fetch(`${apiBaseUrl}/api/plans`, {
-          headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
-        }),
-        fetch(`${apiBaseUrl}/api/user/subscription`, {
-          headers: { "Accept": "application/json", "Authorization": `Bearer ${token}` }
-        })
-      ]);
-
-      if (plansRes.ok) {
-        const plansData = await plansRes.json();
-        setPlans(plansData);
-      }
-      if (subRes.ok) {
-        const subData = await subRes.json();
-        setSubscription(subData);
-      }
-    } catch (e) {
-      console.error("Failed to load plans & subscription data", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleUpgradeClick = (planName: string) => {
     setTargetPlanName(planName);
     setShowComingSoon(true);
   };
 
-  // Pricing Card Sub-component
-  const PricingCard = ({ plan }: { plan: Plan }) => {
-    const isCurrentPlan = subscription.plan === plan.id;
-    const isRecommended = plan.recommended;
-
-    // Feature check lists for each plan
-    const features: Record<string, { labelVi: string; labelEn: string; included: boolean }[]> = {
-      free: [
-        { labelVi: "Quản lý tối đa 3 Fanpages", labelEn: "Manage up to 3 Fanpages", included: true },
-        { labelVi: "5 Luật Auto-Reply phản hồi", labelEn: "5 Keyword Auto-reply rules", included: true },
-        { labelVi: "Live Chat Hub (1 page)", labelEn: "Live Chat Hub (1 page)", included: true },
-        { labelVi: "Tự động trả lời thông minh bằng AI", labelEn: "Intelligent AI Auto-responder", included: false },
-        { labelVi: "Lên lịch đăng bài tự động (Scheduler)", labelEn: "Scheduled posts publisher", included: false },
-        { labelVi: "Báo cáo thống kê & Phân tích", labelEn: "Reporting & analytics export", included: false }
-      ],
-      pro: [
-        { labelVi: "Quản lý tối đa 20 Fanpages", labelEn: "Manage up to 20 Fanpages", included: true },
-        { labelVi: "100 Luật Auto-Reply phản hồi", labelEn: "100 Keyword Auto-reply rules", included: true },
-        { labelVi: "Live Chat Hub đa kênh đầy đủ", labelEn: "Full Live Chat Hub for all channels", included: true },
-        { labelVi: "5,000 lượt phản hồi AI / tháng", labelEn: "5,000 AI respond events / month", included: true },
-        { labelVi: "Lên lịch đăng bài tự động (Scheduler)", labelEn: "Scheduled posts publisher", included: true },
-        { labelVi: "Báo cáo thống kê & Phân tích", labelEn: "Reporting & analytics export", included: true }
-      ],
-      business: [
-        { labelVi: "Không giới hạn Fanpages", labelEn: "Unlimited Fanpages", included: true },
-        { labelVi: "Không giới hạn Luật Auto-Reply", labelEn: "Unlimited Keyword Auto-reply rules", included: true },
-        { labelVi: "Live Chat Hub đa kênh đầy đủ", labelEn: "Full Live Chat Hub for all channels", included: true },
-        { labelVi: "Không giới hạn lượt phản hồi AI", labelEn: "Unlimited AI respond events", included: true },
-        { labelVi: "Lên lịch đăng bài tự động (Scheduler)", labelEn: "Scheduled posts publisher", included: true },
-        { labelVi: "Hỗ trợ riêng (Dedicated Support)", labelEn: "Dedicated account manager support", included: true }
+  const plans: Plan[] = [
+    {
+      id: "basic",
+      nameVi: "Cơ bản",
+      nameEn: "Basic",
+      priceMonthly: 79000,
+      price3Months: 73000,
+      priceYearly: 59000,
+      total3MonthsVi: "Tổng: 219.000đ/3 tháng",
+      total3MonthsEn: "Total: 219,000đ/3 months",
+      totalYearlyVi: "Tổng: 710.000đ/năm",
+      totalYearlyEn: "Total: 710,000đ/year",
+      recommended: true,
+      features: [
+        { labelVi: "Tạo bài viết từ chủ đề yêu cầu", labelEn: "Create posts from requested topics" },
+        { labelVi: "Tạo bài viết từ ảnh sản phẩm", labelEn: "Create posts from product images" },
+        { labelVi: "AI tự động viết và đăng bài đa kênh (Facebook, Zalo OA)", labelEn: "AI multi-channel writing & auto-posting (Facebook, Zalo OA)" },
+        { labelVi: "1000 điểm/tháng (~100 bài viết)", labelEn: "1000 credits/month (~100 posts)" },
+        { labelVi: "⚠️ Chỉ đăng trực tiếp (Không có chế độ duyệt)", labelEn: "⚠️ Direct posting only (No approval workflow)", type: "warning" },
+        { labelVi: "⚠️ Chỉ hỗ trợ tải ảnh (Không hỗ trợ video)", labelEn: "⚠️ Images support only (No video support)", type: "warning" }
       ]
-    };
-
-    const currentPlanFeatures = features[plan.id] || [];
-
-    return (
-      <div className={`rounded-3xl p-6 flex flex-col justify-between border relative transition-all duration-350 hover:translate-y-[-4px] ${
-        isRecommended 
-          ? "bg-gradient-to-b from-[#6C63FF]/15 via-zinc-900/40 to-zinc-950/60 border-[#6C63FF]/40 shadow-xl shadow-[#6C63FF]/5 w-full md:scale-[1.03]" 
-          : "bg-zinc-900/30 border-white/5 shadow-lg w-full"
-      }`}>
-        {/* Recommended Badge */}
-        {isRecommended && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-[#6C63FF] text-[10px] text-white font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow shadow-[#6C63FF]/30 flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            {lang === "en" ? "Most Popular" : "Phổ biến nhất"}
-          </span>
-        )}
-
-        <div className="flex flex-col gap-6">
-          {/* Header */}
-          <div className="flex flex-col gap-2">
-            <span className={`text-xs font-bold uppercase tracking-widest ${isRecommended ? "text-[#6C63FF]" : "text-zinc-500"}`}>
-              {plan.name}
-            </span>
-            <div className="flex items-baseline gap-1 mt-1">
-              {plan.contact ? (
-                <span className="text-3xl font-extrabold text-white">
-                  {lang === "en" ? "Custom" : "Liên hệ"}
-                </span>
-              ) : (
-                <>
-                  <span className="text-3xl font-extrabold text-white">
-                    {plan.price === 0 ? "0đ" : `${plan.price?.toLocaleString()}đ`}
-                  </span>
-                  <span className="text-xs text-zinc-500">
-                    {lang === "en" ? "/month" : "/tháng"}
-                  </span>
-                </>
-              )}
-            </div>
-            {isCurrentPlan && (
-              <span className="text-[10px] text-zinc-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded w-fit mt-1">
-                {lang === "en" ? "Active Subscription" : "Gói hiện tại"}
-              </span>
-            )}
-          </div>
-
-          <hr className="border-white/5" />
-
-          {/* Features list */}
-          <ul className="flex flex-col gap-3">
-            {currentPlanFeatures.map((feat, idx) => (
-              <li key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300">
-                {feat.included ? (
-                  <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                ) : (
-                  <X className="w-4 h-4 text-zinc-650 shrink-0 mt-0.5" />
-                )}
-                <span className={feat.included ? "" : "text-zinc-555 line-through"}>
-                  {lang === "en" ? feat.labelEn : feat.labelVi}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* CTA Button */}
-        <button
-          onClick={() => handleUpgradeClick(plan.name)}
-          className={`w-full py-2.5 mt-8 rounded-xl font-semibold text-xs transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 ${
-            isCurrentPlan 
-              ? "bg-zinc-800 text-zinc-400 border border-zinc-700 cursor-not-allowed"
-              : isRecommended
-                ? "bg-gradient-to-r from-indigo-600 to-[#6C63FF] hover:from-indigo-500 hover:to-[#7C73FF] text-white shadow-lg shadow-[#6C63FF]/15"
-                : "bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/5"
-          }`}
-          disabled={isCurrentPlan}
-        >
-          {isCurrentPlan 
-            ? (lang === "en" ? "Current Plan" : "Đang sử dụng")
-            : plan.contact
-              ? (lang === "en" ? "Contact Support" : "Liên hệ hỗ trợ")
-              : (lang === "en" ? "Upgrade Now" : "Nâng cấp ngay")}
-        </button>
-      </div>
-    );
-  };
+    },
+    {
+      id: "pro",
+      nameVi: "Chuyên nghiệp",
+      nameEn: "Professional",
+      priceMonthly: 179000,
+      price3Months: 163000,
+      priceYearly: 134000,
+      total3MonthsVi: "Tổng: 489.000đ/3 tháng",
+      total3MonthsEn: "Total: 489,000đ/3 months",
+      totalYearlyVi: "Tổng: 1.610.000đ/năm",
+      totalYearlyEn: "Total: 1,610,000đ/year",
+      features: [
+        { labelVi: "Tất cả tính năng Cơ bản", labelEn: "All Basic features included" },
+        { labelVi: "2900 điểm/tháng (~290 bài viết)", labelEn: "2900 credits/month (~290 posts)" },
+        { labelVi: "🎬 Tải video lên để tạo bài viết với AI", labelEn: "🎬 Upload video to create AI post content" },
+        { labelVi: "👁️ Chế độ Duyệt bài viết trước khi đăng tự động", labelEn: "👁️ Manual review workflow before auto-posting" },
+        { labelVi: "Ưu tiên hỗ trợ và hướng dẫn", labelEn: "Priority support and tutorials" },
+        { labelVi: "❌ Không có: Tạo ảnh AI & Tích hợp Website", labelEn: "❌ Excluded: AI Image Generation & Web integration", type: "error" }
+      ]
+    },
+    {
+      id: "premium",
+      nameVi: "Cao Cấp",
+      nameEn: "Premium",
+      priceMonthly: 249000,
+      price3Months: 226000,
+      priceYearly: 187000,
+      total3MonthsVi: "Tổng: 679.000đ/3 tháng",
+      total3MonthsEn: "Total: 679,000đ/3 months",
+      totalYearlyVi: "Tổng: 2.240.000đ/năm",
+      totalYearlyEn: "Total: 2,240,000đ/year",
+      features: [
+        { labelVi: "Tất cả tính năng gói Chuyên nghiệp", labelEn: "All Professional features included" },
+        { labelVi: "4300 điểm/tháng (~430 bài viết)", labelEn: "4300 credits/month (~430 posts)" },
+        { labelVi: "🎨 🤖 Tạo ảnh AI tự động cho bài viết", labelEn: "🎨 🤖 Automatic AI Image Generation for posts" },
+        { labelVi: "🌐 AI Viết Bài Chuyên Sâu cho Website WordPress", labelEn: "🌐 AI Deep Content Writer for WordPress" },
+        { labelVi: "🌐 Đăng bài tự động lên website WordPress", labelEn: "🌐 Auto-publish articles to WordPress websites" },
+        { labelVi: "🌐 Ưu tiên hỗ trợ tích hợp Website & Zalo OA", labelEn: "🌐 Priority support for Web & Zalo OA integrations" }
+      ]
+    },
+    {
+      id: "vip",
+      nameVi: "VIP",
+      nameEn: "VIP",
+      priceMonthly: null,
+      price3Months: null,
+      priceYearly: null,
+      total3MonthsVi: "",
+      total3MonthsEn: "",
+      totalYearlyVi: "",
+      totalYearlyEn: "",
+      contact: true,
+      features: [
+        { labelVi: "Tất cả tính năng Cao Cấp", labelEn: "All Premium features included" },
+        { labelVi: "Số lượng điểm tùy chỉnh", labelEn: "Custom credits volume" },
+        { labelVi: "Đào tạo và hỗ trợ riêng", labelEn: "Dedicated private 1-on-1 support" },
+        { labelVi: "Tích hợp theo yêu cầu", labelEn: "On-demand customized integration" },
+        { labelVi: "Nhiều ưu đãi khác", labelEn: "Various exclusive benefits" }
+      ]
+    }
+  ];
 
   return (
-    <div className="flex flex-col gap-8 w-full max-w-5xl mx-auto">
+    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto">
       
       {/* Header */}
-      <div className="text-center md:text-left">
-        <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-          {lang === "en" ? "Zeflyo Pricing Plans" : "Bảng giá & Gói dịch vụ"}
+      <div className="text-center">
+        <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+          {lang === "en" ? "Choose the plan that fits you" : "Chọn gói phù hợp với bạn"}
         </h2>
-        <p className="text-xs text-zinc-450 mt-1">
-          {lang === "en" ? "Select the tier that fits your scale. Upgrade anytime to unlock AI features." : "Chọn gói dịch vụ phù hợp nhất với quy mô hoạt động của bạn. Nâng cấp bất cứ lúc nào."}
+        <p className="text-sm text-zinc-450 mt-2 max-w-xl mx-auto">
+          {lang === "en" ? "Automate content marketing, scale revenue limits infinitely." : "Tự động hóa content marketing, tăng doanh thu không giới hạn"}
         </p>
+      </div>
+
+      {/* Cycle Toggle Selector */}
+      <div className="flex justify-center mt-2 mb-4">
+        <div className="relative p-1 rounded-2xl bg-zinc-950/40 border border-white/5 flex gap-1 items-center z-10">
+          
+          <button
+            onClick={() => setCycle("monthly")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              cycle === "monthly"
+                ? "bg-[#6C63FF] text-white shadow-md shadow-[#6C63FF]/10"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            {lang === "en" ? "Monthly" : "Theo tháng"}
+          </button>
+
+          <button
+            onClick={() => setCycle("3months")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              cycle === "3months"
+                ? "bg-[#6C63FF] text-white shadow-md shadow-[#6C63FF]/10"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            {lang === "en" ? "3 Months (10% Off)" : "3 tháng (Giảm 10%)"}
+          </button>
+
+          <div className="relative">
+            <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm">
+              {lang === "en" ? "Best Deal - 25% Off" : "Giá tốt nhất - Giảm 25%"}
+            </span>
+            <button
+              onClick={() => setCycle("yearly")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                cycle === "yearly"
+                  ? "bg-[#6C63FF] text-white shadow-md shadow-[#6C63FF]/10"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              {lang === "en" ? "Yearly (25% Off)" : "Theo năm (Giảm 25%)"}
+            </button>
+          </div>
+
+        </div>
       </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-zinc-400">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-          <span className="text-xs">{lang === "en" ? "Loading pricing tables..." : "Đang tải bảng giá..."}</span>
+          <Loader2 className="w-8 h-8 animate-spin text-[#6C63FF]" />
+          <span className="text-xs">{lang === "en" ? "Loading tables..." : "Đang tải bảng giá..."}</span>
         </div>
       ) : (
         <div className="flex flex-col gap-10">
           
           {/* Plans Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            {plans.map((plan) => (
-              <PricingCard key={plan.id} plan={plan} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+            {plans.map((plan) => {
+              const isRecommended = plan.recommended;
+
+              // Extract prices based on active cycle
+              let currentPrice = plan.priceMonthly;
+              let originalPrice = null;
+              let totalLabel = "";
+              let discountBadge = "";
+
+              if (cycle === "3months" && !plan.contact) {
+                currentPrice = plan.price3Months;
+                originalPrice = plan.priceMonthly;
+                totalLabel = lang === "en" ? plan.total3MonthsEn : plan.total3MonthsVi;
+                discountBadge = "-10%";
+              } else if (cycle === "yearly" && !plan.contact) {
+                currentPrice = plan.priceYearly;
+                originalPrice = plan.priceMonthly;
+                totalLabel = lang === "en" ? plan.totalYearlyEn : plan.totalYearlyVi;
+                discountBadge = "-25%";
+              }
+
+              return (
+                <div
+                  key={plan.id}
+                  className={`rounded-3xl p-6 flex flex-col justify-between border relative transition-all duration-350 hover:translate-y-[-4px] ${
+                    isRecommended 
+                      ? "bg-gradient-to-b from-[#6C63FF]/15 via-zinc-900/40 to-zinc-950/60 border-[#6C63FF] shadow-xl shadow-[#6C63FF]/5" 
+                      : "bg-zinc-900/30 border-white/5 shadow-lg"
+                  }`}
+                >
+                  {/* Recommended Badge */}
+                  {isRecommended && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-[#6C63FF] text-[9px] text-white font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow shadow-[#6C63FF]/30 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      {lang === "en" ? "Most Popular" : "Phổ biến nhất"}
+                    </span>
+                  )}
+
+                  <div className="flex flex-col gap-6">
+                    {/* Header */}
+                    <div className="flex flex-col gap-2">
+                      <span className="flex items-center text-sm font-bold text-zinc-200">
+                        {lang === "en" ? plan.nameEn : plan.nameVi}
+                        {discountBadge && (
+                          <span className="ml-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-extrabold px-1.5 py-0.5 rounded-md">
+                            {discountBadge}
+                          </span>
+                        )}
+                      </span>
+
+                      {plan.contact ? (
+                        <div className="flex items-baseline mt-2 h-16">
+                          <span className="text-3xl font-extrabold text-white">
+                            {lang === "en" ? "Contact Us" : "Liên hệ"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col mt-2 h-16 justify-center">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-base text-zinc-400 mr-0.5">đ</span>
+                            <span className="text-3xl font-black text-white">
+                              {currentPrice?.toLocaleString("vi-VN")}
+                            </span>
+                            <span className="text-xs text-zinc-500 font-semibold ml-0.5">
+                              {lang === "en" ? "/month" : "/tháng"}
+                            </span>
+                          </div>
+
+                          {/* Crossed price & Total annual/quarterly cost */}
+                          {originalPrice && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-zinc-500 line-through">
+                                đ{originalPrice.toLocaleString("vi-VN")}
+                              </span>
+                              <span className="text-[10px] text-zinc-450 font-medium">
+                                {totalLabel}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <hr className="border-white/5" />
+
+                    {/* Features list */}
+                    <ul className="flex flex-col gap-3">
+                      {plan.features.map((feat, idx) => {
+                        const isWarning = feat.type === "warning";
+                        const isError = feat.type === "error";
+
+                        return (
+                          <li key={idx} className="flex items-start gap-2 text-xs text-zinc-300 leading-relaxed">
+                            {isError ? (
+                              <X className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                            ) : isWarning ? (
+                              <span className="w-4 h-4 shrink-0 flex items-center justify-center text-yellow-500 font-bold select-none mt-0.5">
+                                !
+                              </span>
+                            ) : (
+                              <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                            )}
+                            <span className={isError ? "text-zinc-555 line-through" : isWarning ? "text-zinc-400" : ""}>
+                              {lang === "en" ? feat.labelEn : feat.labelVi}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+
+                  {/* CTA Button */}
+                  <button
+                    onClick={() => handleUpgradeClick(lang === "en" ? plan.nameEn : plan.nameVi)}
+                    className={`w-full py-2.5 mt-8 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 ${
+                      isRecommended
+                        ? "bg-[#6C63FF] text-white hover:bg-[#584feb] shadow-lg shadow-[#6C63FF]/15"
+                        : "bg-zinc-800/60 hover:bg-zinc-800 text-zinc-200 border border-white/5"
+                    }`}
+                  >
+                    {plan.contact
+                      ? (lang === "en" ? "Contact Support" : "Liên hệ ngay")
+                      : (lang === "en" ? "Subscribe Now" : "Đăng ký ngay")}
+                  </button>
+
+                </div>
+              );
+            })}
           </div>
 
           {/* Accordion Detailed Comparison Table */}
@@ -266,7 +350,7 @@ export default function PricingPage() {
               className="w-full p-5 text-left flex justify-between items-center bg-white/[0.01] hover:bg-white/[0.02] outline-none select-none transition-colors border-b border-white/5"
             >
               <span className="text-xs uppercase font-extrabold text-zinc-400 tracking-wider flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-blue-500" />
+                <HelpCircle className="w-4 h-4 text-[#6C63FF]" />
                 {lang === "en" ? "Detailed Feature Matrix" : "Bảng so sánh chi tiết tính năng"}
               </span>
               {showComparison ? <ChevronUp className="w-4 h-4 text-zinc-500" /> : <ChevronDown className="w-4 h-4 text-zinc-500" />}
@@ -278,53 +362,54 @@ export default function PricingPage() {
                   <thead>
                     <tr className="border-b border-white/5 bg-zinc-950/40 text-zinc-500 font-bold">
                       <th className="p-4">{lang === "en" ? "Feature" : "Tính năng"}</th>
-                      <th className="p-4 w-[20%] text-center">Free</th>
-                      <th className="p-4 w-[20%] text-center">Pro</th>
-                      <th className="p-4 w-[20%] text-center">Business</th>
+                      <th className="p-4 w-[18%] text-center">Cơ bản</th>
+                      <th className="p-4 w-[18%] text-center">Chuyên nghiệp</th>
+                      <th className="p-4 w-[18%] text-center">Cao Cấp</th>
+                      <th className="p-4 w-[18%] text-center">VIP</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-zinc-350">
                     <tr>
-                      <td className="p-4 font-semibold text-zinc-200">Fanpage Facebook</td>
-                      <td className="p-4 text-center">3</td>
-                      <td className="p-4 text-center">20</td>
-                      <td className="p-4 text-center">{lang === "en" ? "Unlimited" : "Không giới hạn"}</td>
+                      <td className="p-4 font-semibold text-zinc-200">Điểm tháng (Credit)</td>
+                      <td className="p-4 text-center">1.000 (~100 posts)</td>
+                      <td className="p-4 text-center">2.900 (~290 posts)</td>
+                      <td className="p-4 text-center">4.300 (~430 posts)</td>
+                      <td className="p-4 text-center">{lang === "en" ? "Custom" : "Tùy chỉnh"}</td>
                     </tr>
                     <tr className="bg-white/[0.01]">
-                      <td className="p-4 font-semibold text-zinc-200">Lượt AI phản hồi/tháng</td>
-                      <td className="p-4 text-center">—</td>
-                      <td className="p-4 text-center">5.000</td>
-                      <td className="p-4 text-center">{lang === "en" ? "Unlimited" : "Không giới hạn"}</td>
+                      <td className="p-4 font-semibold text-zinc-200">Hỗ trợ Video bài viết</td>
+                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
+                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
                     </tr>
                     <tr>
-                      <td className="p-4 font-semibold text-zinc-200">Auto Post & Scheduler</td>
+                      <td className="p-4 font-semibold text-zinc-200">Quy trình duyệt bài viết trước khi đăng</td>
+                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
+                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+                    </tr>
+                    <tr className="bg-white/[0.01]">
+                      <td className="p-4 font-semibold text-zinc-200">Tạo hình ảnh tự động bằng AI</td>
+                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
                       <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
                       <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
                       <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
                     </tr>
-                    <tr className="bg-white/[0.01]">
-                      <td className="p-4 font-semibold text-zinc-200">Live Chat Hub</td>
-                      <td className="p-4 text-center">1 page</td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                    </tr>
                     <tr>
-                      <td className="p-4 font-semibold text-zinc-200">Luật Auto-Reply</td>
-                      <td className="p-4 text-center">5 luật</td>
-                      <td className="p-4 text-center">100 luật</td>
-                      <td className="p-4 text-center">{lang === "en" ? "Unlimited" : "Không giới hạn"}</td>
+                      <td className="p-4 font-semibold text-zinc-200">Đăng bài tự động lên website WordPress</td>
+                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
+                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
+                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
                     </tr>
                     <tr className="bg-white/[0.01]">
                       <td className="p-4 font-semibold text-zinc-200">Ưu tiên hỗ trợ</td>
-                      <td className="p-4 text-center">Email</td>
-                      <td className="p-4 text-center">Email + Chat</td>
-                      <td className="p-4 text-center">Dedicated Support</td>
-                    </tr>
-                    <tr>
-                      <td className="p-4 font-semibold text-zinc-200">Xuất báo cáo dữ liệu</td>
-                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+                      <td className="p-4 text-center">Tiêu chuẩn</td>
+                      <td className="p-4 text-center">Nhanh chóng</td>
+                      <td className="p-4 text-center">Ưu tiên hàng đầu</td>
+                      <td className="p-4 text-center">Hỗ trợ 1-kèm-1</td>
                     </tr>
                   </tbody>
                 </table>
