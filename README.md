@@ -45,14 +45,18 @@ Nếu bạn muốn cấu hình từng bước thủ công:
 * **Linux/macOS:** `cp backend/.env.example backend/.env`
 * **Windows:** `copy backend/.env.example backend/.env`
 
-### Bước 2: Khởi động Docker
+### Bước 2: Cài đặt PHP dependencies
+```bash
+docker compose run --rm app composer install
+```
+
+### Bước 3: Khởi động Docker
 ```bash
 docker compose up -d --build
 ```
 
-### Bước 3: Thiết lập Backend Laravel
+### Bước 4: Thiết lập Backend Laravel
 ```bash
-docker compose exec app composer install
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 ```

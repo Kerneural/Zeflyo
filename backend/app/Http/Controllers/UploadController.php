@@ -13,11 +13,13 @@ class UploadController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|image|max:5120', // max 5MB image
+            'file' => 'nullable|file|image|max:5120',
+            'image' => 'nullable|file|image|max:5120',
         ]);
 
-        if ($request->hasFile('file') && $request->file('file')->isValid()) {
-            $file = $request->file('file');
+        $file = $request->file('file') ?? $request->file('image');
+
+        if ($file && $file->isValid()) {
             // Store the file in public disk, under 'uploads' directory
             $path = $file->store('uploads', 'public');
             
@@ -26,12 +28,12 @@ class UploadController extends Controller
 
             return response()->json([
                 'url' => $url,
-                'message' => 'File uploaded successfully'
+                'message' => 'Upload successful'
             ]);
         }
 
         return response()->json([
-            'error' => 'Invalid file uploaded'
+            'error' => 'No file uploaded or file is invalid'
         ], 400);
     }
 }

@@ -5,12 +5,16 @@ namespace App\Jobs;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-use App\Models\Fanpage;
+use App\Events\MessageSent;
+use App\Models\AutoReplyRule;
 use App\Models\Customer;
+use App\Models\Fanpage;
 use App\Models\Interaction;
+use App\Services\GeminiService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+// Nhận payload webhook từ Facebook, xử lý và lưu trữ tương tác, đồng thời gửi phản hồi tự động nếu cần thiết
 class ProcessFacebookWebhookJob implements ShouldQueue
 {
     use Queueable;
@@ -77,8 +81,8 @@ class ProcessFacebookWebhookJob implements ShouldQueue
     {
         foreach ($messagingEvents as $event) {
             // We only care about message text events from customers
-            $senderId = $event['sender']['id'] ?? null;
-            $recipientId = $event['recipient']['id'] ?? null;
+            $senderId = $event['sender']['id'] ?? null; //giá trị có thể nhận null
+            $recipientId = $event['recipient']['id'] ?? null; //giá trị có thể nhận null
             
             // If sender is the page itself, it's an outgoing response (we can log it as page response)
             $isFromCustomer = ($senderId !== $fanpage->fb_page_id);
@@ -110,6 +114,7 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             );
 
             // Broadcast the new message event in real-time
+            // broadcast(...) trả về PendingBroadcast()->toOthers()
             broadcast(new \App\Events\MessageReceived($interaction, $customer))->toOthers();
 
             Log::info("Saved Messenger interaction in DB. From Customer: " . ($isFromCustomer ? 'Yes' : 'No'));
@@ -175,7 +180,8 @@ class ProcessFacebookWebhookJob implements ShouldQueue
     }
 
     /**
-     * Check if the incoming message contains keywords matching active AutoReplyRules.
+     * Check if the incoming message contains keywords matching active AutoReplyRules,
+     * or call Gemini AI if active.
      */
     protected function checkAndTriggerAutoReply(string $text, Customer $customer, Fanpage $fanpage, string $type, string $fbItemId, ?string $postId = null): void
     {
@@ -185,40 +191,56 @@ class ProcessFacebookWebhookJob implements ShouldQueue
             ->where('is_active', true)
             ->get();
 
+        $replyText = null;
+        $replySource = null;
+
         foreach ($rules as $rule) {
             $keyword = mb_strtolower(trim($rule->keyword));
             
             // Check for keyword containment
             if ($incomingText === $keyword || mb_strpos($incomingText, $keyword) !== false) {
                 Log::info("Auto-reply rule matched! Keyword: {$rule->keyword}, Reply Content: {$rule->reply_content}");
-                
-                $replyFbItemId = 'auto_reply.' . uniqid() . '.' . time();
-                
-                // Save outgoing automated interaction in DB
-                $interaction = Interaction::create([
-                    'customer_id' => $customer->id,
-                    'fanpage_id' => $fanpage->id,
-                    'type' => $type,
-                    'fb_item_id' => $replyFbItemId,
-                    'fb_post_id' => $postId,
-                    'content' => $rule->reply_content,
-                    'is_from_customer' => false,
-                ]);
-
-                // Call Meta APIs to send response back
-                if ($type === 'message') {
-                    $this->sendFacebookMessage($customer->fb_customer_id, $rule->reply_content, $fanpage);
-                } else if ($type === 'comment') {
-                    $this->sendFacebookCommentReply($fbItemId, $rule->reply_content, $fanpage);
-                }
-
-                // Broadcast message sent event so it updates dynamically in the Live Chat UI
-                broadcast(new \App\Events\MessageSent($interaction, $customer))->toOthers();
-                
-                // Stop evaluating rules after the first match
+                $replyText = $rule->reply_content;
+                $replySource = 'keyword';
                 break;
             }
         }
+
+        // When user message does not match any keyword and AI is active for the customer, call Gemini API
+        if ($replyText === null && $customer->ai_active) {
+            $systemPrompt = 'Bạn là trợ lý AI của cửa hàng chuyên bán các khóa học AI và cung cấp tài khoản AI giá rẻ (như ChatGPT Plus, Midjourney, Canva Pro, Netflix, Zoom Pro, v.v.). Hãy trả lời khách hàng một cách lịch sự, ngắn gọn, chuyên nghiệp. Nếu khách hỏi về giá hoặc sản phẩm cụ thể mà bạn không biết, hãy mời khách để lại thông tin và nhân viên sẽ liên hệ lại. Trả lời bằng tiếng Việt. Đặc biệt, không được bịa bất cứ thông tin nào về giá cả, sản phẩm nếu bạn không chắc chắn.';
+            $replyText = (new GeminiService())->generateReply($text, $systemPrompt);
+            $replySource = $replyText ? 'ai' : null;
+        }
+
+        if ($replyText === null) {
+            Log::info('No auto-reply generated for interaction.', ['customer_id' => $customer->id, 'fanpage_id' => $fanpage->id]);
+            return;
+        }
+
+        $replyFbItemId = 'auto_reply.' . uniqid() . '.' . time();
+        
+        // Save outgoing automated interaction in DB
+        $interaction = Interaction::create([
+            'customer_id' => $customer->id,
+            'fanpage_id' => $fanpage->id,
+            'type' => $type,
+            'fb_item_id' => $replyFbItemId,
+            'fb_post_id' => $postId,
+            'content' => $replyText,
+            'is_from_customer' => false,
+            'reply_source' => $replySource,
+        ]);
+
+        // Call Meta APIs to send response back
+        if ($type === 'message') {
+            $this->sendFacebookMessage($customer->fb_customer_id, $replyText, $fanpage);
+        } else if ($type === 'comment') {
+            $this->sendFacebookCommentReply($fbItemId, $replyText, $fanpage);
+        }
+
+        // Broadcast message sent event so it updates dynamically in the Live Chat UI
+        broadcast(new \App\Events\MessageSent($interaction, $customer))->toOthers();
     }
 
     /**

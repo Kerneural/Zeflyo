@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Sidebar from "@/components/Sidebar";
 import { 
   ArrowLeft,
   Calendar as CalendarIcon,
@@ -88,9 +89,15 @@ export default function PostScheduler() {
   ]);
   const [activeQueueIndex, setActiveQueueIndex] = useState<number>(0);
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
+  
+  // AI Generator state
+  const [aiTopic, setAiTopic] = useState<string>("");
+  const [aiTone, setAiTone] = useState<string>("Thân thiện");
+  const [aiGenerating, setAiGenerating] = useState<boolean>(false);
   const [scheduleMode, setScheduleMode] = useState<"weekly" | "fixed">("weekly");
   const [scheduleTimes, setScheduleTimes] = useState<string[]>(["08:00"]);
   const [scheduleDays, setScheduleDays] = useState<number[]>([1, 3, 5]); // 1 = Mon, ..., 7 = Sun
+  const [scheduleDate, setScheduleDate] = useState<string>("");
   
   // Extra options
   const [includeContactInfo, setIncludeContactInfo] = useState<boolean>(false);
@@ -99,6 +106,7 @@ export default function PostScheduler() {
 
   // Statuses
   const [loading, setLoading] = useState<boolean>(true);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -123,6 +131,13 @@ export default function PostScheduler() {
     } else {
       document.documentElement.classList.remove("light");
     }
+
+    // Set today's date as default for fixed schedule
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    setScheduleDate(`${year}-${month}-${day}`);
 
     // Initial page load
     if (savedPages) {
@@ -358,6 +373,56 @@ export default function PostScheduler() {
     setQueue(prev => prev.map((item, idx) => idx === activeQueueIndex ? { ...item, imageUrl: val } : item));
   };
 
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (token && token.startsWith("mock_")) {
+      setUploadingImage(true);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      const mockImages = [
+        "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80"
+      ];
+      const randomImg = mockImages[Math.floor(Math.random() * mockImages.length)];
+      handleImageUrlChange(randomImg);
+      showNotification("success", "Đã tải hình ảnh lên hàng chờ (Mẫu)!");
+      setUploadingImage(false);
+      return;
+    }
+
+    if (!token) return;
+    setUploadingImage(true);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const d = await res.json();
+        handleImageUrlChange(d.url);
+        showNotification("success", "Tải hình ảnh lên thành công!");
+      } else {
+        const err = await res.json();
+        showNotification("error", err.error || "Tải ảnh lên thất bại");
+      }
+    } catch (err) {
+      showNotification("error", "Lỗi kết nối khi tải ảnh");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   // Excel Mock Actions
   const handleImportExcel = () => {
     const mockImported = [
@@ -444,14 +509,19 @@ export default function PostScheduler() {
     if (scheduleMode === "weekly") {
       targetDates = calculateTargetDates();
     } else {
-      // Fixed date mode: Schedule starting from tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      // Fixed date mode: Schedule on the selected date
+      if (!scheduleDate) {
+        showNotification("error", "Vui lòng chọn ngày đăng bài.");
+        setSubmitting(false);
+        return;
+      }
+      
+      const baseDate = new Date(scheduleDate);
       
       // Map times
       scheduleTimes.forEach(time => {
         const [hours, minutes] = time.split(":").map(Number);
-        const slot = new Date(tomorrow);
+        const slot = new Date(baseDate);
         slot.setHours(hours, minutes, 0, 0);
         targetDates.push(slot);
       });
@@ -567,6 +637,71 @@ export default function PostScheduler() {
     }
   };
 
+  const handleGenerateAiContent = async () => {
+    if (!aiTopic.trim()) return;
+
+    setAiGenerating(true);
+    showNotification("success", "Đang kết nối AI sinh bài viết...");
+
+    if (token && token.startsWith("mock_")) {
+      // Mock generation delay
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      
+      const mockTemplates: Record<string, string[]> = {
+        "Thân thiện": [
+          "🌸 Mùa hè gõ cửa rồi cả nhà ơi! Đã đến lúc F5 tủ đồ với những chiếc váy hoa siêu xinh xắn từ Zeflyo Store rồi nè.\n\n✨ Với chất liệu voan tơ mềm mại, bay bổng cùng họa tiết hoa nhí ngọt ngào, mẫu váy mới này sẽ giúp các nàng tự tin tỏa sáng dưới nắng hè rực rỡ.\n\n👉 Nhanh tay sở hữu ngay em nó nhé! Mua ngay tại cửa hàng hoặc inbox Zeflyo để được tư vấn tận tình nào!\n\n#ZeflyoFashion #VayHoaMuaHe #OOTD #Xuhuong",
+          "👋 Chào ngày mới ngập tràn năng lượng! Bạn đã chuẩn bị trang phục cho buổi hẹn hò cuối tuần chưa?\n\n📸 Hãy để Zeflyo gợi ý cho bạn bộ cánh cực chất này nhé. Đảm bảo thu hút mọi ánh nhìn luôn!\n\n❤️ Để lại bình luận hoặc nhắn tin trực tiếp cho Shop để nhận mã giảm giá đặc biệt nha.\n\n#Zeflyo #FriendlyStyle #VayXinh #Shopping"
+        ],
+        "Lịch sự": [
+          "Kính gửi quý khách hàng,\n\nZeflyo xin trân trọng giới thiệu Bộ sưu tập Thời trang Công sở Mới nhất. Thiết kế sang trọng, tối giản nhưng không kém phần hiện đại, mang lại sự tự tin và chuyên nghiệp trong mọi buổi gặp gỡ.\n\n📍 Chất liệu cao cấp chống nhăn, thoáng mát tối ưu.\n📍 Kiểu dáng tinh tế, đường may sắc sảo.\n\nQuý khách vui lòng liên hệ hotline hoặc inbox Fanpage để nhận tư vấn chi tiết về kích thước và chương trình ưu đãi đặc quyền.\n\nTrân trọng cảm ơn quý khách.\n\n#ZeflyoOffice #FormalWear #ClassyStyle #Professional",
+        ],
+        "Khuyến mãi": [
+          "💥 SIÊU SALE BÙNG NỔ - GIẢM GIÁ ĐẾN 50% TOÀN BỘ CỬA HÀNG! 💥\n\nCơ hội mua sắm lớn nhất năm tại Zeflyo đã chính thức bắt đầu. Hàng ngàn sản phẩm hot trend đang chờ đón bạn với mức giá cực hời.\n\n🔥 Đồng giá chỉ từ 99K cho nhiều dòng sản phẩm bán chạy.\n🔥 Tặng kèm Voucher 50K cho hóa đơn từ 500K.\n⏰ Chương trình áp dụng từ nay đến hết ngày chủ nhật.\n\n⚡ Số lượng có hạn! Đừng bỏ lỡ cơ hội sở hữu những sản phẩm chất lượng với mức giá ưu đãi nhất.\n\n👉 SHOP NOW: Inbox để đặt hàng ngay kẻo hết!\n\n#ZeflyoSale #KhuyenMaiKhaiThac #HotSale #FlashSale",
+        ],
+        "Hài hước": [
+          "Nghe nói anh thích con gái dịu dàng... 🌸\nMay quá em đây vừa dịu dàng lại vừa có váy xinh của Zeflyo!\n\n👗 Đẹp tự nhiên không cần son phấn, chỉ cần khoác lên mình chiếc đầm hoa nhí này là crush tự động đổ đứ đừ.\n\n👉 Giá rổ yêu thương, inbox là có người trả lời liền tay (AI nhà em rep nhanh hơn tốc độ crush lật mặt).\n\n#ZeflyoHumor #TrendingOutfit #VayDep #Cute",
+        ]
+      };
+
+      const selectedTemplates = mockTemplates[aiTone] || mockTemplates["Thân thiện"];
+      const generatedText = `${selectedTemplates[Math.floor(Math.random() * selectedTemplates.length)]}\n\n[Ý tưởng: ${aiTopic}]`;
+
+      handleContentChange(generatedText);
+      showNotification("success", "Đã tạo nội dung bài viết bằng AI (Giả lập)!");
+      setAiGenerating(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/posts/generate-ai`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          topic: aiTopic,
+          tone: aiTone
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        handleContentChange(data.content);
+        showNotification("success", "Tạo bài đăng bằng AI thành công!");
+      } else {
+        showNotification("error", data.error || "Lỗi tạo bài đăng bằng AI.");
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "Lỗi kết nối. Vui lòng thử lại sau.");
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
   const activePost = queue[activeQueueIndex] || { content: "", imageUrl: "" };
 
   return (
@@ -576,145 +711,17 @@ export default function PostScheduler() {
       <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none animate-pulse-glow" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-[120px] pointer-events-none animate-pulse-glow-delayed" />
 
-      {/* Sidebar Navigation */}
-      <aside className="hidden lg:flex w-72 bg-[#18181b] border-r border-zinc-800 flex-col relative z-20 transition-all duration-300">
-        {/* Sidebar Header / Logo */}
-        <div className="p-6 border-b border-zinc-850 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <span className="font-extrabold text-white text-base">Z</span>
-          </div>
-          <span className="text-lg font-bold tracking-wider bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
-            ZEFLYO
-          </span>
-        </div>
-
-        {/* User Stats Card */}
-        <div className="p-4 mx-4 mt-6 bg-[#09090b]/40 rounded-2xl border border-green-500/20 text-center flex flex-col gap-1 shadow-inner">
-          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Tổng điểm</span>
-          <span className="text-3xl font-extrabold text-emerald-400">200</span>
-        </div>
-
-        {/* Sidebar Navigation Menu */}
-        <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-3 custom-scrollbar">
-          {/* Dashboard Link */}
-          <a
-            href="/"
-            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
-          >
-            <Home className="w-4 h-4 text-zinc-500" />
-            <span>Trang chủ</span>
-          </a>
-
-          {/* Post Scheduler Link (Active) */}
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between px-3.5 py-3 bg-zinc-900 text-zinc-200 rounded-xl text-xs font-semibold tracking-wider uppercase">
-              <span className="flex items-center gap-3">
-                <CalendarIcon className="w-4 h-4 text-blue-500" />
-                Lên lịch đăng bài
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-blue-400" />
-            </div>
-            <div className="pl-4 mt-1 flex flex-col gap-1.5 border-l border-zinc-800 ml-5">
-              <button 
-                onClick={() => setActiveTab("setup")}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "setup" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/10" 
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
-                }`}
-              >
-                Thiết lập lịch đăng
-              </button>
-              <button 
-                onClick={() => setActiveTab("list")}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "list" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/10" 
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
-                }`}
-              >
-                Quản lý lịch đăng
-              </button>
-              <button 
-                onClick={() => setActiveTab("automation")}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  activeTab === "automation" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/10" 
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
-                }`}
-              >
-                Kích hoạt tự động hóa
-              </button>
-            </div>
-          </div>
-
-          {/* Live Chat Hub Link */}
-          <a
-            href="/chat"
-            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
-          >
-            <MessageSquare className="w-4 h-4 text-zinc-500" />
-            <span>Hộp thư tập trung</span>
-          </a>
-
-          {/* Auto-reply Rules Link */}
-          <a
-            href="/rules"
-            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-all text-xs font-semibold uppercase"
-          >
-            <Sliders className="w-4 h-4 text-zinc-500" />
-            <span>Luật Auto-Reply</span>
-          </a>
-        </nav>
-
-        {/* Sidebar Footer with user info & toggles */}
-        <div className="p-4 border-t border-zinc-850 flex flex-col gap-4">
-          {/* User profile row */}
-          {user && (
-            <div className="flex items-center justify-between bg-zinc-950/40 border border-zinc-850/50 p-2.5 rounded-xl">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-450 flex-shrink-0">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    user.name.charAt(0)
-                  )}
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs text-zinc-200 font-bold truncate block">{user.name}</span>
-                  <span className="text-[10px] text-zinc-500 truncate block">{user.email || "user@zeflyo.io"}</span>
-                </div>
-              </div>
-              <button 
-                onClick={handleLogout}
-                className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer flex-shrink-0"
-                title="Đăng xuất"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          {/* Utility actions */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
-              title="Switch Language / Đổi ngôn ngữ"
-            >
-              <Globe className="w-3.5 h-3.5 text-blue-455" />
-              <span>{lang === "en" ? "EN" : "VI"}</span>
-            </button>
-            
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center w-8 h-8 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
-            >
-              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
-            </button>
-          </div>
-        </div>
-      </aside>
+      <Sidebar
+        currentPath="/scheduler"
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        user={user}
+        lang={lang}
+        toggleLanguage={toggleLanguage}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        handleLogout={handleLogout}
+      />
 
       {/* Main Content Workspace */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto">
@@ -871,6 +878,59 @@ export default function PostScheduler() {
                       })}
                     </div>
 
+                    {/* AI Writer Panel */}
+                    <div className="flex flex-col gap-3.5 bg-blue-650/[0.03] border border-blue-500/10 rounded-2xl p-4 mt-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-wider">
+                        <Sparkles className="w-4 h-4 text-blue-550" />
+                        <span>Trình viết bài bằng AI</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="sm:col-span-2 flex flex-col gap-1.5">
+                          <span className="text-[11px] text-zinc-450 font-bold">Chủ đề / Ý tưởng</span>
+                          <input 
+                            type="text"
+                            value={aiTopic}
+                            onChange={(e) => setAiTopic(e.target.value)}
+                            placeholder="Ví dụ: Giảm giá 20% váy hoa mùa hè..."
+                            className="bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs outline-none text-zinc-250 placeholder:text-zinc-650"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] text-zinc-450 font-bold">Giọng điệu</span>
+                          <select
+                            value={aiTone}
+                            onChange={(e) => setAiTone(e.target.value)}
+                            className="bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs outline-none text-zinc-250 cursor-pointer"
+                          >
+                            <option value="Thân thiện">Thân thiện</option>
+                            <option value="Lịch sự">Lịch sự</option>
+                            <option value="Khuyến mãi">Khuyến mãi</option>
+                            <option value="Hài hước">Hài hước</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleGenerateAiContent}
+                        disabled={aiGenerating || !aiTopic.trim()}
+                        className="flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed text-xs font-bold text-white rounded-xl transition-all cursor-pointer shadow-sm shadow-blue-500/5 active:scale-95"
+                      >
+                        {aiGenerating ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Đang viết bài...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Tạo bằng AI (Generate with AI)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
                     {/* Post Content Input Area */}
                     <div className="flex flex-col gap-2 border-t border-zinc-850 pt-5">
                       <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Nội dung bài viết #{activeQueueIndex + 1}</label>
@@ -895,7 +955,12 @@ export default function PostScheduler() {
                       />
                       
                       {/* Media preview */}
-                      {activePost.imageUrl ? (
+                      {uploadingImage ? (
+                        <div className="border-2 border-dashed border-zinc-850 rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-zinc-950/20">
+                          <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                          <p className="text-xs text-zinc-400">Đang tải ảnh từ thiết bị lên...</p>
+                        </div>
+                      ) : activePost.imageUrl ? (
                         <div className="relative rounded-xl overflow-hidden border border-zinc-850 bg-zinc-950/60 p-2 animate-fade-in">
                           <img 
                             src={activePost.imageUrl} 
@@ -912,17 +977,15 @@ export default function PostScheduler() {
                       ) : (
                         <div 
                           className="border-2 border-dashed border-zinc-850 rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer bg-zinc-950/20 hover:bg-zinc-900/10 hover:border-zinc-800 transition-all"
-                          onClick={() => {
-                            const mockImages = [
-                              "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80",
-                              "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-                              "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80"
-                            ];
-                            const randomImg = mockImages[Math.floor(Math.random() * mockImages.length)];
-                            handleImageUrlChange(randomImg);
-                            showNotification("success", "Đã tải hình ảnh lên hàng chờ (Mẫu)!");
-                          }}
+                          onClick={() => document.getElementById("scheduler-file-upload")?.click()}
                         >
+                          <input
+                            type="file"
+                            id="scheduler-file-upload"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleUploadImage}
+                          />
                           <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-850">
                             <ImageIcon className="w-5 h-5 text-zinc-500" />
                           </div>
@@ -932,6 +995,73 @@ export default function PostScheduler() {
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* Real-time Facebook Post Mockup Preview */}
+                    <div className="flex flex-col gap-3 border-t border-zinc-850 pt-5">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Bản xem trước trực quan (Facebook Live Preview)</label>
+                      
+                      <div className="w-full bg-[#18181b] border border-zinc-800 rounded-xl overflow-hidden shadow-xl text-zinc-200">
+                        {/* Post Header */}
+                        <div className="p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-sm shadow-md">
+                              {fanpages.find(p => selectedPages.includes(p.id))?.avatar_url ? (
+                                <img 
+                                  src={fanpages.find(p => selectedPages.includes(p.id))?.avatar_url!} 
+                                  alt="Page Avatar" 
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                "Z"
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-zinc-150">
+                                {fanpages.find(p => selectedPages.includes(p.id))?.name || "Zeflyo Fanpage"}
+                              </span>
+                              <span className="text-[10px] text-zinc-550 flex items-center gap-1">
+                                <span>Vừa xong</span>
+                                <span>•</span>
+                                <Globe className="w-3 h-3 text-zinc-550" />
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <button className="text-zinc-600 hover:text-zinc-400">
+                            <span className="text-lg font-bold">•••</span>
+                          </button>
+                        </div>
+                        
+                        {/* Post Text */}
+                        <div className="px-4 pb-3 text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed select-text">
+                          {activePost.content || <span className="text-zinc-650 italic">Chưa nhập nội dung bài viết...</span>}
+                        </div>
+                        
+                        {/* Post Media */}
+                        {activePost.imageUrl && (
+                          <div className="w-full border-y border-zinc-850 max-h-[320px] overflow-hidden flex items-center justify-center bg-zinc-950">
+                            <img 
+                              src={activePost.imageUrl} 
+                              alt="Post Media Preview" 
+                              className="w-full object-cover"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Post Actions Mock */}
+                        <div className="px-4 py-2 border-t border-zinc-850 flex items-center justify-between text-zinc-500 text-xs">
+                          <button className="flex-1 py-1.5 flex items-center justify-center gap-2 hover:bg-zinc-900 rounded-lg transition-colors font-medium">
+                            👍 Thích
+                          </button>
+                          <button className="flex-1 py-1.5 flex items-center justify-center gap-2 hover:bg-zinc-900 rounded-lg transition-colors font-medium">
+                            💬 Bình luận
+                          </button>
+                          <button className="flex-1 py-1.5 flex items-center justify-center gap-2 hover:bg-zinc-900 rounded-lg transition-colors font-medium">
+                            ↩️ Chia sẻ
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     <button 
@@ -1040,6 +1170,19 @@ export default function PostScheduler() {
                         <p className="text-[10px] text-amber-500 bg-amber-500/5 px-3 py-2 rounded-lg border border-amber-500/15 flex items-center gap-1">
                           💡 Mẹo: Chế độ lặp lại theo tuần phù hợp cho lịch đăng bài thường xuyên và đều đặn.
                         </p>
+                      )}
+                      
+                      {scheduleMode === "fixed" && (
+                        <div className="flex flex-col gap-2 bg-blue-650/[0.03] border border-blue-500/10 rounded-xl p-3.5 mt-1 animate-fade-in">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Ngày đăng bài (Cố định)</label>
+                          <input 
+                            type="date"
+                            value={scheduleDate}
+                            onChange={(e) => setScheduleDate(e.target.value)}
+                            min={new Date().toISOString().split("T")[0]}
+                            className="w-full bg-zinc-950 border border-zinc-850 rounded-xl px-4 py-2.5 text-xs text-zinc-300 outline-none focus:border-blue-500/50"
+                          />
+                        </div>
                       )}
                     </div>
 

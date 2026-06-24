@@ -44,19 +44,25 @@ else
   echo -e "${GREEN}✓ File backend/.env đã tồn tại. Bỏ qua bước tạo.${NC}"
 fi
 
-# 3. Khởi chạy Docker Containers
-echo -e "\n${BLUE}🐳 Đang khởi động các dịch vụ Docker (Nginx, Postgres, Redis, Soketi)...${NC}"
+# 3. Cấu hình Laravel Backend trong container (Cài đặt thư viện trước khi start các dịch vụ)
+echo -e "\n${BLUE}📦 Đang cài đặt thư viện PHP (Composer)...${NC}"
+# Khởi chạy một container tạm thời để chạy `composer install`, ghi dữ liệu vào thư mục vendor của máy host.
+docker compose run --rm app composer install
+
+if [ $? -ne 0 ]; then
+  echo -e "${RED}Lỗi: Không thể cài đặt Composer. Vui lòng kiểm tra Docker Daemon hoặc kết nối mạng.${NC}"
+  exit 1
+fi
+
+# 4. Khởi chạy tất cả các Docker Containers chính
+echo -e "\n${BLUE}🐳 Đang khởi động toàn bộ dịch vụ Docker (App, Worker, Nginx, Postgres, Redis, Soketi)...${NC}"
 docker compose up -d --build
 
 if [ $? -ne 0 ]; then
   echo -e "${RED}Lỗi: Không thể khởi chạy Docker Compose. Kiểm tra xem Docker Daemon có đang chạy không.${NC}"
   exit 1
 fi
-echo -e "${GREEN}✓ Docker containers đã hoạt động ổn định.${NC}"
-
-# 4. Cấu hình Laravel Backend trong container
-echo -e "\n${BLUE}📦 Đang cài đặt thư viện PHP & thiết lập Database...${NC}"
-docker compose exec app composer install
+echo -e "${GREEN}✓ Toàn bộ Docker containers đã hoạt động ổn định.${NC}"
 
 echo -e "🔑 Sinh App Key cho Laravel..."
 docker compose exec app php artisan key:generate
