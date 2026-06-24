@@ -343,78 +343,274 @@ export default function PricingPage() {
             })}
           </div>
 
-          {/* Accordion Detailed Comparison Table */}
-          <div className="glass-panel rounded-3xl border border-white/5 overflow-hidden">
-            <button
-              onClick={() => setShowComparison(!showComparison)}
-              className="w-full p-5 text-left flex justify-between items-center bg-white/[0.01] hover:bg-white/[0.02] outline-none select-none transition-colors border-b border-white/5"
-            >
-              <span className="text-xs uppercase font-extrabold text-zinc-400 tracking-wider flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-[#6C63FF]" />
-                {lang === "en" ? "Detailed Feature Matrix" : "Bảng so sánh chi tiết tính năng"}
-              </span>
-              {showComparison ? <ChevronUp className="w-4 h-4 text-zinc-500" /> : <ChevronDown className="w-4 h-4 text-zinc-500" />}
-            </button>
+          {/* Detailed Features Comparison Table */}
+          <div className="flex flex-col gap-6 mt-6">
+            <div className="text-center mt-4">
+              <h3 className="text-xl font-bold text-white">
+                {lang === "en" ? "Detailed Feature Matrix" : "So sánh chi tiết tính năng giữa các gói"}
+              </h3>
+              <p className="text-xs text-zinc-450 mt-1">
+                {lang === "en" ? "See the exact differences to choose the best option." : "Xem chi tiết sự khác biệt để lựa chọn gói phù hợp nhất với nhu cầu của bạn"}
+              </p>
+            </div>
 
-            {showComparison && (
-              <div className="overflow-x-auto animate-fadeIn">
+            <div className="glass-panel rounded-3xl border border-white/5 overflow-hidden">
+              <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-white/5 bg-zinc-950/40 text-zinc-500 font-bold">
-                      <th className="p-4">{lang === "en" ? "Feature" : "Tính năng"}</th>
-                      <th className="p-4 w-[18%] text-center">Cơ bản</th>
-                      <th className="p-4 w-[18%] text-center">Chuyên nghiệp</th>
-                      <th className="p-4 w-[18%] text-center">Cao Cấp</th>
-                      <th className="p-4 w-[18%] text-center">VIP</th>
+                    <tr className="border-b border-white/5 bg-zinc-950/40 text-zinc-400 font-bold">
+                      <th className="p-5">{lang === "en" ? "Feature" : "Tính năng"}</th>
+                      <th className="p-5 w-[22%] text-center">Cơ bản</th>
+                      <th className="p-5 w-[22%] text-center">Chuyên nghiệp</th>
+                      <th className="p-5 w-[22%] text-center">Cao Cấp</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-zinc-350">
-                    <tr>
-                      <td className="p-4 font-semibold text-zinc-200">Điểm tháng (Credit)</td>
-                      <td className="p-4 text-center">1.000 (~100 posts)</td>
-                      <td className="p-4 text-center">2.900 (~290 posts)</td>
-                      <td className="p-4 text-center">4.300 (~430 posts)</td>
-                      <td className="p-4 text-center">{lang === "en" ? "Custom" : "Tùy chỉnh"}</td>
+                  <tbody className="divide-y divide-white/5 text-zinc-300">
+                    
+                    {/* Row 1 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs">
+                          {lang === "en" ? "Monthly Post Credits" : "Điểm bài viết hàng tháng"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Credits used for AI post generation & publishing" : "Điểm dùng để tạo & đăng bài viết AI"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <span className="font-bold text-zinc-250 block">1.000 điểm</span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">(~100 bài)</span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <span className="font-bold text-zinc-250 block">2.900 điểm</span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">(~290 bài)</span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <span className="font-bold text-[#6C63FF] block">4.300 điểm</span>
+                        <span className="text-[10px] text-[#6C63FF]/80 block mt-0.5">(~430 bài)</span>
+                      </td>
                     </tr>
-                    <tr className="bg-white/[0.01]">
-                      <td className="p-4 font-semibold text-zinc-200">Hỗ trợ Video bài viết</td>
-                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+
+                    {/* Row 2 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs">
+                          {lang === "en" ? "Create Posts from Topic & Image" : "Tạo bài viết từ chủ đề & từ ảnh"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Write content automatically from prompt or product photo" : "Viết nội dung tự động dựa trên prompt hoặc hình ảnh sản phẩm"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
                     </tr>
-                    <tr>
-                      <td className="p-4 font-semibold text-zinc-200">Quy trình duyệt bài viết trước khi đăng</td>
-                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+
+                    {/* Row 3 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs">
+                          {lang === "en" ? "Auto-post to Facebook Page" : "Đăng bài tự động Fanpage Facebook"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Schedule and automatically publish to your pages" : "Lên lịch và tự động đăng nội dung lên các Fanpage của bạn"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
                     </tr>
-                    <tr className="bg-white/[0.01]">
-                      <td className="p-4 font-semibold text-zinc-200">Tạo hình ảnh tự động bằng AI</td>
-                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
-                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+
+                    {/* Row 4 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs flex items-center gap-1">
+                          💬 {lang === "en" ? "Auto-post to Zalo OA" : "Đăng bài tự động lên Zalo OA"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Automatically schedule & publish to Zalo Official Account" : "Tự động lên lịch và gửi/đăng bài viết lên Zalo Official Account"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
                     </tr>
-                    <tr>
-                      <td className="p-4 font-semibold text-zinc-200">Đăng bài tự động lên website WordPress</td>
-                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
-                      <td className="p-4 text-center"><X className="w-4 h-4 text-zinc-650 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
-                      <td className="p-4 text-center"><Check className="w-4 h-4 text-emerald-400 mx-auto" /></td>
+
+                    {/* Row 5 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs flex items-center gap-1">
+                          🎬 {lang === "en" ? "AI Video Post Generation" : "Tải video tạo bài viết bằng AI"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Extract text content from uploaded videos to write automatically" : "Trích xuất nội dung từ video tải lên để viết bài tự động"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 flex items-center justify-center mx-auto">
+                          <X className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
                     </tr>
-                    <tr className="bg-white/[0.01]">
-                      <td className="p-4 font-semibold text-zinc-200">Ưu tiên hỗ trợ</td>
-                      <td className="p-4 text-center">Tiêu chuẩn</td>
-                      <td className="p-4 text-center">Nhanh chóng</td>
-                      <td className="p-4 text-center">Ưu tiên hàng đầu</td>
-                      <td className="p-4 text-center">Hỗ trợ 1-kèm-1</td>
+
+                    {/* Row 6 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs flex items-center gap-1">
+                          👁️ {lang === "en" ? "Manual Review Before Posting" : "Chế độ Duyệt bài trước khi đăng"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Review and edit AI content before official scheduling" : "Duyệt và chỉnh sửa bài viết AI trước khi lên lịch đăng chính thức"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 flex items-center justify-center mx-auto">
+                          <X className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
                     </tr>
+
+                    {/* Row 7 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs flex items-center gap-1">
+                          🎨 🤖 {lang === "en" ? "AI Image Generation" : "Tạo ảnh AI tự động cho bài viết"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Automatically generate high-quality illustration images using AI" : "Tự động tạo hình ảnh minh họa chất lượng cao bằng AI (Gemini/DALL-E)"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 flex items-center justify-center mx-auto">
+                          <X className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 flex items-center justify-center mx-auto">
+                          <X className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Row 8 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs flex items-center gap-1">
+                          🌐 {lang === "en" ? "Auto-post to WordPress" : "Đăng bài tự động lên Website WordPress"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Automatically sync and publish articles directly to WordPress" : "Tự động đồng bộ và xuất bản bài viết trực tiếp lên Website WordPress"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 flex items-center justify-center mx-auto">
+                          <X className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 flex items-center justify-center mx-auto">
+                          <X className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Row 9 */}
+                    <tr className="hover:bg-white/[0.01]">
+                      <td className="p-5">
+                        <span className="font-bold text-zinc-250 block text-xs flex items-center gap-1">
+                          🌐 {lang === "en" ? "AI Deep Content Writer for Web" : "AI viết bài chuyên sâu cho Website"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 block mt-0.5">
+                          {lang === "en" ? "Create deep SEO articles matching WordPress post structures" : "AI viết bài chuyên sâu cho Website"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 flex items-center justify-center mx-auto">
+                          <X className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-zinc-300 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-500 flex items-center justify-center mx-auto">
+                          <X className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </td>
+                    </tr>
+
                   </tbody>
                 </table>
               </div>
-            )}
+            </div>
           </div>
 
         </div>
