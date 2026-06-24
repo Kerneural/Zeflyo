@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
+import Footer from "@/components/Footer";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { ArrowLeft, Moon, Sun, LogOut, HelpCircle, Sliders } from "lucide-react";
 
@@ -97,16 +98,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             </div>
 
             {/* Footer Branding */}
-            <footer className="w-full py-4 text-center text-xs text-zinc-650 border-t border-zinc-850 bg-[#09090b]/80 backdrop-blur-md mt-12">
-              <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p>© {new Date().getFullYear()} Zeflyo Omnichannel Hub. All rights reserved.</p>
-                <div className="flex gap-4 items-center">
-                  <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5" /> Phase 1 Setup Verified</span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1.5"><Sliders className="w-3.5 h-3.5" /> Multi-Tenant Architecture</span>
-                </div>
-              </div>
-            </footer>
+            <Footer />
           </div>
         </div>
 
