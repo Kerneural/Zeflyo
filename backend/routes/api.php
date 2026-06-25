@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/profile', [\App\Http\Controllers\UserController::class, 'getProfile']);
     Route::put('/user/profile', [\App\Http\Controllers\UserController::class, 'updateProfile']);
     Route::put('/user/password', [\App\Http\Controllers\UserController::class, 'updatePassword']);
+    Route::post('/user/checkin', [\App\Http\Controllers\UserController::class, 'checkIn']);
 
     // File Upload API
     Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'upload']);
@@ -78,5 +79,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // General Upload API
     Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'upload']);
+
+    // System Notifications APIs
+    Route::get('/notifications', [\App\Http\Controllers\SystemNotificationController::class, 'index']);
+    Route::post('/admin/notifications', [\App\Http\Controllers\SystemNotificationController::class, 'store']);
+    Route::delete('/admin/notifications/{id}', [\App\Http\Controllers\SystemNotificationController::class, 'destroy']);
 });
 

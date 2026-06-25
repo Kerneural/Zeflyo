@@ -328,5 +328,147 @@ class SettingsTest extends TestCase
             'status' => 'cancelled'
         ]);
     }
+
+    public function test_user_can_checkin_and_claim_credits(): void
+    {
+        $user = User::factory()->create([
+            'credits' => 10,
+            'last_checkin_at' => null,
+            'timezone' => 'Asia/Ho_Chi_Minh',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/user/checkin');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('user.credits', 60);
+
+        $user->refresh();
+        $this->assertEquals(60, $user->credits);
+        $this->assertNotNull($user->last_checkin_at);
+
+        $timezone = $user->timezone ?? 'Asia/Ho_Chi_Minh';
+        $todayString = \Carbon\Carbon::now($timezone)->format('Y-m-d');
+
+        $this->assertDatabaseHas('user_checkins', [
+            'user_id' => $user->id,
+            'checkin_date' => $todayString,
+        ]);
+        
+        $this->assertContains($todayString, $response->json('user.checkin_history'));
+    }
+
+    public function test_user_cannot_checkin_twice_on_same_day(): void
+    {
+        $user = User::factory()->create([
+            'credits' => 10,
+            'last_checkin_at' => null,
+            'timezone' => 'Asia/Ho_Chi_Minh',
+        ]);
+
+        $timezone = $user->timezone ?? 'Asia/Ho_Chi_Minh';
+        $todayString = \Carbon\Carbon::now($timezone)->format('Y-m-d');
+
+        $user->checkins()->create([
+            'checkin_date' => $todayString,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/user/checkin');
+
+        $response->assertStatus(400)
+            ->assertJsonValidationErrors(['checkin']);
+
+        $user->refresh();
+        $this->assertEquals(10, $user->credits);
+    }
+
+    public function test_user_can_fetch_notifications(): void
+    {
+        $user = User::factory()->create();
+        \App\Models\SystemNotification::create([
+            'category' => 'feature',
+            'title_vi' => 'Thông báo kiểm tra',
+            'title_en' => 'Test Notification',
+            'snippet_vi' => 'Đoạn trích kiểm tra',
+            'snippet_en' => 'Test snippet',
+            'pinned' => true,
+            'blocks_vi' => [['type' => 'paragraph', 'text' => 'Xin chào']],
+            'blocks_en' => [['type' => 'paragraph', 'text' => 'Hello']],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/notifications');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(1)
+            ->assertJsonFragment([
+                'title_vi' => 'Thông báo kiểm tra',
+                'title_en' => 'Test Notification',
+            ]);
+    }
+
+    public function test_admin_can_create_notification(): void
+    {
+        $admin = User::factory()->create(['email' => 'admin@zeflyo.io']);
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/admin/notifications', [
+                'category' => 'update',
+                'title_vi' => 'Bản cập nhật lớn',
+                'title_en' => 'Major update',
+                'snippet_vi' => 'Nhiều tính năng mới',
+                'snippet_en' => 'Many new features',
+                'pinned' => false,
+                'blocks_vi' => [['type' => 'paragraph', 'text' => 'Cập nhật']],
+                'blocks_en' => [['type' => 'paragraph', 'text' => 'Update']],
+            ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('system_notifications', [
+            'title_vi' => 'Bản cập nhật lớn',
+            'category' => 'update',
+        ]);
+    }
+
+    public function test_regular_user_cannot_create_notification(): void
+    {
+        $user = User::factory()->create(['email' => 'regular@zeflyo.io']);
+
+        $response = $this->actingAs($user)
+            ->postJson('/api/admin/notifications', [
+                'category' => 'update',
+                'title_vi' => 'Bản cập nhật lớn',
+                'title_en' => 'Major update',
+                'snippet_vi' => 'Nhiều tính năng mới',
+                'snippet_en' => 'Many new features',
+                'blocks_vi' => [['type' => 'paragraph', 'text' => 'Cập nhật']],
+                'blocks_en' => [['type' => 'paragraph', 'text' => 'Update']],
+            ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_admin_can_delete_notification(): void
+    {
+        $admin = User::factory()->create(['email' => 'admin@zeflyo.io']);
+        $notif = \App\Models\SystemNotification::create([
+            'category' => 'info',
+            'title_vi' => 'Xoá tôi đi',
+            'title_en' => 'Delete me',
+            'snippet_vi' => 'Mô tả',
+            'snippet_en' => 'Description',
+            'blocks_vi' => [],
+            'blocks_en' => [],
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->deleteJson("/api/admin/notifications/{$notif->id}");
+
+        $response->assertStatus(200);
+        $this->assertDatabaseMissing('system_notifications', [
+            'id' => $notif->id,
+        ]);
+    }
 }
 

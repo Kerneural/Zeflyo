@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'display_name', 'avatar_url', 'timezone', 'credits', 'subscription_plan', 'subscription_expires_at', 'phone', 'referral_phone', 'uid'])]
+#[Fillable(['name', 'email', 'password', 'display_name', 'avatar_url', 'timezone', 'credits', 'subscription_plan', 'subscription_expires_at', 'phone', 'referral_phone', 'uid', 'last_checkin_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -50,6 +50,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_checkin_at' => 'datetime',
         ];
     }
 
@@ -77,5 +78,10 @@ class User extends Authenticatable
     public function products(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function checkins(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserCheckin::class);
     }
 }

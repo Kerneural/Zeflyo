@@ -136,6 +136,18 @@ class FacebookAuthController extends Controller
 
     protected function formatUser($user)
     {
+        $checkinHistory = [];
+        if ($user->exists) {
+            $checkinHistory = $user->checkins()
+                ->whereMonth('checkin_date', \Carbon\Carbon::now()->month)
+                ->whereYear('checkin_date', \Carbon\Carbon::now()->year)
+                ->pluck('checkin_date')
+                ->map(function($date) {
+                    return $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : \Carbon\Carbon::parse($date)->format('Y-m-d');
+                })
+                ->toArray();
+        }
+
         return [
             'id' => $user->uid ?? $user->id,
             'name' => $user->name,
@@ -148,6 +160,8 @@ class FacebookAuthController extends Controller
             'subscription_expires_at' => $user->subscription_expires_at,
             'phone' => $user->phone,
             'referral_phone' => $user->referral_phone,
+            'last_checkin_at' => $user->last_checkin_at ? \Carbon\Carbon::parse($user->last_checkin_at)->toIso8601String() : null,
+            'checkin_history' => $checkinHistory,
         ];
     }
 }
