@@ -127,6 +127,7 @@ export default function GeneralSettingsPage() {
             const u = JSON.parse(savedUser);
             u.subscription_plan = "free";
             u.subscription_expires_at = null;
+            u.credits = 0;
             localStorage.setItem("zeflyo_user", JSON.stringify(u));
             window.dispatchEvent(new Event("zeflyo_profile_updated"));
             setUser(u);

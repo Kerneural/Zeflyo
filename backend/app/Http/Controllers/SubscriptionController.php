@@ -216,6 +216,7 @@ class SubscriptionController extends Controller
 
         $user->subscription_plan = 'free';
         $user->subscription_expires_at = null;
+        $user->credits = 100;
         $user->save();
 
         return response()->json([
