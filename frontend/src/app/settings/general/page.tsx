@@ -12,7 +12,8 @@ import {
   RefreshCw, 
   Trash2, 
   Check, 
-  AlertCircle 
+  AlertCircle,
+  Sparkles
 } from "lucide-react";
 
 interface Fanpage {
@@ -68,6 +69,12 @@ export default function GeneralSettingsPage() {
   // Notification states
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
+  // Cancellation States
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
+  const [cancelFeedback, setCancelFeedback] = useState("");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (type: "success" | "error", message: string) => {
@@ -89,11 +96,88 @@ export default function GeneralSettingsPage() {
       setLang(updatedLang as "en" | "vi");
     };
 
+    const handleProfileUpdate = () => {
+      const savedUser = localStorage.getItem("zeflyo_user");
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    };
+
     window.addEventListener("zeflyo_lang_changed", handleLangChange);
+    window.addEventListener("zeflyo_profile_updated", handleProfileUpdate);
     return () => {
       window.removeEventListener("zeflyo_lang_changed", handleLangChange);
+      window.removeEventListener("zeflyo_profile_updated", handleProfileUpdate);
     };
   }, []);
+
+  const handleCancelSubscription = async (reasons: string[], feedback: string) => {
+    setCancelling(true);
+
+    if (!token || token.startsWith("mock_")) {
+      // Mock cancel
+      setTimeout(() => {
+        const savedUser = localStorage.getItem("zeflyo_user");
+        if (savedUser) {
+          try {
+            const u = JSON.parse(savedUser);
+            u.subscription_plan = "free";
+            u.subscription_expires_at = null;
+            localStorage.setItem("zeflyo_user", JSON.stringify(u));
+            window.dispatchEvent(new Event("zeflyo_profile_updated"));
+            setUser(u);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        setCancelling(false);
+        setShowCancelModal(false);
+      }, 1000);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/user/subscription/cancel`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          reasons: reasons,
+          feedback: feedback
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          // Fetch updated profile
+          const profileRes = await fetch(`${apiBaseUrl}/api/user/profile`, {
+            headers: {
+              "Accept": "application/json",
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            localStorage.setItem("zeflyo_user", JSON.stringify(profileData));
+            window.dispatchEvent(new Event("zeflyo_profile_updated"));
+            setUser(profileData);
+          }
+          setShowCancelModal(false);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     if (token) {
@@ -431,6 +515,75 @@ export default function GeneralSettingsPage() {
           {lang === "en" ? "Manage user profile details, credentials and Facebook integration." : "Quản lý thông tin cá nhân, bảo mật tài khoản và liên kết trang Facebook của bạn."}
         </p>
       </div>
+
+      {/* Active Subscription Banner */}
+      {!loadingProfile && user && (
+        <div className="glass-panel p-5 rounded-3xl border border-white/5 bg-zinc-900/40 flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#6C63FF]/15 border border-[#6C63FF]/30 flex items-center justify-center text-[#6C63FF]">
+              <Sparkles className="w-6 h-6 animate-pulse" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                {lang === "en" ? "Your Current Plan" : "Gói dịch vụ hiện tại"}
+              </span>
+              <span className="text-sm font-black text-white flex items-center gap-2 mt-0.5">
+                {(!user?.subscription_plan || user?.subscription_plan === "free") ? (lang === "en" ? "Free Plan" : "Gói Miễn Phí") :
+                  user.subscription_plan === "basic" ? (lang === "en" ? "Basic Plan" : "Gói Cơ Bản") :
+                    user.subscription_plan === "pro" ? (lang === "en" ? "Professional Plan" : "Gói Chuyên Nghiệp") :
+                      user.subscription_plan === "premium" ? (lang === "en" ? "Premium Plan" : "Gói Cao Cấp") : String(user.subscription_plan).toUpperCase()}
+
+                {user?.subscription_plan && user.subscription_plan !== "free" && (
+                  <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                    {lang === "en" ? "Active" : "Đang hoạt động"}
+                  </span>
+                )}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:text-right">
+              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                {lang === "en" ? "Total Points" : "Tổng điểm"}
+              </span>
+              <span className="text-base font-extrabold text-emerald-400 mt-0.5">
+                {user?.credits !== undefined ? user.credits : 0} pts
+              </span>
+            </div>
+
+            {user?.subscription_expires_at && (
+              <div className="flex flex-col sm:text-right border-l border-white/5 pl-6">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                  {lang === "en" ? "Expiration Date" : "Ngày hết hạn"}
+                </span>
+                <span className="text-xs text-zinc-300 font-mono mt-0.5">
+                  {new Date(user.subscription_expires_at).toLocaleDateString(lang === "en" ? "en-US" : "vi-VN", {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                  })}
+                </span>
+              </div>
+            )}
+
+            {user?.subscription_plan && user.subscription_plan !== "free" && (
+              <div className="border-l border-white/5 pl-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedReasons([]);
+                    setCancelFeedback("");
+                    setShowCancelModal(true);
+                  }}
+                  disabled={cancelling}
+                  className="px-3.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-bold transition-all active:scale-95 cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                >
+                  {cancelling ? (lang === "en" ? "Processing..." : "Đang huỷ...") : (lang === "en" ? "Cancel Plan" : "Huỷ gói")}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {loadingProfile ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-zinc-400">
@@ -842,6 +995,121 @@ export default function GeneralSettingsPage() {
                 className="py-2 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-semibold text-white cursor-pointer shadow-lg shadow-red-600/10"
               >
                 {lang === "en" ? "Confirm Disconnect" : "Ngắt kết nối"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancellation Reason Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
+          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 w-full max-w-md shadow-2xl flex flex-col gap-6 text-left max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                {lang === "en" ? "Cancel Subscription" : "Huỷ gói dịch vụ"}
+              </h3>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                {lang === "en" ? "Close" : "Đóng"}
+              </button>
+            </div>
+
+            <div>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                {lang === "en"
+                  ? "We are very sorry to see you go. Please let us know the reasons you are canceling so we can improve Zeflyo:"
+                  : "Chúng tôi rất tiếc khi bạn quyết định dừng sử dụng gói dịch vụ. Vui lòng chọn lý do huỷ để giúp Zeflyo cải thiện tốt hơn:"}
+              </p>
+            </div>
+
+            {/* Reasons List */}
+            <div className="flex flex-col gap-3">
+              {[
+                { id: "expensive", labelVi: "Giá gói dịch vụ quá cao", labelEn: "Price is too high" },
+                { id: "missing_features", labelVi: "Thiếu tính năng tôi cần", labelEn: "Missing features I need" },
+                { id: "hard_to_use", labelVi: "Khó sử dụng / Giao diện phức tạp", labelEn: "Hard to use / Complex interface" },
+                { id: "bugs", labelVi: "Gặp nhiều lỗi trong quá trình sử dụng", labelEn: "Encountered too many bugs" },
+                { id: "no_longer_needed", labelVi: "Không còn nhu cầu sử dụng", labelEn: "No longer needed" },
+                { id: "other", labelVi: "Lý do khác...", labelEn: "Other reasons..." }
+              ].map((reason) => {
+                const label = lang === "en" ? reason.labelEn : reason.labelVi;
+                const isSelected = selectedReasons.includes(label);
+
+                return (
+                  <label
+                    key={reason.id}
+                    className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none ${isSelected
+                        ? "bg-red-500/10 border-red-500/30 text-white"
+                        : "bg-zinc-950/20 border-white/5 text-zinc-400 hover:border-white/10 hover:text-zinc-200"
+                      }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {
+                        if (isSelected) {
+                          setSelectedReasons(selectedReasons.filter(r => r !== label));
+                        } else {
+                          setSelectedReasons([...selectedReasons, label]);
+                        }
+                      }}
+                      className="mt-0.5 rounded border-white/10 bg-zinc-900 text-red-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span className="text-xs font-semibold leading-tight">{label}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {/* Other reason input textarea */}
+            {(selectedReasons.includes("Lý do khác...") || selectedReasons.includes("Other reasons...")) && (
+              <div className="flex flex-col gap-2 animate-fadeIn">
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                  {lang === "en" ? "Please specify your reason" : "Chi tiết lý do khác"}
+                </span>
+                <textarea
+                  value={cancelFeedback}
+                  onChange={(e) => setCancelFeedback(e.target.value)}
+                  placeholder={lang === "en" ? "Please tell us more..." : "Vui lòng chia sẻ thêm ý kiến của bạn..."}
+                  className="w-full min-h-[80px] p-3 rounded-xl bg-zinc-950/40 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/50 resize-none font-sans"
+                />
+              </div>
+            )}
+
+            {/* Warning Message */}
+            <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
+              <p className="text-[10px] text-red-400 leading-relaxed font-semibold">
+                ⚠️ {lang === "en"
+                  ? "Warning: Your subscription will be cancelled and reverted to Free tier immediately. You will lose access to premium features."
+                  : "Cảnh báo: Gói dịch vụ hiện tại sẽ bị huỷ và hạ cấp về gói Miễn Phí ngay lập tức. Bạn sẽ mất quyền truy cập các tính năng Premium."}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2 border-t border-white/5">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-zinc-800 border border-white/5 text-zinc-300 font-bold text-xs transition-all active:scale-95 cursor-pointer text-center"
+              >
+                {lang === "en" ? "Keep My Plan" : "Giữ lại gói"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleCancelSubscription(selectedReasons, cancelFeedback)}
+                disabled={cancelling || selectedReasons.length === 0}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:hover:bg-red-600 text-white font-extrabold text-xs transition-all active:scale-95 cursor-pointer text-center flex items-center justify-center gap-1 shadow-lg shadow-red-900/15"
+              >
+                {cancelling ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  lang === "en" ? "Confirm Cancel" : "Xác nhận huỷ"
+                )}
               </button>
             </div>
           </div>
