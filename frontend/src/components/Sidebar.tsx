@@ -634,14 +634,30 @@ export default function Sidebar({
     <>
       <aside className="hidden lg:flex w-72 h-screen sticky top-0 bg-[#08080c] dark:bg-[#08080c] light:bg-white border-r border-zinc-800/40 flex-col relative z-20 flex-shrink-0 transition-all duration-300">
       
-      {/* Sidebar Header / Logo */}
-      <div className="p-6 border-b border-zinc-850 flex items-center gap-3.5 flex-shrink-0">
-        <div className="w-9.5 h-9.5 rounded-xl bg-gradient-to-tr from-[#7c3aed] to-[#4f46e5] flex items-center justify-center shadow-lg shadow-purple-500/20">
-          <span className="font-extrabold text-white text-lg tracking-wider">Z</span>
+      {/* Sidebar Header / Logo & Notifications */}
+      <div className="p-6 border-b border-zinc-850 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-3.5">
+          <div className="w-9.5 h-9.5 rounded-xl bg-gradient-to-tr from-[#7c3aed] to-[#4f46e5] flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <span className="font-extrabold text-white text-lg tracking-wider">Z</span>
+          </div>
+          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
+            ZEFLYO
+          </span>
         </div>
-        <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
-          ZEFLYO
-        </span>
+
+        {/* Bell Icon for Desktop */}
+        <button
+          onClick={() => setIsNotificationOpen(true)}
+          className="relative flex items-center justify-center w-8 h-8 bg-zinc-900/50 hover:bg-zinc-800 hover:text-white text-zinc-300 rounded-xl transition-all border border-white/5 cursor-pointer active:scale-95 shadow-sm"
+          title={lang === "en" ? "Notifications" : "Thông báo"}
+        >
+          <Bell className="w-4 h-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm shadow-red-500/20">
+              {unreadCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* User Stats Card */}
@@ -891,39 +907,29 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* Utility toggles */}
-        <div className="flex items-center justify-between gap-2">
-          <button
-            onClick={handleToggleLanguage}
-            className="flex items-center justify-center gap-1.5 py-1.5 px-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm flex-1"
-            title={lang === "en" ? "Switch Language" : "Đổi ngôn ngữ"}
-          >
-            <Globe className="w-3.5 h-3.5 text-[#7c3aed]" />
-            <span>{lang === "en" ? "EN" : "VI"}</span>
-          </button>
-
-          {/* Bell Icon for Desktop */}
-          <button
-            onClick={() => setIsNotificationOpen(true)}
-            className="relative flex items-center justify-center w-8.5 h-8.5 bg-zinc-900 hover:bg-zinc-800 hover:text-white text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
-            title={lang === "en" ? "Notifications" : "Thông báo"}
-          >
-            <Bell className="w-4.5 h-4.5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm shadow-red-500/20">
-                {unreadCount}
-              </span>
+        {/* Theme toggle switch */}
+        <button
+          onClick={handleToggleTheme}
+          className="flex items-center justify-between w-full py-2 px-3.5 bg-zinc-900/60 hover:bg-zinc-800/80 text-zinc-300 hover:text-white rounded-xl transition-all border border-white/5 cursor-pointer active:scale-95 shadow-sm"
+          title={lang === "en" ? "Toggle theme" : "Chuyển giao diện sáng/tối"}
+        >
+          <div className="flex items-center gap-2">
+            {theme === "dark" ? (
+              <>
+                <Moon className="w-4 h-4 text-indigo-400" />
+                <span className="text-xs font-semibold">{lang === "en" ? "Dark Mode" : "Giao diện tối"}</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-semibold">{lang === "en" ? "Light Mode" : "Giao diện sáng"}</span>
+              </>
             )}
-          </button>
-          
-          <button
-            onClick={handleToggleTheme}
-            className="flex items-center justify-center w-8.5 h-8.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
-            title={lang === "en" ? "Toggle theme" : "Chuyển giao diện sáng/tối"}
-          >
-            {theme === "dark" ? <Sun className="w-4.5 h-4.5 text-amber-400" /> : <Moon className="w-4.5 h-4.5 text-indigo-400" />}
-          </button>
-        </div>
+          </div>
+          <span className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider">
+            {lang === "en" ? "Switch" : "Thay đổi"}
+          </span>
+        </button>
       </div>
     </aside>
 
@@ -1745,6 +1751,17 @@ export default function Sidebar({
         </div>
       </div>
     )}
+    {/* Floating Language Switcher for Desktop (Top Right) */}
+    <div className="fixed top-6 right-6 z-30 hidden lg:flex items-center">
+      <button
+        onClick={handleToggleLanguage}
+        className="flex items-center justify-center gap-1.5 py-1.5 px-3.5 bg-[#0b0b0f]/60 hover:bg-zinc-900/80 text-zinc-200 hover:text-white rounded-full text-xs font-bold transition-all border border-white/5 backdrop-blur-md cursor-pointer active:scale-95 shadow-lg shadow-black/20"
+        title={lang === "en" ? "Switch Language" : "Đổi ngôn ngữ"}
+      >
+        <Globe className="w-3.5 h-3.5 text-[#7c3aed] animate-pulse" />
+        <span>{lang === "en" ? "EN" : "VI"}</span>
+      </button>
+    </div>
     </>
   );
 }
