@@ -6,7 +6,8 @@ import {
   HelpCircle, 
   AlertTriangle, 
   ArrowUp,
-  AlertOctagon
+  AlertOctagon,
+  Play
 } from "lucide-react";
 
 interface GuideChapter {
@@ -18,6 +19,12 @@ interface GuideChapter {
     stepsVi: string[];
     stepsEn: string[];
     callouts: { type: "tip" | "warning" | "danger"; textVi: string; textEn: string }[];
+    screenshot?: {
+      url: string;
+      captionVi: string;
+      captionEn: string;
+    };
+    videoUrl?: string;
   };
 }
 
@@ -26,6 +33,7 @@ export default function GuidePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChapter, setActiveChapter] = useState("quickstart");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [activeVideos, setActiveVideos] = useState<Record<string, boolean>>({});
 
   const contentRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -81,6 +89,13 @@ export default function GuidePage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const toggleVideo = (chapterId: string) => {
+    setActiveVideos(prev => ({
+      ...prev,
+      [chapterId]: !prev[chapterId]
+    }));
+  };
+
   const chapters: GuideChapter[] = [
     {
       id: "quickstart",
@@ -100,7 +115,13 @@ export default function GuidePage() {
         ],
         callouts: [
           { type: "tip", textVi: "Mẹo: Chế độ Giả lập giúp bạn test nhanh các tính năng mà không cần setup API Backend thật.", textEn: "Tip: Mock Mode helps you test the interface immediately without configuring a real Laravel API." }
-        ]
+        ],
+        screenshot: {
+          url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+          captionVi: "Giao diện Dashboard tổng quan của Zeflyo Hub sau khi đăng nhập.",
+          captionEn: "Overview Dashboard interface of Zeflyo Hub after successful authorization."
+        },
+        videoUrl: "dQw4w9WgXcQ"
       }
     },
     {
@@ -121,7 +142,13 @@ export default function GuidePage() {
         ],
         callouts: [
           { type: "warning", textVi: "Lưu ý: Bạn phải là Admin hoặc Biên tập viên của Fanpage để kết nối thành công.", textEn: "Warning: You must be an administrator or editor of the Facebook page to connect it." }
-        ]
+        ],
+        screenshot: {
+          url: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=800&q=80",
+          captionVi: "Bảng điều khiển kết nối tài khoản Facebook và quản lý Fanpage.",
+          captionEn: "Facebook integrations panel and Fanpage status toggle list."
+        },
+        videoUrl: "dQw4w9WgXcQ"
       }
     },
     {
@@ -142,7 +169,13 @@ export default function GuidePage() {
         ],
         callouts: [
           { type: "tip", textVi: "Mẹo: Trạng thái kết nối WebSocket ở tiêu đề đầu trang thể hiện độ trễ đồng bộ tin nhắn.", textEn: "Tip: The WebSocket status indicator in the header represents real-time synchronization state." }
-        ]
+        ],
+        screenshot: {
+          url: "https://images.unsplash.com/photo-1611605698335-8b15d27e03f9?auto=format&fit=crop&w=800&q=80",
+          captionVi: "Giao diện Live Chat Hub 3 cột với danh sách hội thoại, nội dung chat và thông tin chi tiết khách hàng.",
+          captionEn: "Live Chat Hub 3-column UI featuring conversation list, current chat area, and customer sidebar details."
+        },
+        videoUrl: "dQw4w9WgXcQ"
       }
     },
     {
@@ -163,7 +196,13 @@ export default function GuidePage() {
         ],
         callouts: [
           { type: "danger", textVi: "Quan trọng: Hãy chắc chắn từ khóa không bị trùng lặp để tránh xung đột kịch bản phản hồi.", textEn: "Important: Ensure keywords do not duplicate to avoid scenario execution conflicts." }
-        ]
+        ],
+        screenshot: {
+          url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+          captionVi: "Giao diện quản lý các quy tắc trả lời tự động dựa trên từ khóa (Keyword Auto-Reply Rules).",
+          captionEn: "Management workspace showing custom keyword-based auto-reply rules."
+        },
+        videoUrl: "dQw4w9WgXcQ"
       }
     },
     {
@@ -184,7 +223,13 @@ export default function GuidePage() {
         ],
         callouts: [
           { type: "tip", textVi: "Mẹo: Bạn có thể chỉnh sửa lại bản nháp trước khi chuyển sang lịch đăng bài.", textEn: "Tip: You can edit the drafted text manually before sending it to the scheduler." }
-        ]
+        ],
+        screenshot: {
+          url: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+          captionVi: "Trình tạo bài viết AI hỗ trợ chọn tông giọng và sinh hashtag tự động.",
+          captionEn: "AI writing assistant allowing tone selection and auto-generating relevant hashtags."
+        },
+        videoUrl: "dQw4w9WgXcQ"
       }
     },
     {
@@ -205,7 +250,13 @@ export default function GuidePage() {
         ],
         callouts: [
           { type: "warning", textVi: "Lưu ý: Múi giờ đặt lịch mặc định được lấy từ Cấu hình Tài khoản của bạn.", textEn: "Warning: The default scheduling timezone is loaded from your Account Settings." }
-        ]
+        ],
+        screenshot: {
+          url: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
+          captionVi: "Lịch lên lịch đăng bài trực quan hiển thị danh sách bài viết theo ngày/giờ.",
+          captionEn: "Post scheduling interface displaying posts queue organized by publication dates."
+        },
+        videoUrl: "dQw4w9WgXcQ"
       }
     },
     {
@@ -226,7 +277,13 @@ export default function GuidePage() {
         ],
         callouts: [
           { type: "tip", textVi: "Mẹo: Nên kết hợp với khung giờ vàng của Fanpage để tối ưu lượt tiếp cận.", textEn: "Tip: Connect to page golden hours metrics to optimize organic reach." }
-        ]
+        ],
+        screenshot: {
+          url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+          captionVi: "Cấu hình chiến dịch đăng bài tự động bằng AI, tự động lên lịch đăng bài theo chu kỳ.",
+          captionEn: "AI Auto-publishing campaign setup dashboard configuring auto-writing rules."
+        },
+        videoUrl: "dQw4w9WgXcQ"
       }
     },
     {
@@ -247,7 +304,13 @@ export default function GuidePage() {
         ],
         callouts: [
           { type: "danger", textVi: "Quan trọng: Vui lòng lưu thông tin cấu hình trước khi rời khỏi trang.", textEn: "Important: Make sure to save changes before navigating away." }
-        ]
+        ],
+        screenshot: {
+          url: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80",
+          captionVi: "Giao diện Cài đặt tổng quan, nơi cập nhật hồ sơ, kết nối Facebook và nâng cấp gói.",
+          captionEn: "System settings dashboard for profile updates, Facebook connections, and package upgrades."
+        },
+        videoUrl: "dQw4w9WgXcQ"
       }
     }
   ];
@@ -393,6 +456,59 @@ export default function GuidePage() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {/* Screenshot Image with Caption */}
+              {ch.content.screenshot && (
+                <div className="mt-4 border-t border-white/5 pt-4 flex flex-col gap-2">
+                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">
+                    {lang === "en" ? "Screenshot illustration" : "Hình ảnh minh họa"}
+                  </span>
+                  <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-white/5 bg-zinc-950/40">
+                    <img
+                      src={ch.content.screenshot.url}
+                      alt={lang === "en" ? ch.content.screenshot.captionEn : ch.content.screenshot.captionVi}
+                      className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
+                    />
+                  </div>
+                  <span className="text-[10px] text-zinc-500 italic text-center">
+                    {lang === "en" ? ch.content.screenshot.captionEn : ch.content.screenshot.captionVi}
+                  </span>
+                </div>
+              )}
+
+              {/* Video Embed Toggle Interface */}
+              {ch.content.videoUrl && (
+                <div className="mt-2 flex flex-col gap-3">
+                  {!activeVideos[ch.id] ? (
+                    <button
+                      onClick={() => toggleVideo(ch.id)}
+                      className="w-fit flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/15 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all active:scale-95 cursor-pointer shadow-sm"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-red-400/20" />
+                      <span>{lang === "en" ? "Watch Video Guide →" : "Xem video hướng dẫn →"}</span>
+                    </button>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => toggleVideo(ch.id)}
+                        className="w-fit flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all active:scale-95 cursor-pointer"
+                      >
+                        <span>{lang === "en" ? "Close Video" : "Đóng video"}</span>
+                      </button>
+                      <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/5 bg-black shadow-lg">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${ch.content.videoUrl}`}
+                          title={lang === "en" ? ch.titleEn : ch.titleVi}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          className="absolute inset-0 w-full h-full"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
