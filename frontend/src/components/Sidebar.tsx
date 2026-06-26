@@ -27,7 +27,13 @@ import {
   ChevronRight,
   Sparkles,
   Trash,
-  Plus
+  Plus,
+  User,
+  CreditCard,
+  HelpCircle,
+  Receipt,
+  BookOpen,
+  ShieldCheck
 } from "lucide-react";
 
 interface ContentBlock {
@@ -963,17 +969,123 @@ export default function Sidebar({
         </a>
 
         {/* Cài đặt */}
-        <a
-          href="/settings/general"
-          className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
-            isSettingsActive
-              ? "bg-zinc-900 text-zinc-200 shadow-sm"
-              : "text-zinc-400 hover:text-zinc-255 hover:bg-zinc-900/30"
-          }`}
-        >
-          <Settings className={`w-4.5 h-4.5 ${isSettingsActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
-          <span>{lang === "en" ? "Settings" : "Cài đặt"}</span>
-        </a>
+        <div className="flex flex-col gap-1.5">
+          <a
+            href="/settings/general"
+            className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
+              isSettingsActive
+                ? "bg-zinc-900 text-zinc-200 shadow-sm"
+                : "text-zinc-400 hover:text-zinc-255 hover:bg-zinc-900/30"
+            }`}
+          >
+            <Settings className={`w-4.5 h-4.5 ${isSettingsActive ? "text-[#7c3aed]" : "text-zinc-500"}`} />
+            <span>{lang === "en" ? "Settings" : "Cài đặt"}</span>
+          </a>
+
+          {/* Settings Submenu (xổ xuống dưới mục Cài đặt) */}
+          {isSettingsActive && (
+            <div className="pl-4 pr-1 py-1 flex flex-col gap-1 border-l border-zinc-850 ml-5.5 mt-1 transition-all">
+              <a
+                href="/settings/general"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  resolvedPath === "/settings/general"
+                    ? "bg-[#6C63FF]/10 text-white border-l-2 border-[#6C63FF] rounded-l-none"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/20"
+                }`}
+              >
+                <User className="w-3.5 h-3.5 shrink-0" />
+                <span>{lang === "en" ? "General" : "Tổng quan"}</span>
+              </a>
+
+              {/* Bảng giá (Chỉ hiển thị cho free tier) */}
+              {(!user?.subscription_plan || user.subscription_plan === "free") && (
+                <a
+                  href="/settings/pricing"
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                    resolvedPath === "/settings/pricing"
+                      ? "bg-[#6C63FF]/10 text-white border-l-2 border-[#6C63FF] rounded-l-none"
+                      : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/20"
+                  }`}
+                >
+                  <CreditCard className="w-3.5 h-3.5 shrink-0" />
+                  <span>{lang === "en" ? "Pricing" : "Bảng giá"}</span>
+                </a>
+              )}
+
+              <a
+                href="/settings/support"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  resolvedPath === "/settings/support"
+                    ? "bg-[#6C63FF]/10 text-white border-l-2 border-[#6C63FF] rounded-l-none"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/20"
+                }`}
+              >
+                <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{lang === "en" ? "Support" : "Hỗ trợ"}</span>
+              </a>
+
+              <a
+                href="/settings/billing"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  resolvedPath === "/settings/billing"
+                    ? "bg-[#6C63FF]/10 text-white border-l-2 border-[#6C63FF] rounded-l-none"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/20"
+                }`}
+              >
+                <Receipt className="w-3.5 h-3.5 shrink-0" />
+                <span>{lang === "en" ? "Billing" : "Lịch sử"}</span>
+              </a>
+
+              <a
+                href="/settings/guide"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  resolvedPath === "/settings/guide"
+                    ? "bg-[#6C63FF]/10 text-white border-l-2 border-[#6C63FF] rounded-l-none"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/20"
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                <span>{lang === "en" ? "Guide" : "Hướng dẫn"}</span>
+              </a>
+
+              <a
+                href="/settings/policy"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  resolvedPath === "/settings/policy"
+                    ? "bg-[#6C63FF]/10 text-white border-l-2 border-[#6C63FF] rounded-l-none"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/20"
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <span>{lang === "en" ? "Policy" : "Chính sách"}</span>
+              </a>
+
+              <a
+                href="/settings/language"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  resolvedPath === "/settings/language"
+                    ? "bg-[#6C63FF]/10 text-white border-l-2 border-[#6C63FF] rounded-l-none"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/20"
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5 shrink-0" />
+                <span>{lang === "en" ? "Language" : "Ngôn ngữ"}</span>
+              </a>
+
+              <a
+                href="/settings/feedback"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  resolvedPath === "/settings/feedback"
+                    ? "bg-[#6C63FF]/10 text-white border-l-2 border-[#6C63FF] rounded-l-none"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/20"
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                <span>{lang === "en" ? "Feedback" : "Phản hồi"}</span>
+              </a>
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* Sidebar Footer (Pinned at Bottom) */}

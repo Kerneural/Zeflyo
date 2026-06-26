@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
-import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { ArrowLeft, Moon, Sun, LogOut, HelpCircle, Sliders } from "lucide-react";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
@@ -86,11 +85,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           </div>
         </header>
 
-        {/* Inner Settings Workspace: Settings Sidebar + Content Area */}
+        {/* Inner Settings Workspace: Settings Content Area */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Settings Sub-Sidebar */}
-          <SettingsSidebar />
-
           {/* Settings Main Content Area */}
           <div className="flex-1 flex flex-col overflow-y-auto min-w-0 custom-scrollbar justify-between">
             <div className="p-4 md:p-8 flex-1 max-w-[1400px] w-full mx-auto">
