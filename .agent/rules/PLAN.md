@@ -1,5 +1,5 @@
 # 🎯 PLAN.md — Zeflyo 2-Week Tốc Chiến Roadmap
-> *Last updated: 2026-06-15 | Duration: 14 Days (Local Dev -> Staging -> Production)*
+> *Last updated: 2026-06-26 | Duration: 14 Days (Local Dev -> Staging -> Production)*
 
 ---
 
@@ -50,3 +50,14 @@
 - [ ] DevOps (Hoàng): Deploy Next.js to S3 + CloudFront CDN.
 - [ ] DevOps/Security (Hoàng + Khoa): Setup CloudWatch log groups, alerting metric filters, and Dashboard.
 - [ ] Team (Hoàng + Khoa + Tiến): Final QA, demo run, bug fixes, freeze code, and release project.
+
+### Phase 6: UI/UX Premium Overhaul & Sidebar Optimization (2026-06-26) - [Walkthrough](file:///C:/Users/ACER/.gemini/antigravity-ide/brain/0db0bc85-e913-4c3e-af7a-005ff44c8899/walkthrough.md)
+- [x] **Global CSS**: Xóa utility class hijacking, fix font tiếng Việt (`Plus Jakarta Sans`), design system light/dark mode premium.
+- [x] **Layout root**: Thêm blocking inline script trong `<head>` để inject theme class đồng bộ — fix hoàn toàn hiện tượng nháy đen khi reload.
+- [x] **Sidebar**: Refactor toàn bộ — replace `<a>` bằng Next.js `<Link>`/`router.push()`, collapsible submenus độc lập, sticky scroll đúng, light theme đồng bộ, auto-expand theo route.
+- [x] **Language sync**: Fix localStorage key mismatch `"lang"` → `"zeflyo_lang"` trong `autopost/page.tsx`.
+- [x] **Tab URL sync**: Thêm `useEffect` đọc `?tab=` query param khi mount cho scheduler & autopost.
+- [x] **Settings layout**: Truyền `theme`/`toggleTheme` props từ settings layout xuống Sidebar để đồng bộ theme.
+- [x] **Page UI overhaul**: Nâng cấp toàn bộ UI/UX cho `/scheduler`, `/autopost`, `/rules`, `/chat`, `/` (login).
+- [x] **Unified "Đăng & Tự Động Hóa" sidebar menu**: Gộp 2 mục "Lên lịch đăng bài" + "Đăng bài tự động AI" thành 1 hub với 4 section rõ ràng (Lên lịch / Tạo bài AI / Sản phẩm / Tự động hóa).
+- [x] **TypeScript**: `npx tsc --noEmit` → 0 errors. `npm run build` → all routes compiled successfully.
