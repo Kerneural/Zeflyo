@@ -79,7 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // User settings and feedback APIs
     Route::put('/user/language', [\App\Http\Controllers\UserSettingsController::class, 'updateLanguage']);
-    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store']);
+    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store'])->middleware('throttle:5,1');
 
     // General Upload API
     Route::post('/upload', [\App\Http\Controllers\UploadController::class, 'upload']);
