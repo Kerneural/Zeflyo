@@ -56,9 +56,32 @@ interface ScheduledPost {
 
 interface QueuePost {
   id: string;
-  content: string;
   imageUrl: string;
+  content: string;
 }
+
+const promptPresets = [
+  {
+    label: "🎁 Tặng quà Minigame",
+    topic: "Tổ chức chương trình Minigame đoán số may mắn nhận quà tri ân khách hàng thân thiết",
+    goal: "Kích thích lượng tương tác (like, share, comment) cực lớn cho Fanpage và tặng voucher mua hàng 50K cho tất cả người tham gia"
+  },
+  {
+    label: "💡 Mẹo vặt thời trang",
+    topic: "Chia sẻ 3 mẹo phối đồ công sở cực hack dáng, thanh lịch nhưng vẫn trẻ trung cho chị em công sở bận rộn",
+    goal: "Trao giá trị hữu ích về thời trang nhằm tạo lòng tin và khéo léo giới thiệu dòng sản phẩm sơ mi lụa mới ra mắt của shop"
+  },
+  {
+    label: "🔥 Sale sập sàn 50%",
+    topic: "Chương trình khuyến mãi lớn nhất năm: Siêu sale bùng nổ lên tới 50% toàn bộ sản phẩm hè tại cửa hàng",
+    goal: "Thôi thúc khách hàng mua sắm gấp bằng cách giới thiệu mã voucher giới hạn, hotline đặt hàng và ưu tiên chốt đơn sớm"
+  },
+  {
+    label: "📖 Kể chuyện khởi nghiệp",
+    topic: "Câu chuyện hậu trường khởi nghiệp đầy chông gai và tâm huyết của đội ngũ sáng lập thương hiệu thời trang Zeflyo",
+    goal: "Tạo sự đồng cảm sâu sắc, xây dựng mối quan hệ tin cậy dài lâu với khách hàng bằng triết lý Value-First tập trung vào chất lượng"
+  }
+];
 
 export default function PostScheduler() {
   const [token, setToken] = useState<string | null>(null);
@@ -95,6 +118,10 @@ export default function PostScheduler() {
   const [aiTopic, setAiTopic] = useState<string>("");
   const [aiTone, setAiTone] = useState<string>("Thân thiện");
   const [aiGenerating, setAiGenerating] = useState<boolean>(false);
+  const [aiGoal, setAiGoal] = useState<string>("");
+  const [aiFramework, setAiFramework] = useState<string>("aida");
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [scheduleMode, setScheduleMode] = useState<"weekly" | "fixed">("weekly");
   const [scheduleTimes, setScheduleTimes] = useState<string[]>(["08:00"]);
   const [scheduleDays, setScheduleDays] = useState<number[]>([1, 3, 5]); // 1 = Mon, ..., 7 = Sun
@@ -655,69 +682,139 @@ export default function PostScheduler() {
     }
   };
 
-  const handleGenerateAiContent = async () => {
-    if (!aiTopic.trim()) return;
+  const handleGenerateAiStream = async () => {
+    if (!aiTopic.trim() || !aiGoal.trim()) return;
 
+    const controller = new AbortController();
+    setAbortController(controller);
+    setIsStreaming(true);
     setAiGenerating(true);
-    showNotification("success", "Đang kết nối AI sinh bài viết...");
+    showNotification("success", "Đang khởi tạo kết nối AI...");
+
+    // Clear active post content first
+    handleContentChange("");
 
     if (token && token.startsWith("mock_")) {
-      // Mock generation delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      const mockTemplates: Record<string, string[]> = {
-        "Thân thiện": [
-          "🌸 Mùa hè gõ cửa rồi cả nhà ơi! Đã đến lúc F5 tủ đồ với những chiếc váy hoa siêu xinh xắn từ Zeflyo Store rồi nè.\n\n✨ Với chất liệu voan tơ mềm mại, bay bổng cùng họa tiết hoa nhí ngọt ngào, mẫu váy mới này sẽ giúp các nàng tự tin tỏa sáng dưới nắng hè rực rỡ.\n\n👉 Nhanh tay sở hữu ngay em nó nhé! Mua ngay tại cửa hàng hoặc inbox Zeflyo để được tư vấn tận tình nào!\n\n#ZeflyoFashion #VayHoaMuaHe #OOTD #Xuhuong",
-          "👋 Chào ngày mới ngập tràn năng lượng! Bạn đã chuẩn bị trang phục cho buổi hẹn hò cuối tuần chưa?\n\n📸 Hãy để Zeflyo gợi ý cho bạn bộ cánh cực chất này nhé. Đảm bảo thu hút mọi ánh nhìn luôn!\n\n❤️ Để lại bình luận hoặc nhắn tin trực tiếp cho Shop để nhận mã giảm giá đặc biệt nha.\n\n#Zeflyo #FriendlyStyle #VayXinh #Shopping"
-        ],
-        "Lịch sự": [
-          "Kính gửi quý khách hàng,\n\nZeflyo xin trân trọng giới thiệu Bộ sưu tập Thời trang Công sở Mới nhất. Thiết kế sang trọng, tối giản nhưng không kém phần hiện đại, mang lại sự tự tin và chuyên nghiệp trong mọi buổi gặp gỡ.\n\n📍 Chất liệu cao cấp chống nhăn, thoáng mát tối ưu.\n📍 Kiểu dáng tinh tế, đường may sắc sảo.\n\nQuý khách vui lòng liên hệ hotline hoặc inbox Fanpage để nhận tư vấn chi tiết về kích thước và chương trình ưu đãi đặc quyền.\n\nTrân trọng cảm ơn quý khách.\n\n#ZeflyoOffice #FormalWear #ClassyStyle #Professional",
-        ],
-        "Khuyến mãi": [
-          "💥 SIÊU SALE BÙNG NỔ - GIẢM GIÁ ĐẾN 50% TOÀN BỘ CỬA HÀNG! 💥\n\nCơ hội mua sắm lớn nhất năm tại Zeflyo đã chính thức bắt đầu. Hàng ngàn sản phẩm hot trend đang chờ đón bạn với mức giá cực hời.\n\n🔥 Đồng giá chỉ từ 99K cho nhiều dòng sản phẩm bán chạy.\n🔥 Tặng kèm Voucher 50K cho hóa đơn từ 500K.\n⏰ Chương trình áp dụng từ nay đến hết ngày chủ nhật.\n\n⚡ Số lượng có hạn! Đừng bỏ lỡ cơ hội sở hữu những sản phẩm chất lượng với mức giá ưu đãi nhất.\n\n👉 SHOP NOW: Inbox để đặt hàng ngay kẻo hết!\n\n#ZeflyoSale #KhuyenMaiKhaiThac #HotSale #FlashSale",
-        ],
-        "Hài hước": [
-          "Nghe nói anh thích con gái dịu dàng... 🌸\nMay quá em đây vừa dịu dàng lại vừa có váy xinh của Zeflyo!\n\n👗 Đẹp tự nhiên không cần son phấn, chỉ cần khoác lên mình chiếc đầm hoa nhí này là crush tự động đổ đứ đừ.\n\n👉 Giá rổ yêu thương, inbox là có người trả lời liền tay (AI nhà em rep nhanh hơn tốc độ crush lật mặt).\n\n#ZeflyoHumor #TrendingOutfit #VayDep #Cute",
-        ]
+      // Mock streaming mode
+      const mockTemplates: Record<string, string> = {
+        aida: `⚡ [Attention - Gây chú ý]: Bạn đang loay hoay viết nội dung Fanpage mỗi ngày? ${aiTopic}!\n\n💡 [Interest - Thích thú]: Đừng lo lắng, Zeflyo giúp tự động hóa 100% quá trình lên lịch, tạo nội dung chuẩn Marketing giúp fanpage tiếp cận hàng chục ngàn người dùng tự nhiên.\n\n🎁 [Desire - Khao khát]: Đăng ký ngay hôm nay để nhận Voucher 50% đặc quyền dành riêng cho bạn. Đạt mục tiêu: ${aiGoal} chưa bao giờ dễ dàng hơn thế!\n\n👉 [Action - Hành động]: Click vào liên kết bên dưới hoặc Inbox ngay để được Zeflyo hỗ trợ tư vấn trực tiếp 24/7!`,
+        pas: `🔥 [Problem - Vấn đề]: ${aiTopic} đang gặp trở ngại lớn về lượng tương tác tự nhiên và bài viết kém thu hút?\n\n⚠️ [Agitate - Xoáy sâu]: Việc bài đăng thưa thớt khiến khách hàng dần lãng quên thương hiệu của bạn, trực tiếp ảnh hưởng đến doanh số bán hàng mùa này.\n\n🛡️ [Solve - Giải pháp]: Hãy để Zeflyo giải quyết triệt để! Hệ thống tự động tạo bài bằng AI chuẩn công thức PAS, giải quyết hoàn hảo mục tiêu: ${aiGoal} chỉ trong vài lượt nhấp chuột.\n\n👉 Nhấc máy liên hệ hotline 0987-654-321 ngay hôm nay!`,
+        bab: `🌟 [Before - Trước đây]: Chưa sử dụng Zeflyo, bạn mất hàng giờ ngồi viết nội dung cho chiến dịch "${aiTopic}" nhưng không có kết quả.\n\n🌈 [After - Sau này]: Từ khi có Zeflyo, bài đăng tự động chạy đúng khung giờ vàng, lượng tương tác tăng vọt 200%, chốt đơn không ngừng nghỉ.\n\n🚀 [Bridge - Cầu nối]: Hãy nâng cấp tài khoản của bạn để kết nối AI Zeflyo ngay hôm nay, hoàn thành mục tiêu: ${aiGoal} một cách hoàn hảo nhất!\n\n💬 Để lại bình luận hoặc nhắn tin cho chúng tôi nhé.`
       };
 
-      const selectedTemplates = mockTemplates[aiTone] || mockTemplates["Thân thiện"];
-      const generatedText = `${selectedTemplates[Math.floor(Math.random() * selectedTemplates.length)]}\n\n[Ý tưởng: ${aiTopic}]`;
+      const mockResponseText = mockTemplates[aiFramework] || mockTemplates.aida;
+      let currentText = "";
+      let index = 0;
 
-      handleContentChange(generatedText);
-      showNotification("success", "Đã tạo nội dung bài viết bằng AI (Giả lập)!");
-      setAiGenerating(false);
+      const intervalId = setInterval(() => {
+        if (index >= mockResponseText.length) {
+          clearInterval(intervalId);
+          setIsStreaming(false);
+          setAiGenerating(false);
+          setAbortController(null);
+          showNotification("success", "Đã tạo nội dung bài viết bằng AI (Giả lập)!");
+          return;
+        }
+
+        const nextChunk = mockResponseText.slice(index, index + 4);
+        index += 4;
+        currentText += nextChunk;
+
+        setQueue(prev => prev.map((item, idx) => idx === activeQueueIndex ? { ...item, content: currentText } : item));
+      }, 30);
+
+      setAbortController({
+        abort: () => {
+          clearInterval(intervalId);
+          setIsStreaming(false);
+          setAiGenerating(false);
+          setAbortController(null);
+          showNotification("error", "Đã hủy viết bài!");
+        }
+      } as any);
+
       return;
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/posts/generate-ai`, {
+      const response = await fetch(`${apiBaseUrl}/api/posts/generate-ai-stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          "Accept": "text/event-stream",
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           topic: aiTopic,
-          tone: aiTone
-        })
+          goal: aiGoal,
+          framework: aiFramework,
+          tone: "Thân thiện",
+          post_length: "medium"
+        }),
+        signal: controller.signal
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        handleContentChange(data.content);
-        showNotification("success", "Tạo bài đăng bằng AI thành công!");
-      } else {
-        showNotification("error", data.error || "Lỗi tạo bài đăng bằng AI.");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } catch (err) {
-      console.error(err);
-      showNotification("error", "Lỗi kết nối. Vui lòng thử lại sau.");
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+      if (!reader) {
+        throw new Error("Response body is not readable");
+      }
+
+      let partialLine = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = (partialLine + chunk).split("\n");
+        partialLine = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("data: ")) {
+            const dataStr = trimmed.slice(6).trim();
+            if (dataStr) {
+              try {
+                const parsed = JSON.parse(dataStr);
+                if (parsed.chunk) {
+                  setQueue(prev => prev.map((item, idx) => 
+                    idx === activeQueueIndex ? { ...item, content: item.content + parsed.chunk } : item
+                  ));
+                }
+              } catch (e) {}
+            }
+          } else if (trimmed.startsWith("event: end")) {
+            setIsStreaming(false);
+            break;
+          }
+        }
+      }
+      showNotification("success", "Đã tạo nội dung bài viết bằng AI thành công!");
+    } catch (err: any) {
+      if (err.name === "AbortError") {
+        showNotification("error", "Đã hủy viết bài!");
+      } else {
+        console.error(err);
+        showNotification("error", "Lỗi tạo bài đăng bằng AI.");
+      }
     } finally {
+      setIsStreaming(false);
       setAiGenerating(false);
+      setAbortController(null);
     }
+  };
+
+  const handleCancelGeneration = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+    }
+    setIsStreaming(false);
+    setAiGenerating(false);
   };
 
   const activePost = queue[activeQueueIndex] || { content: "", imageUrl: "" };
@@ -897,56 +994,133 @@ export default function PostScheduler() {
                     </div>
 
                     {/* AI Writer Panel */}
-                    <div className="flex flex-col gap-3.5 bg-blue-650/[0.03] border border-blue-500/10 rounded-2xl p-4 mt-2">
+                    <div className="flex flex-col gap-4 bg-blue-650/[0.03] border border-blue-500/10 rounded-2xl p-5 mt-2">
                       <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-wider">
                         <Sparkles className="w-4 h-4 text-blue-550" />
                         <span>Trình viết bài bằng AI</span>
                       </div>
+
+                      {/* Prompt Chips */}
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Gợi ý chủ đề nhanh</span>
+                        <div className="flex flex-wrap gap-2">
+                          {promptPresets.map((preset, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                setAiTopic(preset.topic);
+                                setAiGoal(preset.goal);
+                                showNotification("success", `Đã áp dụng: ${preset.label}`);
+                              }}
+                              className="px-3 py-1.5 rounded-full text-[11px] font-semibold bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-350 hover:text-zinc-100 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                              {preset.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="sm:col-span-2 flex flex-col gap-1.5">
-                          <span className="text-[11px] text-zinc-450 font-bold">Chủ đề / Ý tưởng</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] text-zinc-450 font-bold">Chủ đề bài đăng</span>
                           <input 
                             type="text"
                             value={aiTopic}
                             onChange={(e) => setAiTopic(e.target.value)}
                             placeholder="Ví dụ: Giảm giá 20% váy hoa mùa hè..."
-                            className="bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs outline-none text-zinc-250 placeholder:text-zinc-650"
+                            className="bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2.5 text-xs outline-none text-zinc-250 placeholder:text-zinc-650"
                           />
                         </div>
                         <div className="flex flex-col gap-1.5">
-                          <span className="text-[11px] text-zinc-450 font-bold">Giọng điệu</span>
-                          <select
-                            value={aiTone}
-                            onChange={(e) => setAiTone(e.target.value)}
-                            className="bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs outline-none text-zinc-250 cursor-pointer"
-                          >
-                            <option value="Thân thiện">Thân thiện</option>
-                            <option value="Lịch sự">Lịch sự</option>
-                            <option value="Khuyến mãi">Khuyến mãi</option>
-                            <option value="Hài hước">Hài hước</option>
-                          </select>
+                          <span className="text-[11px] text-zinc-450 font-bold">Mục tiêu bài viết</span>
+                          <input 
+                            type="text"
+                            value={aiGoal}
+                            onChange={(e) => setAiGoal(e.target.value)}
+                            placeholder="Ví dụ: Tặng code giảm giá, kích thích tương tác..."
+                            className="bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2.5 text-xs outline-none text-zinc-250 placeholder:text-zinc-650"
+                          />
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={handleGenerateAiContent}
-                        disabled={aiGenerating || !aiTopic.trim()}
-                        className="flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed text-xs font-bold text-white rounded-xl transition-all cursor-pointer shadow-sm shadow-blue-500/5 active:scale-95"
-                      >
-                        {aiGenerating ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>Đang viết bài...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>Tạo bằng AI (Generate with AI)</span>
-                          </>
-                        )}
-                      </button>
+                      {/* visual framework selection cards */}
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[11px] text-zinc-450 font-bold">Chọn công thức Marketing</span>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {/* Card AIDA */}
+                          <div 
+                            onClick={() => setAiFramework("aida")}
+                            className={`p-4 rounded-xl border cursor-pointer transition-all duration-300 flex flex-col gap-1 ${
+                              aiFramework === "aida" 
+                                ? "bg-[#6C63FF]/5 border-[#6C63FF] text-[#6C63FF] shadow-[0_0_15px_rgba(108,99,255,0.15)] opacity-100" 
+                                : "bg-zinc-950/40 border-zinc-850 text-zinc-450 hover:border-zinc-800 opacity-60 hover:opacity-80"
+                            }`}
+                          >
+                            <span className="text-xs font-bold flex items-center gap-1.5">
+                              ⚡ Thuyết phục (AIDA)
+                            </span>
+                            <span className="text-[10px] text-zinc-550 leading-normal">
+                              Attention → Interest → Desire → Action. Phù hợp kêu gọi hành động.
+                            </span>
+                          </div>
+
+                          {/* Card PAS */}
+                          <div 
+                            onClick={() => setAiFramework("pas")}
+                            className={`p-4 rounded-xl border cursor-pointer transition-all duration-300 flex flex-col gap-1 ${
+                              aiFramework === "pas" 
+                                ? "bg-[#EF4444]/5 border-[#EF4444] text-[#EF4444] shadow-[0_0_15px_rgba(239,68,68,0.15)] opacity-100" 
+                                : "bg-zinc-950/40 border-zinc-850 text-zinc-450 hover:border-zinc-800 opacity-60 hover:opacity-80"
+                            }`}
+                          >
+                            <span className="text-xs font-bold flex items-center gap-1.5">
+                              🔥 Đồng cảm (PAS)
+                            </span>
+                            <span className="text-[10px] text-zinc-550 leading-normal">
+                              Problem → Agitate → Solve. Nhấn mạnh nỗi đau của khách hàng.
+                            </span>
+                          </div>
+
+                          {/* Card BAB */}
+                          <div 
+                            onClick={() => setAiFramework("bab")}
+                            className={`p-4 rounded-xl border cursor-pointer transition-all duration-300 flex flex-col gap-1 ${
+                              aiFramework === "bab" 
+                                ? "bg-[#3B82F6]/5 border-[#3B82F6] text-[#3B82F6] shadow-[0_0_15px_rgba(59,130,246,0.15)] opacity-100" 
+                                : "bg-zinc-950/40 border-zinc-850 text-zinc-450 hover:border-zinc-800 opacity-60 hover:opacity-80"
+                            }`}
+                          >
+                            <span className="text-xs font-bold flex items-center gap-1.5">
+                              🌟 Kể chuyện (BAB)
+                            </span>
+                            <span className="text-[10px] text-zinc-550 leading-normal">
+                              Before → After → Bridge. Kể câu chuyện chuyển đổi của khách hàng.
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {isStreaming ? (
+                        <button
+                          type="button"
+                          onClick={handleCancelGeneration}
+                          className="flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-xs font-bold text-white rounded-xl transition-all cursor-pointer shadow-sm shadow-red-500/10 active:scale-95 animate-pulse"
+                        >
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>🛑 Hủy viết bài (Cancel Generation)</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleGenerateAiStream}
+                          disabled={aiGenerating || !aiTopic.trim() || !aiGoal.trim()}
+                          className="flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed text-xs font-bold text-white rounded-xl transition-all cursor-pointer shadow-sm shadow-blue-500/5 active:scale-95"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>✍️ Bắt đầu viết bằng AI (Generate with AI)</span>
+                        </button>
+                      )}
                     </div>
 
                     {/* Post Content Input Area */}

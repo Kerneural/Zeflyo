@@ -63,6 +63,16 @@
 
 ---
 
+## ✅ Phase 7 Implemented (2026-07-02)
+
+### AI Writer Redesign on Scheduler
+- Cập nhật giao diện tab "Tạo bài AI" trên [frontend/src/app/scheduler/page.tsx](frontend/src/app/scheduler/page.tsx) theo yêu cầu phase 7.
+- Thêm prompt chips để tự điền chủ đề và mục tiêu nhanh.
+- Thêm 3 card chọn framework: AIDA, PAS, BAB với trạng thái active/hover rõ ràng.
+- Kết nối endpoint SSE `/api/posts/generate-ai-stream` để hiển thị nội dung theo từng chunk.
+- Thêm nút hủy viết bài dùng AbortController để dừng request ngay lập tức.
+- Kiểm tra xác nhận: `npx tsc --noEmit` thành công và `npm run build` thành công.
+
 ## 🔜 Next Steps (3 hành động kỹ thuật trực tiếp kế tiếp)
 
 - [ ] **Step 1:** Đồng bộ hóa credits thực tế nhận được từ webhook SePay với hệ thống trừ điểm khi chạy AI Campaigns (backend: `POST /api/webhooks/sepay` → cộng credits vào `users.credits`).
