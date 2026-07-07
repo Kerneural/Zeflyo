@@ -14,7 +14,8 @@ RUN apk add --no-cache \
     linux-headers \
     bash \
     icu-dev \
-    pkgconf
+    pkgconf \
+    sqlite-dev
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
