@@ -116,10 +116,18 @@ export default function AutoReplyRules() {
 
     if (savedToken) setToken(savedToken);
     const currentOrigin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
-    if (!savedApiBase || (savedApiBase === "http://localhost" && currentOrigin !== "http://localhost")) {
-      localStorage.setItem("zeflyo_api_base", currentOrigin);
-      setApiBaseUrl(currentOrigin);
-    } else if (savedApiBase) {
+    let defaultApiBase = currentOrigin;
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      if (hostname === "localhost" || hostname === "127.0.0.1") {
+        defaultApiBase = "http://localhost";
+      }
+    }
+    const isStaleLocalhost = savedApiBase && (savedApiBase.includes("localhost:") || savedApiBase.includes("127.0.0.1:"));
+    if (!savedApiBase || isStaleLocalhost || (savedApiBase === "http://localhost" && defaultApiBase !== "http://localhost")) {
+      localStorage.setItem("zeflyo_api_base", defaultApiBase);
+      setApiBaseUrl(defaultApiBase);
+    } else {
       setApiBaseUrl(savedApiBase);
     }
     if (savedUser) setUser(JSON.parse(savedUser));
