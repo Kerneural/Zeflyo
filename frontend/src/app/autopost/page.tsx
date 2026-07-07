@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import {
   Sparkles, Plus, Trash2, Loader2, Check, AlertTriangle,
@@ -101,8 +102,18 @@ const WEEKDAYS = [
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════
 export default function AutoPostPage() {
+  return (
+    <Suspense fallback={null}>
+      <AutoPostPageContent />
+    </Suspense>
+  );
+}
+
+function AutoPostPageContent() {
   // ── Global state ──
   const [token, setToken] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [user, setUser] = useState<UserProfile | null>(null);
   const [lang, setLang] = useState<"en" | "vi">("vi");
@@ -137,6 +148,22 @@ export default function AutoPostPage() {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [setupMsg, setSetupMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [tempSetupId, setTempSetupId] = useState<number | null>(null);
+
+  // Sync tab parameter from URL reactively
+  useEffect(() => {
+    if (tab) {
+      const localMap: Record<string, "topic_setup" | "manage" | "product_setup" | "product_list"> = {
+        setup: "topic_setup",
+        list: "manage",
+        automation: "product_setup",
+        product_list: "product_list"
+      };
+      const mapped = localMap[tab];
+      if (mapped) {
+        setActiveTab(mapped);
+      }
+    }
+  }, [tab]);
 
   // ── Tab 2: Manage state ──
   const [setups, setSetups] = useState<AutoSetupItem[]>([]);
@@ -188,24 +215,6 @@ export default function AutoPostPage() {
 
     const today = new Date();
     setScheduleDate(today.toISOString().split("T")[0]);
-
-    // Sync tab parameter from URL
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab");
-      if (tab) {
-        const localMap: Record<string, "topic_setup" | "manage" | "product_setup" | "product_list"> = {
-          setup: "topic_setup",
-          list: "manage",
-          automation: "product_setup",
-          product_list: "product_list"
-        };
-        const mapped = localMap[tab];
-        if (mapped) {
-          setActiveTab(mapped);
-        }
-      }
-    }
   }, []);
 
   useEffect(() => {
