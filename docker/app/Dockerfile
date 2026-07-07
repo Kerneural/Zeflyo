@@ -13,7 +13,8 @@ RUN apk add --no-cache \
     postgresql-dev \
     linux-headers \
     bash \
-    icu-dev
+    icu-dev \
+    pkgconf
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
