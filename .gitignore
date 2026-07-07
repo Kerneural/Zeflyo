@@ -2,3 +2,14 @@ docs/plan.md
 temp/
 implementation/
 prometheus_grafana_mastery.md
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+terraform.tfvars
+terraform.tfvars.json
+override.tf
+override.tf.json
+_override.tf
+_override.tf.json

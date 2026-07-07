@@ -1,0 +1,5 @@
+do_token     = "dop_v1_your_digitalocean_personal_access_token_here"
+ssh_key_name = "tên-ssh-key-của-bạn-trên-digitalocean"
+droplet_name = "zeflyo-production"
+region       = "sgp1"
+droplet_size = "s-1vcpu-2gb"
