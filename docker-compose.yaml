@@ -12,6 +12,7 @@ services:
       - ./backend:/var/www/html
       - ./frontend/out:/var/www/frontend
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
