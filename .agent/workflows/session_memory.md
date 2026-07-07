@@ -1,80 +1,32 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-06-26 | Status: **FULL UI/UX PREMIUM OVERHAUL + SIDEBAR UNIFICATION — 100% COMPLETE & VERIFIED**
+> Last Checkpoint: 2026-07-07 | Status: Triển khai thành công Zeflyo lên DigitalOcean VPS sạch bằng Terraform, Docker Compose và cấu hình HTTPS bảo mật hoàn chỉnh qua Certbot.
 
 ---
 
 ## ⚡ Active Task Completed (Những việc ĐÃ HOÀN THÀNH trong session)
-
-### 🎨 UI/UX Premium Overhaul — Toàn bộ Frontend
-
-*   **Global Design System ([`globals.css`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/globals.css)):**
-    *   Xóa bỏ class hijacking nguy hiểm (`.text-white`, `.text-zinc-100` bị override bằng `!important` làm hỏng button màu).
-    *   Đổi `--font-heading` sang `'Plus Jakarta Sans'` để hiển thị tiếng Việt có dấu đúng chuẩn (trước đó fallback ra Times New Roman xấu).
-    *   Thêm CSS override riêng cho light mode sidebar: background trắng, border nhạt, text slate — premium như Linear/Vercel.
-    *   Thêm logo text gradient indigo-purple đẹp trong light mode.
-
-*   **Theme Flash Fix ([`layout.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/layout.tsx)):**
-    *   Thêm **blocking inline `<script>` trong `<head>`** đọc `localStorage.zeflyo_theme` và gán class `.light` đồng bộ ngay khi parse HTML, **loại bỏ hoàn toàn hiện tượng nháy đen** khi reload trang ở light mode.
-
-*   **Sidebar Major Refactor ([`Sidebar.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/components/Sidebar.tsx)):**
-    *   Thay **toàn bộ `<a>` tag và `window.location.href`** bằng Next.js `<Link>` và `router.push()` — loại bỏ hoàn toàn hiện tượng nháy màu đen khi chuyển trang.
-    *   Tất cả submenu (Cài đặt, Đăng bài) **có thể collapse/expand độc lập** — trước đó bị cố định, không toggle được.
-    *   Sidebar **sticky scroll đúng chuẩn**: root container `h-screen overflow-hidden`, chỉ nội dung bên trong mới `overflow-y-auto`.
-    *   Theme light mode sidebar **đồng bộ toàn bộ** — trước đó sidebar vẫn đen dù đã chuyển sang light theme.
-    *   Auto-expand submenu khi navigate đến `/scheduler` hoặc `/autopost`.
-
-*   **Language Sync Fix ([`autopost/page.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/autopost/page.tsx)):**
-    *   Sửa lỗi key `"lang"` → **`"zeflyo_lang"`** trong localStorage. Lý do: tất cả pages dùng `zeflyo_lang` nhưng autopost dùng key khác nên ngôn ngữ bị reset mỗi lần chuyển trang.
-
-*   **Tab URL Sync ([`scheduler/page.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/scheduler/page.tsx) & [`autopost/page.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/autopost/page.tsx)):**
-    *   Thêm `useEffect` đọc `?tab=...` query param khi mount để đồng bộ active tab với URL — cho phép sidebar navigate trực tiếp đến đúng sub-tab.
-
-*   **Settings Theme Sync ([`settings/layout.tsx`](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/settings/layout.tsx)):**
-    *   Truyền `theme` và `toggleTheme` props xuống `<Sidebar>` từ layout settings — trước đó sidebar trong settings page không nhận được theme state nên luôn tối.
-
-### 🗂️ Unified "Đăng & Tự Động Hóa" Menu — Sidebar Restructuring
-
-*   **Vấn đề**: Hai mục sidebar "Lên lịch đăng bài" (`/scheduler`) và "Đăng bài tự động AI" (`/autopost`) gây nhầm lẫn vì chức năng na ná nhau, thậm chí cùng tên sub-tab "Quản lý lịch đăng".
-*   **Giải pháp**: Gộp thành **1 menu duy nhất "Đăng & Tự Động Hóa"** với 4 section rõ ràng bên trong:
-    *   📅 **Lên lịch** → `/scheduler?tab=setup` / `/scheduler?tab=list`
-    *   🤖 **Tạo bài AI** → `/autopost?tab=setup` / `/autopost?tab=list`
-    *   📦 **Sản phẩm** → `/autopost?tab=automation` / `/autopost?tab=product_list`
-    *   ⚡ **Tự động hóa** → `/scheduler?tab=automation`
-*   **State**: Thay 2 state `isSchedulerOpen`/`isAutopostOpen` bằng 1 state `isPublishOpen`.
-*   **Type fix**: Mở rộng `activeTab` prop type để include `topic_setup`, `manage`, `product_setup` — fix 3 TypeScript errors.
-*   **Verified**: `npx tsc --noEmit` → **0 errors** ✅
-
----
+*   **Infrastructure (Terraform & VPS Sạch)**:
+    *   Xây dựng hạ tầng tự động qua [main.tf](file:///r:/_Projects/Eurus_Workspace/Zeflyo/terraform/main.tf), [variables.tf](file:///r:/_Projects/Eurus_Workspace/Zeflyo/terraform/variables.tf) để tạo Droplet `4 vCPU / 8GB RAM` tại Singapore (IP: `165.232.163.188`) thay thế cho cấu hình 1Panel cũ bị lỗi.
+    *   Tách biệt môi trường và an toàn cho website WordPress (`dailysmartlife.com`) hiện tại.
+*   **Docker Stack Optimization (Nginx & Frontend)**:
+    *   Cấu hình Next.js export tĩnh, nén cục bộ và giải nén tại thư mục `/app/frontend/out` trên máy chủ.
+    *   Nâng cấp [docker-compose.yaml](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docker-compose.yaml) và [default.conf](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docker/nginx/conf.d/default.conf) để Nginx phục vụ trực tiếp tệp tĩnh, không dùng Node.js chạy ngầm, tiết kiệm dung lượng RAM.
+    *   Cấu hình chuyển tiếp reverse proxy cho Laravel Octane API `/api` và Soketi WebSockets `/app`, `/socket.io`.
+*   **PHP Dockerfile Compilation Fixes**:
+    *   Sửa lỗi biên dịch thư viện trên ảnh Alpine trong [Dockerfile](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docker/app/Dockerfile) bằng việc bổ sung `pkgconf` và `sqlite-dev` vào quy trình cài đặt apk, giúp biên dịch trơn tru `pdo_pgsql`, `gd`, `zip`, `opcache`, và `intl`.
+*   **Laravel Database Setup & Dependencies**:
+    *   Chạy thành công `composer install` có kèm dev-dependencies bên trong container để có sẵn Faker phục vụ Seed dữ liệu.
+    *   Chạy khởi tạo hệ thống gồm `key:generate`, `migrate --force` và `db:seed --force` trên PostgreSQL thành công.
+*   **SSL / HTTPS Integration**:
+    *   Cài đặt Certbot trên host VPS, tạm dừng container Nginx và chạy `certbot certonly --standalone` để cấp phát chứng chỉ HTTPS cho tên miền `zeflyo.duckdns.org`.
+    *   Mount an toàn thư mục `/etc/letsencrypt` từ host vào container Nginx dưới quyền Read-Only và định cấu hình SSL bảo mật nghiêm ngặt.
 
 ## 🧠 Semantic Context Essence (Tinh túy kiến thức & Quyết định thiết kế)
-
-*   **KHÔNG dùng `window.location.href`** trong Sidebar: Dùng Next.js `router.push()` và `<Link>`. Việc dùng anchor tag gốc gây full page reload → hiện tượng nháy đen → UX xấu.
-*   **Theme injection phải blocking**: Script gán theme class **phải nằm trong `<head>` và không có `async/defer`** để chạy trước khi browser render bất kỳ DOM nào. Nếu dùng `useEffect` (client-side) sẽ luôn bị nháy đen vì render trắng/tối trước rồi mới đổi.
-*   **localStorage keys chuẩn của dự án**:
-    *   `zeflyo_theme` → `"dark"` | `"light"` (default: `"light"`)
-    *   `zeflyo_lang` → `"vi"` | `"en"` (default: `"vi"`)
-    *   `zeflyo_user` → JSON object UserProfile
-    *   `zeflyo_token` → JWT token (nếu bắt đầu bằng `"mock_token"` → mock mode)
-    *   `zeflyo_read_notifications` → mảng ID thông báo đã đọc
-*   **Admin identity**: Email cứng `admin@zeflyo.io` được check ở cả frontend (`isAdmin`) và backend middleware.
-*   **Sidebar activeTab prop**: Sidebar nhận `activeTab` từ page để highlight đúng sub-tab. Khi navigate từ trang khác (không có `setActiveTab`), Sidebar dùng `router.push("/scheduler?tab=xxx")` để vừa chuyển trang vừa set tab qua URL.
-*   **Mock Mode**: Token bắt đầu bằng `mock_token_` → frontend chạy hoàn toàn với dữ liệu giả không cần backend. Credits tự cộng +100/ngày cho plan free.
-*   **Mô hình quản lý mới (PM transition)**: Tiến thử sức làm Feature PM & Coordinator (theo dõi tiến độ, backlog, reminder). Hoàng lùi về làm DevOps Lead & Technical Gatekeeper tối cao (quản lý hạ tầng AWS, CI/CD, có quyền phủ quyết/điều chỉnh kế hoạch nếu không hợp lý, duyệt PR staging/main cùng Khoa).
-
----
-
-## ✅ Phase 7 Implemented (2026-07-02)
-
-### AI Writer Redesign on Scheduler
-- Cập nhật giao diện tab "Tạo bài AI" trên [frontend/src/app/scheduler/page.tsx](frontend/src/app/scheduler/page.tsx) theo yêu cầu phase 7.
-- Thêm prompt chips để tự điền chủ đề và mục tiêu nhanh.
-- Thêm 3 card chọn framework: AIDA, PAS, BAB với trạng thái active/hover rõ ràng.
-- Kết nối endpoint SSE `/api/posts/generate-ai-stream` để hiển thị nội dung theo từng chunk.
-- Thêm nút hủy viết bài dùng AbortController để dừng request ngay lập tức.
-- Kiểm tra xác nhận: `npx tsc --noEmit` thành công và `npm run build` thành công.
+*   **Lý do Nginx phục vụ Next.js trực tiếp**: Tránh chạy Node.js trong môi trường sản xuất giúp giảm thiểu RAM sử dụng, giảm thiểu rủi ro bảo mật và tối đa hóa tốc độ tải trang tĩnh của Next.js.
+*   **Lý do cần sqlite-dev**: PHP 8.4 khi biên dịch PDO trên Alpine bắt buộc cần các file headers của Sqlite3 kể cả khi chúng ta chỉ sử dụng driver pdo_pgsql.
+*   **Cơ chế lưu trữ RAM của Octane**: Do Octane chạy nạp mã nguồn Laravel vào RAM, khi có thay đổi tệp tin lớp học hoặc nạp thêm dependency mới (như Faker), cần phải chạy `docker restart app_zeflyo` để khởi động lại Octane trong container thay vì chỉ chạy composer ngoài host.
+*   **Lưu ý bảo mật**: Đã thêm các tệp tin cấu hình nhạy cảm của Terraform (`*.tfvars`, `*.tfstate`, `.terraform/`) vào [.gitignore](file:///r:/_Projects/Eurus_Workspace/Zeflyo/.gitignore) tránh lộ token DigitalOcean lên GitHub.
 
 ## 🔜 Next Steps (3 hành động kỹ thuật trực tiếp kế tiếp)
-
-- [ ] **Step 1:** Đồng bộ hóa credits thực tế nhận được từ webhook SePay với hệ thống trừ điểm khi chạy AI Campaigns (backend: `POST /api/webhooks/sepay` → cộng credits vào `users.credits`).
-- [ ] **Step 2:** Tích hợp DB encryption cho các Facebook token fanpage (`pages.access_token`) bằng Laravel Eloquent Encrypted Casts — yêu cầu security của Khoa chưa làm.
-- [ ] **Step 3:** DevOps (Hoàng): Hoàn thiện Terraform scripts + GitHub Actions CI/CD cho Phase 5 (Pest test → Larastan → Trivy scan → ECR upload → ECS rolling deploy → S3+CloudFront Next.js deploy).
+- [ ] **Step 1:** Kiểm tra liên kết Webhook Facebook trực tiếp bằng các tương tác bình luận/tin nhắn từ fanpage thực tế xem luồng ghi nhận của Queue Worker có hoạt động chính xác.
+- [ ] **Step 2:** Thiết lập cronjob tự động sao lưu định kỳ thư mục dữ liệu PostgreSQL (`postgres_data`) trên VPS ra không gian lưu trữ ngoài (ví dụ: S3 hoặc DO Spaces).
+- [ ] **Step 3:** Thay đổi tên miền thực tế của khách hàng (cấu hình trỏ bản ghi A từ tên miền chính thay vì dùng DuckDNS) và thực hiện cấp lại chứng chỉ SSL Let's Encrypt tương ứng.

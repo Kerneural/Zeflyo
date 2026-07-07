@@ -45,11 +45,11 @@
 - [x] Frontend (Tiến): Build AI Writer Panel and Facebook Live Mockup Preview on `/scheduler` page.
 - [x] Testing: Write feature test suite verification for AI content generation API.
 
-### Phase 5: CI/CD AWS Deploy & Monitoring (Day 12 - 14) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/phases/phase5_cicd_aws.md)
-- [ ] DevOps (Hoàng): Complete Terraform scripts. Set up GitHub Actions CI/CD (Pest test, Larastan, Trivy scan, ECR upload, ECS rolling update deploy).
-- [ ] DevOps (Hoàng): Deploy Next.js to S3 + CloudFront CDN.
-- [ ] DevOps/Security (Hoàng + Khoa): Setup CloudWatch log groups, alerting metric filters, and Dashboard.
-- [ ] Team (Hoàng + Khoa + Tiến): Final QA, demo run, bug fixes, freeze code, and release project.
+### Phase 5: VPS Deployment & HTTPS (Day 12 - 14) - [Specs](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docs/deployment_zeflyo_digitalocean.md)
+- [x] DevOps (Hoàng): Complete Terraform scripts to deploy a clean DigitalOcean VPS.
+- [x] DevOps (Hoàng): Build and upload static Next.js export, configure Nginx to serve it directly from local folder.
+- [x] DevOps (Hoàng): Configure Certbot SSL on host, mount `/etc/letsencrypt` to Nginx, and activate HTTPS.
+- [x] Team (Hoàng + Khoa + Tiến): Setup database migrations, seeders, and verify functional live production environment at `zeflyo.duckdns.org`.
 
 ### Phase 6: UI/UX Premium Overhaul & Sidebar Optimization (2026-06-26) - [Walkthrough](file:///C:/Users/ACER/.gemini/antigravity-ide/brain/0db0bc85-e913-4c3e-af7a-005ff44c8899/walkthrough.md)
 - [x] **Global CSS**: Xóa utility class hijacking, fix font tiếng Việt (`Plus Jakarta Sans`), design system light/dark mode premium.
