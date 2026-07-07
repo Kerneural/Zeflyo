@@ -194,7 +194,13 @@ export default function ChatHub() {
     }
 
     setToken(savedToken);
-    if (savedApiBase) setApiBaseUrl(savedApiBase);
+    const currentOrigin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    if (!savedApiBase || (savedApiBase === "http://localhost" && currentOrigin !== "http://localhost")) {
+      localStorage.setItem("zeflyo_api_base", currentOrigin);
+      setApiBaseUrl(currentOrigin);
+    } else if (savedApiBase) {
+      setApiBaseUrl(savedApiBase);
+    }
     if (savedUser) setUser(JSON.parse(savedUser));
     if (savedLang === "en" || savedLang === "vi") setLang(savedLang as "en" | "vi");
 

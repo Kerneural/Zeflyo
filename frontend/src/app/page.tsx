@@ -195,7 +195,13 @@ export default function App() {
         localStorage.removeItem("zeflyo_user");
       }
     }
-    if (savedApiBase) setApiBaseUrl(savedApiBase);
+    const currentOrigin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    if (!savedApiBase || (savedApiBase === "http://localhost" && currentOrigin !== "http://localhost")) {
+      localStorage.setItem("zeflyo_api_base", currentOrigin);
+      setApiBaseUrl(currentOrigin);
+    } else if (savedApiBase) {
+      setApiBaseUrl(savedApiBase);
+    }
     if (savedAppId) setAppId(savedAppId);
     if (savedLang === "en" || savedLang === "vi") setLang(savedLang);
     

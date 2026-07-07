@@ -419,7 +419,14 @@ export default function GeneralSettingsPage() {
 
   useEffect(() => {
     const savedToken = localStorage.getItem("zeflyo_token");
-    const savedApiBase = localStorage.getItem("zeflyo_api_base") || "http://localhost";
+    const savedApiBase = localStorage.getItem("zeflyo_api_base");
+    const currentOrigin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    if (!savedApiBase || (savedApiBase === "http://localhost" && currentOrigin !== "http://localhost")) {
+      localStorage.setItem("zeflyo_api_base", currentOrigin);
+      setApiBaseUrl(currentOrigin);
+    } else if (savedApiBase) {
+      setApiBaseUrl(savedApiBase);
+    }
     const savedLang = localStorage.getItem("zeflyo_lang") || "vi";
 
     if (savedToken) setToken(savedToken);
