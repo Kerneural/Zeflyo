@@ -18,7 +18,7 @@ RUN apk add --no-cache \
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-configure pdo_pgsql --with-pdo-pgsql=/usr \
+    && docker-php-ext-configure pdo_pgsql --with-pdo-pgsql \
     && docker-php-ext-install pdo pdo_pgsql gd zip pcntl sockets opcache intl
 
 # Install Composer
