@@ -7,9 +7,9 @@ Tài liệu này hướng dẫn quy trình khởi tạo máy chủ và triển k
 ## 🏗️ Kiến Trúc Hệ Thống Trên DigitalOcean
 
 Bằng việc sử dụng một VPS (Droplet) trắng riêng biệt, chúng ta có thể cô lập hoàn toàn môi trường chạy Docker, không gây loãng hoặc ảnh hưởng đến các dự án khác (như WordPress cũ):
-*   **Máy chủ**: Ubuntu 22.04 LTS (Khuyên dùng cấu hình tối thiểu 1 vCPU / 2GB RAM để chạy mượt mà các container Docker).
+*   **Máy chủ**: Ubuntu 22.04 LTS (Khuyên dùng cấu hình tối thiểu 2 vCPU / 4GB RAM trở lên để biên dịch PHP và chạy mượt mà các container Docker).
 *   **Docker Containers**:
-    *   `nginx_zeflyo` (Cổng 80/443): Web server chính phục vụ giao diện Next.js tĩnh và reverse-proxy định tuyến `/api` & WebSockets.
+    *   `nginx_zeflyo` (Cổng 80/443): Web server chính phục vụ giao diện Next.js tĩnh từ thư mục `/app/frontend/out` và reverse-proxy định tuyến `/api`, `/storage` & WebSockets (`/app`, `/socket.io`).
     *   `app_zeflyo` (Cổng 8000 nội bộ): Laravel Octane chạy mã nguồn PHP Backend.
     *   `worker_zeflyo`: Laravel Queue Worker chạy ngầm xử lý hàng đợi.
     *   `postgres_zeflyo` (Cổng 5432): Cơ sở dữ liệu chính PostgreSQL.
@@ -39,21 +39,22 @@ Bằng việc sử dụng một VPS (Droplet) trắng riêng biệt, chúng ta c
     ssh_key_name = "tên-ssh-key-đã-upload-trên-digitalocean"
     droplet_name = "zeflyo-production"
     region       = "sgp1"  # Singapore (khu vực tối ưu nhất cho Việt Nam)
-    droplet_size = "s-1vcpu-2gb"
+    droplet_size = "s-4vcpu-8gb" # Lựa chọn kích thước droplet mong muốn
     ```
 7.  Khởi chạy các lệnh Terraform để khởi tạo VPS tự động:
     ```bash
     terraform init
-    terraform plan
+    ```
+    ```bash
     terraform apply
     ```
     *Gõ `yes` khi hệ thống yêu cầu xác nhận. Khi chạy xong, Terraform sẽ in ra địa chỉ IP công khai của Droplet.*
 
 ---
 
-### BƯỚC 2: Cấu Hình Tên Miền
+### BƯỚC 2: Cấu Hợp Tên Miền
 1.  Truy cập vào trang quản trị tên miền của bạn (hoặc tài khoản **DuckDNS** nếu dùng miễn phí).
-2.  Trỏ bản ghi **`A`** của tên miền chính (ví dụ: `zeflyo.duckdns.org`) về địa chỉ IP của Droplet vừa được in ra từ Terraform.
+2.  Trỏ bản ghi **`A`** của tên miền chính (ví dụ: `zeflyo.duckdns.org`) về địa chỉ IP của Droplet vừa tạo.
 
 ---
 
@@ -74,7 +75,7 @@ Bằng việc sử dụng một VPS (Droplet) trắng riêng biệt, chúng ta c
     cp backend/.env.example backend/.env
     nano backend/.env
     ```
-    Điền các thông số kết nối khớp với Docker Compose:
+    Điền các thông số kết nối khớp với Docker Compose và điền các API Token thực tế của bạn:
     ```env
     APP_ENV=production
     APP_DEBUG=false
@@ -135,7 +136,7 @@ Bằng việc sử dụng một VPS (Droplet) trắng riêng biệt, chúng ta c
     npm run build
     ```
 4.  Nén thư mục `out` vừa được sinh ra thành tệp **`out.zip`**.
-5.  Upload tệp `out.zip` lên thư mục `/app/frontend` trên VPS (sử dụng công cụ SFTP như FileZilla hoặc lệnh `scp`):
+5.  Upload tệp `out.zip` lên thư mục `/app/frontend` trên VPS (sử dụng công cụ SFTP hoặc lệnh `scp` từ local):
     ```bash
     scp out.zip root@<IP_MÁY_CHỦ>:/app/frontend/
     ```
@@ -149,40 +150,70 @@ Bằng việc sử dụng một VPS (Droplet) trắng riêng biệt, chúng ta c
 
 ---
 
-### BƯỚC 5: Khởi Chạy Hệ Thống Docker Compose
+### BƯỚC 5: Khởi Chạy Hệ Thống Docker Compose & Khởi Tạo Laravel
 
-1.  Tại thư mục `/app` trên VPS, chạy lệnh khởi dựng Docker Compose:
+1.  **Cài đặt Composer dependencies lần đầu trước khi khởi chạy**:
+    Vì Container ứng dụng Laravel bắt đầu chạy bằng cách khởi động Octane (yêu cầu bộ nạp tự động `vendor/autoload.php`), nên ta cần chạy composer để tải các gói thư viện trước, tránh việc container bị crash loop:
+    ```bash
+    docker compose run --rm app composer install
+    ```
+    *(Lệnh này sẽ tải các thư viện bao gồm cả dev-dependencies như Faker để phục vụ chạy Seeder).*
+
+2.  **Khởi chạy toàn bộ container**:
     ```bash
     docker compose up -d
     ```
-    *(Các container Nginx, App, PostgreSQL, Redis, Worker, Soketi sẽ được tự động tải về, biên dịch và chạy ngầm).*
-2.  Truy cập vào container backend `app_zeflyo` để cấu hình Laravel:
+
+3.  **Tạo Key & Chạy Migrations**:
     ```bash
-    docker exec -it app_zeflyo bash
+    docker exec app_zeflyo php artisan key:generate
+    docker exec app_zeflyo php artisan migrate --force
     ```
-3.  Chạy các lệnh thiết lập bên trong container:
+
+4.  **Chạy Seeder dữ liệu mẫu**:
+    Vì Laravel Octane lưu trữ mã nguồn trong bộ nhớ RAM, ta cần khởi động lại container để Octane nhận diện bộ nạp tự động mới từ Composer trước khi seed:
     ```bash
-    composer install --no-dev --optimize-autoloader
-    php artisan key:generate
-    php artisan migrate --force
-    php artisan db:seed --force
-    exit
+    docker restart app_zeflyo
+    docker exec app_zeflyo php artisan db:seed --force
     ```
 
 ---
 
-### BƯỚC 6: Cấu hình SSL (HTTPS) bảo mật tự động bằng Certbot
-Để bật chứng chỉ bảo mật HTTPS cho dự án, bạn chạy Certbot trực tiếp trên VPS:
+### BƯỚC 6: Cấu Hình SSL (HTTPS) Tự Động Bằng Certbot
 
-1.  Cài đặt Certbot:
-    ```bash
-    apt-get install -y certbot python3-certbot-nginx
-    ```
-2.  Bật SSL cho Nginx:
-    ```bash
-    certbot --nginx -d zeflyo.duckdns.org
-    ```
-    *(Làm theo hướng dẫn trên màn hình, điền email và chọn chuyển hướng tự động HTTP sang HTTPS).*
-3.  Certbot sẽ tự động chèn cấu hình SSL vào Nginx và tự động gia hạn 3 tháng một lần.
+Do Nginx chạy trong Docker chiếm dụng cổng 80/443, ta sẽ lấy chứng chỉ SSL ở môi trường máy chủ (Host) thông qua chế độ `standalone` của Certbot, sau đó mount trực tiếp thư mục chứng chỉ vào container Nginx.
 
-Hệ thống Zeflyo của bạn đã hoàn thành triển khai, hoạt động an toàn và bảo mật hoàn hảo trên DigitalOcean!
+1.  **Tải Certbot trên VPS Host**:
+    ```bash
+    apt-get update && apt-get install -y certbot
+    ```
+
+2.  **Tạm dừng Nginx Container** để giải phóng cổng 80:
+    ```bash
+    docker stop nginx_zeflyo
+    ```
+
+3.  **Yêu cầu cấp phát chứng chỉ SSL** Let's Encrypt:
+    ```bash
+    certbot certonly --standalone -d zeflyo.duckdns.org --non-interactive --agree-tos --email your-email@gmail.com
+    ```
+    *(Thay đổi `zeflyo.duckdns.org` thành tên miền của bạn và điền email quản trị thực tế).*
+
+4.  **Kiểm tra cấu hình Nginx & Docker Mount**:
+    Đảm bảo tệp `docker-compose.yaml` đã mount thư mục chứng chỉ:
+    ```yaml
+        volumes:
+          - /etc/letsencrypt:/etc/letsencrypt:ro
+    ```
+    Đảm bảo cấu hình Nginx trong dự án (`docker/nginx/conf.d/default.conf`) đã được thiết lập lắng nghe cổng `443 ssl` và chỉ định đường dẫn tệp chứng chỉ khớp với tên miền:
+    ```nginx
+        ssl_certificate /etc/letsencrypt/live/zeflyo.duckdns.org/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/zeflyo.duckdns.org/privkey.pem;
+    ```
+
+5.  **Khởi động lại và áp dụng cấu hình SSL cho Nginx**:
+    ```bash
+    docker compose up -d --force-recreate nginx
+    ```
+
+Hệ thống Zeflyo của bạn đã hoàn thành triển khai, hoạt động an toàn và bảo mật hoàn hảo với giao thức HTTPS trên DigitalOcean!
