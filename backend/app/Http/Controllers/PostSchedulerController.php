@@ -147,13 +147,6 @@ class PostSchedulerController extends Controller
         return response()->stream(function () use ($request, $geminiService) {
             set_time_limit(0);
 
-            // Clear output buffers to ensure instant flush to client
-            if (! app()->environment('testing')) {
-                while (ob_get_level() > 0) {
-                    ob_end_clean();
-                }
-            }
-
             $messages = $this->buildPrompts($request->all());
 
             $geminiService->generateReplyStream($messages, function ($chunk) {
