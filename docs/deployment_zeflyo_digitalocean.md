@@ -140,12 +140,13 @@ Bằng việc sử dụng một VPS (Droplet) trắng riêng biệt, chúng ta c
     ```bash
     scp out.zip root@<IP_MÁY_CHỦ>:/app/frontend/
     ```
-6.  Trên VPS, giải nén tệp `out.zip` trực tiếp vào thư mục `/app/frontend/out`:
+6.  Trên VPS, giải nén tệp `out.zip` trực tiếp vào thư mục `/app/frontend/out` và cấp quyền đọc (read) cho Nginx:
     ```bash
     apt-get install -y unzip
     mkdir -p /app/frontend/out
     unzip /app/frontend/out.zip -d /app/frontend/out
     rm /app/frontend/out.zip
+    chmod -R 755 /app/frontend/out
     ```
 
 ---
