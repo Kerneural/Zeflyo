@@ -135,6 +135,7 @@ function PostSchedulerContent() {
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [presets, setPresets] = useState(promptPresets);
   const [isLoadingPresets, setIsLoadingPresets] = useState<boolean>(false);
+  const [businessNiche, setBusinessNiche] = useState<string>("");
   const [scheduleMode, setScheduleMode] = useState<"weekly" | "fixed">("weekly");
   const [scheduleTimes, setScheduleTimes] = useState<string[]>(["08:00"]);
   const [scheduleDays, setScheduleDays] = useState<number[]>([1, 3, 5]); // 1 = Mon, ..., 7 = Sun
@@ -216,42 +217,39 @@ function PostSchedulerContent() {
     }
   }, []);
 
-  // Fetch dynamic, AI-personalized prompt presets based on the selected Fanpage name/niche
-  useEffect(() => {
-    if (!token) return;
+  // Generate dynamic, AI-personalized prompt presets based on user business niche
+  const handleGeneratePresets = async () => {
+    if (!token || !businessNiche.trim() || isLoadingPresets) return;
 
-    const activePage = fanpages.find(p => selectedPages.includes(p.id));
-    if (!activePage) {
-      setPresets(promptPresets);
-      return;
-    }
+    setIsLoadingPresets(true);
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/posts/quick-presets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ niche: businessNiche.trim() })
+      });
 
-    const fetchPresets = async () => {
-      setIsLoadingPresets(true);
-      try {
-        const response = await fetch(`${apiBaseUrl}/api/posts/quick-presets`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ brand_name: activePage.name })
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.presets && Array.isArray(data.presets)) {
-            setPresets(data.presets);
-          }
+      if (response.ok) {
+        const data = await response.json();
+        if (data.presets && Array.isArray(data.presets)) {
+          setPresets(data.presets);
+          showNotification("success", "Đã tạo 4 gợi ý viết bài mới theo sản phẩm của bạn!");
+        } else {
+          showNotification("error", "Không thể lấy chủ đề gợi ý.");
         }
-      } catch (e) {
-        console.error("Failed to fetch dynamic presets:", e);
-      } finally {
-        setIsLoadingPresets(false);
+      } else {
+        showNotification("error", "Lỗi tạo gợi ý chủ đề.");
       }
-    };
-
-    fetchPresets();
-  }, [selectedPages, fanpages, token, apiBaseUrl]);
+    } catch (e) {
+      console.error(e);
+      showNotification("error", "Lỗi kết nối.");
+    } finally {
+      setIsLoadingPresets(false);
+    }
+  };
 
   useEffect(() => {
     if (theme === "light") {
@@ -1065,8 +1063,41 @@ function PostSchedulerContent() {
                         <span>Trình viết bài bằng AI</span>
                       </div>
 
-                      {/* Prompt Chips */}
+                      {/* Lĩnh vực / Sản phẩm kinh doanh */}
                       <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Lĩnh vực kinh doanh hoặc Sản phẩm của bạn</span>
+                        <div className="flex gap-2">
+                          <input 
+                            type="text"
+                            value={businessNiche}
+                            onChange={(e) => setBusinessNiche(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleGeneratePresets();
+                              }
+                            }}
+                            placeholder="Ví dụ: Khóa học AI, Đồ điện gia dụng, Mỹ phẩm, Spa, Cafe..."
+                            className="flex-1 bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs outline-none text-zinc-250 placeholder:text-zinc-650"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleGeneratePresets}
+                            disabled={isLoadingPresets || !businessNiche.trim()}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                          >
+                            {isLoadingPresets ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Sparkles className="w-3.5 h-3.5" />
+                            )}
+                            Gợi ý bằng AI
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Prompt Chips */}
+                      <div className="flex flex-col gap-1.5 mt-1">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Gợi ý chủ đề nhanh</span>
                           {isLoadingPresets && (
