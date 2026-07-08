@@ -341,7 +341,8 @@ export default function App() {
   };
 
   const handleFacebookLogin = () => {
-    if (typeof window !== "undefined" && window.location.protocol !== "https:") {
+    const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    if (typeof window !== "undefined" && window.location.protocol !== "https:" && !isLocalhost) {
       showNotification("error", lang === "en"
         ? "Facebook Login requires a secure HTTPS connection. On HTTP local development, please use 'Mock Dev Mode' or 'Dev Login' below."
         : "Đăng nhập Facebook yêu cầu kết nối bảo mật HTTPS. Khi chạy local ở giao thức HTTP, vui lòng sử dụng 'Chế độ Giả lập' hoặc 'Đăng nhập Developer' bên dưới."
