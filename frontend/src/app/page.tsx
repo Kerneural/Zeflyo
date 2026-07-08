@@ -204,6 +204,10 @@ export default function App() {
       }
     }
     const isStaleLocalhost = savedApiBase && (savedApiBase.includes("localhost:") || savedApiBase.includes("127.0.0.1:"));
+    const targetApi = !savedApiBase || isStaleLocalhost || (savedApiBase === "http://localhost" && defaultApiBase !== "http://localhost")
+      ? defaultApiBase
+      : savedApiBase;
+
     if (!savedApiBase || isStaleLocalhost || (savedApiBase === "http://localhost" && defaultApiBase !== "http://localhost")) {
       localStorage.setItem("zeflyo_api_base", defaultApiBase);
       setApiBaseUrl(defaultApiBase);
@@ -220,9 +224,24 @@ export default function App() {
       document.documentElement.classList.remove("light");
     }
 
-    // Default appId if not set
-    const initialAppId = savedAppId || "802422055100000"; // Placeholder test app id
-    setAppId(initialAppId);
+    // Fetch configuration from Backend dynamically
+    const fetchConfig = async (url: string) => {
+      try {
+        const res = await fetch(`${url}/api/config`, {
+          headers: { Accept: "application/json" }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.facebook_app_id) {
+            setAppId(data.facebook_app_id);
+            localStorage.setItem("zeflyo_fb_app_id", data.facebook_app_id);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch public config from backend", e);
+      }
+    };
+    fetchConfig(targetApi);
 
     setLoading(false);
   }, []);
@@ -549,9 +568,26 @@ export default function App() {
     localStorage.removeItem("zeflyo_mock_pages");
   };
 
-  const saveSettings = () => {
+  const saveSettings = async () => {
     localStorage.setItem("zeflyo_api_base", apiBaseUrl);
-    localStorage.setItem("zeflyo_fb_app_id", appId);
+    
+    let currentAppId = appId;
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/config`, {
+        headers: { Accept: "application/json" }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.facebook_app_id) {
+          currentAppId = data.facebook_app_id;
+          setAppId(currentAppId);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch facebook app id from saved api address:", e);
+    }
+
+    localStorage.setItem("zeflyo_fb_app_id", currentAppId);
     showNotification("success", translations[lang].saveConfig);
   };
 

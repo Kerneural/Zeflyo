@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', fn () => response()->json(['message' => 'Unauthenticated.'], 401))->name('login');
 Route::post('/auth/facebook/callback', [FacebookAuthController::class, 'callback']);
 Route::post('/auth/demo', [FacebookAuthController::class, 'demoLogin']);
+Route::get('/config', fn () => response()->json(['facebook_app_id' => config('services.facebook.client_id')]));
 
 // Facebook Webhook endpoints (Publicly accessible by Meta)
 Route::get('/webhook/facebook', [FacebookWebhookController::class, 'verify']);
