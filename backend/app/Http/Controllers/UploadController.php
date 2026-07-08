@@ -61,16 +61,23 @@ class UploadController extends Controller
      */
     private function compressImage($sourcePath, $targetPath, $mimeType)
     {
+        if (!extension_loaded('gd') || !function_exists('imagecreatetruecolor')) {
+            return false;
+        }
+
         try {
             switch ($mimeType) {
                 case 'image/jpeg':
                 case 'image/jpg':
+                    if (!function_exists('imagecreatefromjpeg')) return false;
                     $image = @imagecreatefromjpeg($sourcePath);
                     break;
                 case 'image/png':
+                    if (!function_exists('imagecreatefrompng')) return false;
                     $image = @imagecreatefrompng($sourcePath);
                     break;
                 case 'image/webp':
+                    if (!function_exists('imagecreatefromwebp')) return false;
                     $image = @imagecreatefromwebp($sourcePath);
                     break;
                 default:
@@ -103,14 +110,17 @@ class UploadController extends Controller
 
             $success = false;
             if ($mimeType === 'image/png') {
+                if (!function_exists('imagepng')) return false;
                 // Compresses PNG (0 to 9, 6 is balanced default)
-                $success = imagepng($image, $targetPath, 6);
+                $success = @imagepng($image, $targetPath, 6);
             } else {
                 // Compresses JPEG/WebP (Quality 75% gives huge savings with negligible quality loss)
                 if ($mimeType === 'image/webp') {
-                    $success = imagewebp($image, $targetPath, 75);
+                    if (!function_exists('imagewebp')) return false;
+                    $success = @imagewebp($image, $targetPath, 75);
                 } else {
-                    $success = imagejpeg($image, $targetPath, 75);
+                    if (!function_exists('imagejpeg')) return false;
+                    $success = @imagejpeg($image, $targetPath, 75);
                 }
             }
 
