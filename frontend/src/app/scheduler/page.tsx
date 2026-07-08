@@ -133,6 +133,8 @@ function PostSchedulerContent() {
   const [aiFramework, setAiFramework] = useState<string>("aida");
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [presets, setPresets] = useState(promptPresets);
+  const [isLoadingPresets, setIsLoadingPresets] = useState<boolean>(false);
   const [scheduleMode, setScheduleMode] = useState<"weekly" | "fixed">("weekly");
   const [scheduleTimes, setScheduleTimes] = useState<string[]>(["08:00"]);
   const [scheduleDays, setScheduleDays] = useState<number[]>([1, 3, 5]); // 1 = Mon, ..., 7 = Sun
@@ -213,6 +215,43 @@ function PostSchedulerContent() {
       }
     }
   }, []);
+
+  // Fetch dynamic, AI-personalized prompt presets based on the selected Fanpage name/niche
+  useEffect(() => {
+    if (!token) return;
+
+    const activePage = fanpages.find(p => selectedPages.includes(p.id));
+    if (!activePage) {
+      setPresets(promptPresets);
+      return;
+    }
+
+    const fetchPresets = async () => {
+      setIsLoadingPresets(true);
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/posts/quick-presets`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ brand_name: activePage.name })
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.presets && Array.isArray(data.presets)) {
+            setPresets(data.presets);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch dynamic presets:", e);
+      } finally {
+        setIsLoadingPresets(false);
+      }
+    };
+
+    fetchPresets();
+  }, [selectedPages, fanpages, token, apiBaseUrl]);
 
   useEffect(() => {
     if (theme === "light") {
@@ -1028,18 +1067,28 @@ function PostSchedulerContent() {
 
                       {/* Prompt Chips */}
                       <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Gợi ý chủ đề nhanh</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Gợi ý chủ đề nhanh</span>
+                          {isLoadingPresets && (
+                            <span className="text-[10px] text-blue-400 flex items-center gap-1 animate-pulse">
+                              <Loader2 className="w-3 h-3 animate-spin" /> AI đang cá nhân hóa...
+                            </span>
+                          )}
+                        </div>
                         <div className="flex flex-wrap gap-2">
-                          {promptPresets.map((preset, idx) => (
+                          {presets.map((preset, idx) => (
                             <button
                               key={idx}
                               type="button"
+                              disabled={isLoadingPresets}
                               onClick={() => {
                                 setAiTopic(preset.topic);
                                 setAiGoal(preset.goal);
                                 showNotification("success", `Đã áp dụng: ${preset.label}`);
                               }}
-                              className="px-3 py-1.5 rounded-full text-[11px] font-semibold bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-350 hover:text-zinc-100 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm"
+                              className={`px-3 py-1.5 rounded-full text-[11px] font-semibold bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-350 hover:text-zinc-100 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm ${
+                                isLoadingPresets ? "opacity-50 cursor-not-allowed" : ""
+                              }`}
                             >
                               {preset.label}
                             </button>

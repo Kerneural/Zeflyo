@@ -236,4 +236,21 @@ class PostSchedulerController extends Controller
             ],
         ];
     }
+
+    public function getQuickPresets(Request $request)
+    {
+        $request->validate([
+            'brand_name' => 'required|string|max:255',
+        ]);
+
+        $brandName = $request->input('brand_name');
+        $geminiService = app(GeminiService::class);
+        $presets = $geminiService->generateQuickPresets($brandName);
+
+        if ($presets === null) {
+            return response()->json(['error' => 'Failed to generate quick presets.'], 500);
+        }
+
+        return response()->json(['presets' => $presets]);
+    }
 }

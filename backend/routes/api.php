@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/posts/schedule/{id}', [PostSchedulerController::class, 'destroy']);
     Route::post('/posts/generate-ai', [PostSchedulerController::class, 'generateAi']);
     Route::post('/posts/generate-ai-stream', [PostSchedulerController::class, 'generateAiStream'])->middleware('throttle:ai_generator');
+    Route::post('/posts/quick-presets', [PostSchedulerController::class, 'getQuickPresets']);
 
     // Auto-Reply Rules APIs
     Route::apiResource('/auto-reply-rules', AutoReplyRuleController::class);

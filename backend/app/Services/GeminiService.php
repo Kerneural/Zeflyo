@@ -147,6 +147,25 @@ class GeminiService
     }
 
     /**
+     * Generate 4 custom presets based on brand name/fanpage name.
+     */
+    public function generateQuickPresets(string $brandName): ?array
+    {
+        $prompt = "Bạn là chuyên gia marketing cao cấp. Dựa trên tên Fanpage hoặc thương hiệu: '{$brandName}', hãy đề xuất 4 gợi ý chủ đề viết bài nhanh cho Facebook dưới định dạng JSON array chứa đúng 4 object.\n"
+            ."Mỗi object đại diện cho một chủ đề và phải có chính xác các trường sau:\n"
+            ."- 'label': nhãn cực kỳ ngắn gọn (2-4 từ, kèm emoji đại diện phù hợp)\n"
+            ."- 'topic': chủ đề viết bài chi tiết và có chiều sâu dài khoảng 1-2 câu\n"
+            ."- 'goal': mục tiêu viết bài cụ thể cho chủ đề đó (ví dụ: tăng tương tác, trao giá trị, thúc giục mua hàng, xây dựng uy tín)\n\n"
+            ."YÊU CẦU BẮT BUỘC:\n"
+            ."1. Danh sách đề xuất phải đa dạng (ví dụ: 1 minigame/tương tác, 1 chia sẻ mẹo vặt/hướng dẫn hữu ích, 1 bài quảng cáo/ưu đãi sản phẩm, 1 bài giới thiệu thương hiệu/đội ngũ).\n"
+            ."2. Phải phân tích tên Fanpage '{$brandName}' để đưa ra các gợi ý phù hợp CHÍNH XÁC với ngành nghề hoặc lĩnh vực hoạt động tương ứng (ví dụ: Điện máy, Làm đẹp, Giáo dục, Đồ ăn, Công nghệ, v.v.).\n"
+            ."3. Nếu tên thương hiệu hoặc Fanpage là tiếng Việt, hãy trả về toàn bộ nội dung bằng tiếng Việt.\n"
+            ."4. Phản hồi của bạn chỉ được chứa chuỗi JSON array hợp lệ, không chứa thẻ Markdown ```json hay bất kỳ văn bản chào hỏi nào.";
+
+        return $this->callGeminiJson($prompt);
+    }
+
+    /**
      * Generate a Facebook post from a topic title using campaign config.
      */
     public function generatePostFromTopic(string $topic, array $config): ?string
