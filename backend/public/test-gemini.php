@@ -7,16 +7,11 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 $service = app(App\Services\GeminiService::class);
-echo "Testing Gemini Service...\n";
+echo "Testing Gemini Service with User Inputs...\n";
 try {
-    $res = $service->generateQuickPresets('Spa làm đẹp');
+    $res = $service->generateQuickPresets('Khoá học autocad giá rẻ', 'aida');
     if ($res === null) {
         echo "FAILED: Result is NULL.\n";
-        // Let's log keys rotation state or try a simple call
-        $keys = config('services.gemini.key');
-        $model = config('services.gemini.model');
-        echo "Model: $model\n";
-        echo "Keys Count: " . count(array_filter(array_map('trim', explode(',', $keys)))) . "\n";
     } else {
         echo "SUCCESS:\n";
         print_r($res);
