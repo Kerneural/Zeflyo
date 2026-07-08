@@ -1,32 +1,39 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-07-08 | Status: Unified Post Scheduler, Spacious Preview Modal, and AI Concurrency Anti-Spam protection (5 rotated keys) fully deployed.
+> Last Checkpoint: 2026-07-02 | Status: **PHASE 7 BACKEND & TESTING COMPLETED — FRONTEND TO DO**
 
 ---
 
-## ⚡ Active Tasks Completed (Những việc ĐÃ HOÀN THÀNH trong session)
-*   **Post Scheduler & AI Campaign Merge [frontend]:**
-    *   Merged the separate `autopost` campaign manager and `scheduler` post scheduler into a single, cohesive route under [scheduler/page.tsx](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/scheduler/page.tsx).
-    *   Consolidated the sidebar in [Sidebar.tsx](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/components/Sidebar.tsx) to map cleanly to the subtab switchers (`/scheduler?tab=setup` and `/scheduler?tab=list`).
-    *   Implemented `mounted` hydration state check to bypass Next.js server/client hydration mismatch warnings (caused by third-party browser translator extensions injecting elements).
-*   **Facebook-Style Live Edit & Review Modal [frontend]:**
-    *   Rebuilt the edit/view modal at the bottom of [scheduler/page.tsx](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/scheduler/page.tsx) to be tall and spacious (`max-w-7xl h-[85vh] max-h-[850px] flex flex-col justify-between`).
-    *   Textarea and the mock Facebook feed card stretch dynamically to fill 100% height, using `flex-1 min-h-0 overflow-y-auto` to scroll long content gracefully.
-    *   Enlarged the editor textarea size to `text-sm` for optimal screen usability.
-*   **API Concurrency Lock & Anti-Spam Throttling [backend]:**
-    *   Added a Cache-based concurrency locking check (`auto_setup_topics_lock_{id}` and `auto_setup_gen_lock_{id}`) in [TopicController.php](file:///r:/_Projects/Eurus_Workspace/Zeflyo/backend/app/Http/Controllers/TopicController.php) to prevent duplicate clicks and concurrent API spamming for the same campaign.
-    *   Imposed a strict limit of **15 pending topics max** processed in a single batch content generation call to avoid request timeout and API key rate limit exhaustion.
-    *   Introduced a **1.2s delay (`usleep(1200000)`)** between sequential AI generations in the batch loop. This distributes API load evenly and fits perfectly within the rotated **5 Free API keys'** combined capacity.
-*   **Gemini API Key Expansion [backend]:**
-    *   Configured **5 rotated API keys** in `GEMINI_API_KEY` (local and VPS `.env`) to handle higher concurrency traffic.
-*   **Deployment and Service Refresh [devops]:**
-    *   Successfully compiled the static bundle via `npm run build`, packaged into `out.zip`, and deployed changes to DO VPS `165.232.163.188` using direct `git pull` + container restarts.
+## ⚡ Active Task Completed (Những việc ĐÃ HOÀN THÀNH trong session)
+
+### 🧪 JZ-7 — Testing & Integration (Tiến Pho Duc)
+*   **Đồng bộ mã nguồn:** Xác nhận và hoàn tất việc merge các cập nhật từ `main` (chứa phần code phát triển SSE stream API của Hoàng từ PR #6).
+*   **Kiểm thử tự động (Feature Tests):** Dựng thành công file [GeminiStreamTest.php](file:///d:/ThucTapDN/Zeflyo/backend/tests/Feature/GeminiStreamTest.php) với 6 kịch bản kiểm thử:
+    1.  `test_stream_endpoint_returns_correct_sse_headers` (Headers phản hồi chuẩn).
+    2.  `test_stream_endpoint_validates_required_parameters` (Validation 422).
+    3.  `test_abort_stream_behavior` (Mô phỏng ngắt kết nối client và bảo vệ rò rỉ bộ nhớ/db transactions).
+    4.  `test_generated_content_follows_aida_framework` (Công thức AIDA Value-First).
+    5.  `test_generated_content_follows_pas_framework` (Công thức PAS Value-First).
+    6.  `test_generated_content_follows_bab_framework` (Công thức BAB Value-First).
+*   **Tỷ lệ PASS:** Chạy toàn bộ test suite dự án đạt tỉ lệ PASS 100% (49 tests, 168 assertions).
+*   **Định dạng & Kiểu dữ liệu:**
+    *   Mã nguồn vượt qua kiểm tra Pint hoàn toàn sạch sẽ.
+    *   Biên dịch và đóng gói frontend tĩnh Next.js (`npx tsc --noEmit` & `npm run build`) thành công 100%.
+*   **Đồng bộ Git & Jira:**
+    *   Commit thay đổi với định dạng chuẩn: `test(ai-writer): implement feature tests for SSE stream, abort connection, and marketing formulas`.
+    *   Chuyển trạng thái ticket **`JZ-7`** sang **Done** 🟢.
+
+---
 
 ## 🧠 Semantic Context Essence (Tinh túy kiến thức & Quyết định thiết kế)
-*   **Next.js SSR Hydration Guard**: Standard `typeof window !== 'undefined'` checks during initial render can cause mismatch if client HTML has attributes modified by extensions (like `bis_skin_checked` or translation tags). Standardizing a `mounted` state check ensures SSR outputs a simple skeleton or matches server output until client hydration.
-*   **Spacious Viewport Constraints**: Modal interfaces with scrollable inputs must avoid absolute heights that overflow the screen. Combining `flex flex-col` and `min-h-0` inside columns ensures the editor stretches dynamically to the exact window bounds without pushing action buttons off-screen.
-*   **AI Anti-Spam Control**: Batch requests to free APIs must be rate-limited programmatically (concurrency locks + delay limits) to guarantee zero 429 failures without requiring an excessive rotation list.
+
+*   **Mocking connection_aborted():** Trong PHPUnit/Pest, để mock hàm toàn cục `connection_aborted` mà không phá vỡ kiểm thử, ta khai báo một mock function trong namespace của controller (`namespace App\Http\Controllers`) trong file test.
+*   **Dọn dẹp Output Buffering:** Khi một test ném ra exception trong quá trình stream nội dung, Symfony/Laravel để lại các output buffer chưa đóng. Cần đo level ban đầu (`ob_get_level()`) và dọn dẹp các buffer dư thừa trong block `finally` mà không làm ảnh hưởng đến buffer của chính PHPUnit.
+*   **Tránh Unicode Mismatch:** Các chuỗi mock phản hồi từ AI nên dùng tiếng Việt không dấu (ASCII) để so sánh trực tiếp chính xác, tránh hiện tượng tự động encode ký tự tiếng Việt có dấu thành mã Unicode (như `\u0111\u1ea7u`) làm sai lệch phép so sánh chuỗi raw JSON.
+
+---
 
 ## 🔜 Next Steps (3 hành động kỹ thuật trực tiếp kế tiếp)
-- [ ] **Step 1:** Add test cases for campaign execution worker queue in staging environment.
-- [ ] **Step 2:** Refactor additional presets customization options if business niche prompt suggestions require specific framework modifications (AIDA, PAS, BAB).
-- [ ] **Step 3:** Support multi-image or video media upload attachments within the single scheduler queue array.
+
+- [x] **Step 1:** Hoàng (Backend) phát triển API stream SSE và cơ chế abort ngắt kết nối (`JZ-5` - **DONE**).
+- [ ] **Step 2:** Khoa (Frontend) thiết kế lại UI tab "Tạo bài AI", Prompt chips và kết nối stream SSE hiển thị typing effect (`JZ-6` - **TO DO**).
+- [x] **Step 3:** Tiến (Kiểm định) viết 6 kịch bản feature test trong `tests/Feature/GeminiStreamTest.php` và hỗ trợ tích hợp (`JZ-7` - **DONE**).
