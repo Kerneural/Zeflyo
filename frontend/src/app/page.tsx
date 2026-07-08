@@ -26,7 +26,17 @@ import {
   Sun,
   Moon,
   Home,
-  ArrowLeft
+  ArrowLeft,
+  Zap,
+  Clock,
+  Image as ImageIcon,
+  ChevronDown,
+  Play,
+  Sparkles,
+  Star,
+  Check,
+  Menu,
+  X
 } from "lucide-react";
 
 // Inline Facebook SVG Icon (since Lucide removed brand icons)
@@ -154,8 +164,104 @@ const translations = {
   }
 };
 
+const landingTranslations = {
+  en: {
+    badge: "💎 Multichannel AI Marketing Platform",
+    headline: "Automate Your Fanpage Management with AI",
+    subheadline: "Schedule posts intelligently, write content with Gemini AI, and auto-reply to customers in real-time. Boost your engagement and sales effortlessly.",
+    getStarted: "Get Started Now",
+    viewGuide: "Read User Guide",
+    features: "Features",
+    workflow: "How It Works",
+    pricing: "Pricing",
+    faqs: "FAQs",
+    featuresTitle: "Everything You Need to Scale Your Fanpage",
+    featuresSub: "Powered by Gemini AI and real-time socket connections to handle all customer interactions and posting schedules.",
+    postSchedule: "Automated Post Scheduling",
+    postScheduleDesc: "Generate content ideas, write engaging posts with Gemini, attach compressed images, and auto-schedule publishing.",
+    chatAgent: "Intelligent Chat Agent",
+    chatAgentDesc: "Centralized chat hub. AI automatically handles comments and Messenger private messages with human-like behavior.",
+    keywordRules: "Smart Reply Rules",
+    keywordRulesDesc: "Set conditions to send automated replies based on keywords, contexts, or user intent automatically.",
+    imageCompress: "Automatic Image Compression",
+    imageCompressDesc: "In-place smart image compression to save host bandwidth and ensure instant previews on Facebook.",
+    step1: "Connect Fanpage",
+    step1Desc: "Authenticate securely with Facebook in 2 clicks and select the Fanpages you want to manage.",
+    step2: "Set Campaigns",
+    step2Desc: "Create topic concepts and customize AI instructions for post tone, length, and content ideas.",
+    step3: "AI Auto-Write",
+    step3Desc: "Gemini AI generates detailed draft posts complete with formatted text, emojis, and relevant images.",
+    step4: "Automated Posting",
+    step4Desc: "Approve posts individually or publish automatically on a weekly or fixed date schedule.",
+    starter: "Starter",
+    starterDesc: "For individuals exploring AI automations.",
+    pro: "Pro Plan",
+    proDesc: "Best for growing creators and online businesses.",
+    enterprise: "Enterprise",
+    enterpriseDesc: "For large agencies managing massive networks.",
+    pricingSub: "Choose a plan that fits your growth stage. No hidden fees.",
+    mostPopular: "Most Popular",
+    free: "Free",
+    month: "/month",
+    customPrice: "Custom",
+    faqTitle: "Frequently Asked Questions",
+    faqSub: "Find answers to common questions about Zeflyo AI Agent.",
+    ctaTitle: "Ready to Revolutionize Your Social Media?",
+    ctaSub: "Join thousands of businesses who automate their marketing and support with Zeflyo.",
+    backToHome: "Back to Homepage"
+  },
+  vi: {
+    badge: "💎 Nền tảng Tiếp thị & Tự động hóa AI Đa Kênh",
+    headline: "Tự Động Hóa Quản Lý Fanpage Bằng Trí Tuệ Nhân Tạo",
+    subheadline: "Lên lịch thông minh, soạn bài tự động bằng AI Gemini, và tự phản hồi tin nhắn khách hàng trong thời gian thực. Bứt phá doanh số và tương tác vượt trội.",
+    getStarted: "Trải nghiệm ngay",
+    viewGuide: "Xem hướng dẫn",
+    features: "Tính năng",
+    workflow: "Quy trình",
+    pricing: "Bảng giá",
+    faqs: "Giải đáp",
+    featuresTitle: "Đầy đủ công cụ tối ưu cho Fanpage của bạn",
+    featuresSub: "Kết hợp sức mạnh từ Gemini AI và kết nối Socket thời gian thực giúp quản lý mọi bài viết và tương tác khách hàng.",
+    postSchedule: "Tự động lập lịch bài đăng",
+    postScheduleDesc: "AI lên ý tưởng chủ đề, viết bài chi tiết, đính kèm hình ảnh chuẩn và lập lịch đăng tự động theo tuần/ngày.",
+    chatAgent: "Hộp chat tập trung & AI Agent",
+    chatAgentDesc: "Quản lý tập trung bình luận & tin nhắn. AI tự động đọc hiểu và nhắn tin trả lời khách hàng siêu tốc.",
+    keywordRules: "Quy tắc phản hồi từ khóa",
+    keywordRulesDesc: "Thiết lập kịch bản gửi tin nhắn tự động khi phát hiện từ khóa phù hợp với nhu cầu tìm hiểu của khách hàng.",
+    imageCompress: "Nén ảnh tối ưu tự động",
+    imageCompressDesc: "Hình ảnh tải lên được nén thông minh trực tiếp trên máy chủ, tiết kiệm băng thông và xem thử cực nhanh.",
+    step1: "Kết nối Fanpage",
+    step1Desc: "Đăng nhập an toàn qua Facebook chỉ với 2 click và cấp quyền cho Fanpage bạn muốn chạy AI.",
+    step2: "Thiết lập Chiến dịch",
+    step2Desc: "Nhập sản phẩm hoặc chủ đề mong muốn, tùy chỉnh độ dài bài viết, văn phong và chỉ dẫn riêng cho AI.",
+    step3: "AI Tự động soạn bài",
+    step3Desc: "Gemini AI tự động lên danh sách chủ đề và viết sẵn các bài đăng nháp kèm hình ảnh chất lượng.",
+    step4: "Duyệt & Đăng bài",
+    step4Desc: "Xem trước bài viết dạng Facebook Live-Preview, phê duyệt đăng ngay hoặc để hệ thống tự động đăng theo lịch hẹn.",
+    starter: "Trải nghiệm",
+    starterDesc: "Dành cho cá nhân khám phá tự động hóa bằng AI.",
+    pro: "Gói Pro chuyên nghiệp",
+    proDesc: "Tối ưu nhất cho các nhà sáng tạo và chủ shop kinh doanh online.",
+    enterprise: "Doanh nghiệp",
+    enterpriseDesc: "Dành cho các Agency quản lý hệ thống trang mạng quy mô lớn.",
+    pricingSub: "Lựa chọn gói dịch vụ phù hợp với nhu cầu tăng trưởng. Không phát sinh chi phí ẩn.",
+    mostPopular: "Khuyên dùng",
+    free: "Miễn phí",
+    month: "/tháng",
+    customPrice: "Liên hệ",
+    faqTitle: "Những câu hỏi thường gặp",
+    faqSub: "Giải đáp các thắc mắc phổ biến nhất khi sử dụng hệ thống Zeflyo AI Agent.",
+    ctaTitle: "Sẵn sàng cách mạng hóa Fanpage của bạn?",
+    ctaSub: "Tham gia cùng hàng ngàn thương hiệu đang tự động hóa quy trình tiếp thị và chăm sóc khách hàng với Zeflyo.",
+    backToHome: "Quay lại Trang chủ"
+  }
+};
+
 export default function App() {
   const [token, setToken] = useState<string | null>(null);
+  const [showLogin, setShowLogin] = useState<boolean>(false);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -620,10 +726,631 @@ export default function App() {
           <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
           <p className="text-zinc-400 text-sm">{t.syncServices}</p>
         </div>
-      ) : !token ? (
+      ) : !token && !showLogin ? (
+        /* Marketing Landing Page */
+        <div className="flex-1 flex flex-col min-h-screen w-full relative z-10 overflow-y-auto bg-zinc-950 text-zinc-100 font-sans selection:bg-blue-500/30 selection:text-blue-200">
+          
+          {/* Header/Navbar */}
+          <header className="sticky top-0 z-50 w-full border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+              
+              {/* Brand Logo */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg border border-white/10">
+                  <span className="font-extrabold text-white text-base">Z</span>
+                </div>
+                <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+                  ZEFLYO
+                </span>
+              </div>
+
+              {/* Desktop Nav Links */}
+              <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-zinc-400">
+                <a href="#features" className="hover:text-white transition-colors">{landingTranslations[lang].features}</a>
+                <a href="#workflow" className="hover:text-white transition-colors">{landingTranslations[lang].workflow}</a>
+                <a href="#pricing" className="hover:text-white transition-colors">{landingTranslations[lang].pricing}</a>
+                <a href="#faqs" className="hover:text-white transition-colors">{landingTranslations[lang].faqs}</a>
+              </nav>
+
+              {/* Header Right toggles + CTA */}
+              <div className="flex items-center gap-3.5">
+                <button
+                  onClick={toggleLanguage}
+                  className="flex items-center gap-1 py-1.5 px-3 bg-zinc-900 border border-zinc-850 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <Globe className="w-3.5 h-3.5 text-blue-400" />
+                  <span>{lang === "en" ? "EN" : "VI"}</span>
+                </button>
+                <button
+                  onClick={toggleTheme}
+                  className="w-8 h-8 flex items-center justify-center bg-zinc-900 border border-zinc-850 hover:bg-zinc-800 text-zinc-300 rounded-full transition-all cursor-pointer"
+                >
+                  {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+                </button>
+                
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="hidden sm:flex items-center gap-1.5 py-2 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full text-xs font-bold shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25 transition-all cursor-pointer active:scale-95 border border-white/5"
+                >
+                  <span>{landingTranslations[lang].getStarted}</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Mobile Menu Hamburguer Toggle */}
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="md:hidden p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+              </div>
+
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            {mobileMenuOpen && (
+              <div className="md:hidden border-t border-zinc-900 bg-zinc-950 p-6 flex flex-col gap-4 animate-fade-in absolute w-full left-0 top-full shadow-2xl">
+                <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-zinc-400 hover:text-white py-1">{landingTranslations[lang].features}</a>
+                <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-zinc-400 hover:text-white py-1">{landingTranslations[lang].workflow}</a>
+                <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-zinc-400 hover:text-white py-1">{landingTranslations[lang].pricing}</a>
+                <a href="#faqs" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-zinc-400 hover:text-white py-1">{landingTranslations[lang].faqs}</a>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); setShowLogin(true); }}
+                  className="w-full flex items-center justify-center gap-1.5 py-3 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg transition-all cursor-pointer"
+                >
+                  <span>{landingTranslations[lang].getStarted}</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </header>
+
+          {/* Hero Section */}
+          <section className="relative pt-12 pb-24 md:py-32 px-6 flex flex-col items-center text-center overflow-hidden border-b border-zinc-900 bg-zinc-950">
+            {/* Background Glows */}
+            <div className="absolute top-10 w-[600px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-10 w-[600px] h-[300px] bg-indigo-600/5 rounded-full blur-[120px] pointer-events-none" />
+            
+            <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 relative z-10">
+              
+              {/* Badge */}
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold tracking-wide shadow-sm animate-float">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <span>{landingTranslations[lang].badge}</span>
+              </div>
+
+              {/* Headline */}
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
+                {lang === "vi" ? (
+                  <>
+                    Tự Động Hóa Quản Lý Fanpage <br className="hidden sm:inline" />
+                    <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-violet-400 bg-clip-text text-transparent">
+                      Bằng Trí Tuệ Nhân Tạo
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Automate Your Fanpage <br className="hidden sm:inline" />
+                    <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-violet-400 bg-clip-text text-transparent">
+                      With Gemini AI
+                    </span>
+                  </>
+                )}
+              </h1>
+
+              {/* Subheadline */}
+              <p className="text-base sm:text-lg text-zinc-400 max-w-2xl leading-relaxed mt-2">
+                {landingTranslations[lang].subheadline}
+              </p>
+
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 w-full sm:w-auto">
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 py-3.5 px-8 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all cursor-pointer active:scale-[0.98] border border-white/10"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>{landingTranslations[lang].getStarted}</span>
+                </button>
+                <a
+                  href="https://github.com/Kerneural/Zeflyo/tree/main/docs"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 py-3.5 px-8 bg-zinc-900 border border-zinc-850 hover:bg-zinc-800 text-zinc-300 font-bold rounded-xl transition-all cursor-pointer active:scale-[0.98]"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  <span>{landingTranslations[lang].viewGuide}</span>
+                </a>
+              </div>
+
+              {/* Visual Mock Dashboard preview */}
+              <div className="w-full max-w-5xl mt-12 md:mt-16 rounded-2xl border border-zinc-850 bg-zinc-900/40 p-3.5 md:p-5 backdrop-blur-sm relative shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60 rounded-2xl pointer-events-none z-20" />
+                
+                {/* Header bar of mockup */}
+                <div className="flex items-center justify-between border-b border-zinc-850 pb-4 mb-4 text-left">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500/70" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/70" />
+                    <span className="text-[10px] text-zinc-500 font-mono ml-2 select-none">ZEFLYO WORKSPACE PREVIEW</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/25">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[10px] text-green-400 font-bold tracking-wider uppercase">Active Agent</span>
+                  </div>
+                </div>
+
+                {/* Dashboard layout inside mockup */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                  
+                  {/* Left panel: active pages */}
+                  <div className="glass-card rounded-xl p-4 flex flex-col gap-3.5 border border-zinc-850 bg-zinc-900/50">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Channels</span>
+                    
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-zinc-950/60 border border-zinc-850">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-md bg-blue-600/20 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold text-xs">F</div>
+                        <span className="text-xs font-bold text-zinc-300">Zeflyo Fashion Shop</span>
+                      </div>
+                      <span className="text-[9px] font-mono text-green-400 font-bold bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">LIVE</span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-zinc-950/60 border border-zinc-850">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-md bg-violet-600/20 text-violet-400 border border-violet-500/20 flex items-center justify-center font-bold text-xs">T</div>
+                        <span className="text-xs font-bold text-zinc-300">Tech Course Center</span>
+                      </div>
+                      <span className="text-[9px] font-mono text-green-400 font-bold bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">LIVE</span>
+                    </div>
+                  </div>
+
+                  {/* Middle panel: stats and counter */}
+                  <div className="glass-card rounded-xl p-4 flex flex-col gap-4 border border-zinc-850 bg-zinc-900/50">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Performance Insights</span>
+                    <div className="grid grid-cols-2 gap-3.5">
+                      <div className="bg-zinc-950/60 border border-zinc-850 p-3 rounded-lg flex flex-col">
+                        <span className="text-xl font-black text-white">4,289</span>
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase mt-1">Posts Drafted</span>
+                      </div>
+                      <div className="bg-zinc-950/60 border border-zinc-850 p-3 rounded-lg flex flex-col">
+                        <span className="text-xl font-black text-blue-400">924</span>
+                        <span className="text-[9px] text-zinc-500 font-bold uppercase mt-1">Auto Replies</span>
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-zinc-950/40 border border-zinc-850 text-[10px] text-zinc-450 flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+                      <span>Next auto-post scheduled in 42 minutes.</span>
+                    </div>
+                  </div>
+
+                  {/* Right panel: live preview mock interaction */}
+                  <div className="glass-card rounded-xl p-4 flex flex-col gap-3.5 border border-zinc-850 bg-zinc-900/50">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Real-time AI Chat Agent</span>
+                    
+                    <div className="flex flex-col gap-2 bg-zinc-950/60 p-2.5 rounded-lg border border-zinc-850 text-[10px]">
+                      <div className="text-zinc-500 font-bold">👤 Customer (2m ago)</div>
+                      <div className="text-zinc-300">"Tư vấn giá khóa học Claude AI cho em với ạ."</div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 bg-blue-600/[0.04] p-2.5 rounded-lg border border-blue-500/10 text-[10px] animate-pulse">
+                      <div className="text-blue-400 font-bold flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-blue-400" />
+                        <span>Zeflyo AI Agent (Just now)</span>
+                      </div>
+                      <div className="text-zinc-300">
+                        "Chào bạn! Khóa học Claude code đang được ưu đãi còn 499k. Bạn đăng ký luôn nha?"
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          {/* Statistics / Social Proof Section */}
+          <section className="py-16 px-6 bg-zinc-950 border-b border-zinc-900">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+                
+                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm">
+                  <span className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">
+                    10,000+
+                  </span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider mt-3">
+                    {lang === "vi" ? "Bài viết đã lập lịch & đăng" : "Auto posts scheduled & published"}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm">
+                  <span className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+                    99.99%
+                  </span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider mt-3">
+                    {lang === "vi" ? "Thời gian hoạt động cổng kết nối" : "Webhook Gateway Uptime"}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm">
+                  <span className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                    10x
+                  </span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider mt-3">
+                    {lang === "vi" ? "Tốc độ sản xuất & tương tác" : "Marketing efficiency increase"}
+                  </span>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* Core Features Grid Section */}
+          <section id="features" className="py-24 px-6 bg-zinc-950 border-b border-zinc-900">
+            <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
+              
+              <div className="text-center flex flex-col gap-3">
+                <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">{landingTranslations[lang].features}</span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                  {landingTranslations[lang].featuresTitle}
+                </h2>
+                <p className="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto">
+                  {landingTranslations[lang].featuresSub}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6">
+                
+                {/* Feature 1 */}
+                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-blue-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-105 transition-transform flex-shrink-0">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <h3 className="font-bold text-white text-base">{landingTranslations[lang].postSchedule}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{landingTranslations[lang].postScheduleDesc}</p>
+                  </div>
+                </div>
+
+                {/* Feature 2 */}
+                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-indigo-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform flex-shrink-0">
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <h3 className="font-bold text-white text-base">{landingTranslations[lang].chatAgent}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{landingTranslations[lang].chatAgentDesc}</p>
+                  </div>
+                </div>
+
+                {/* Feature 3 */}
+                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-violet-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:scale-105 transition-transform flex-shrink-0">
+                    <Sliders className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <h3 className="font-bold text-white text-base">{landingTranslations[lang].keywordRules}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{landingTranslations[lang].keywordRulesDesc}</p>
+                  </div>
+                </div>
+
+                {/* Feature 4 */}
+                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-fuchsia-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 group-hover:scale-105 transition-transform flex-shrink-0">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <h3 className="font-bold text-white text-base">{landingTranslations[lang].imageCompress}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{landingTranslations[lang].imageCompressDesc}</p>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+
+          {/* Workflow Roadmap Section */}
+          <section id="workflow" className="py-24 px-6 bg-zinc-950 border-b border-zinc-900 relative">
+            <div className="max-w-7xl mx-auto flex flex-col items-center gap-16">
+              
+              <div className="text-center flex flex-col gap-3">
+                <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">{landingTranslations[lang].workflow}</span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                  {lang === "vi" ? "4 bước vận hành siêu tốc cùng Zeflyo" : "Get started in 4 simple steps"}
+                </h2>
+              </div>
+
+              {/* Step Roadmap */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative w-full">
+                
+                {/* Connector line for desktop */}
+                <div className="hidden lg:block absolute top-[44px] left-[12%] right-[12%] h-0.5 border-t border-dashed border-zinc-800 z-0" />
+                
+                {/* Step 1 */}
+                <div className="flex flex-col items-start gap-4 relative z-10 text-left group">
+                  <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-bold text-zinc-400 flex items-center justify-center group-hover:border-blue-500/50 group-hover:text-blue-400 transition-colors bg-zinc-950">
+                    01
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="font-bold text-white text-base">{landingTranslations[lang].step1}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{landingTranslations[lang].step1Desc}</p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex flex-col items-start gap-4 relative z-10 text-left group">
+                  <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-bold text-zinc-400 flex items-center justify-center group-hover:border-indigo-500/50 group-hover:text-indigo-400 transition-colors bg-zinc-950">
+                    02
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="font-bold text-white text-base">{landingTranslations[lang].step2}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{landingTranslations[lang].step2Desc}</p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex flex-col items-start gap-4 relative z-10 text-left group">
+                  <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-bold text-zinc-400 flex items-center justify-center group-hover:border-violet-500/50 group-hover:text-violet-400 transition-colors bg-zinc-950">
+                    03
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="font-bold text-white text-base">{landingTranslations[lang].step3}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{landingTranslations[lang].step3Desc}</p>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="flex flex-col items-start gap-4 relative z-10 text-left group">
+                  <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-bold text-zinc-400 flex items-center justify-center group-hover:border-fuchsia-500/50 group-hover:text-fuchsia-400 transition-colors bg-zinc-950">
+                    04
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="font-bold text-white text-base">{landingTranslations[lang].step4}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{landingTranslations[lang].step4Desc}</p>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+
+          {/* Pricing Section */}
+          <section id="pricing" className="py-24 px-6 bg-zinc-950 border-b border-zinc-900">
+            <div className="max-w-7xl mx-auto flex flex-col items-center gap-16">
+              
+              <div className="text-center flex flex-col gap-3">
+                <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">{landingTranslations[lang].pricing}</span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                  {lang === "vi" ? "Bảng giá dịch vụ hợp lý" : "Affordable Plans for Every Goal"}
+                </h2>
+                <p className="text-sm text-zinc-400 max-w-lg mx-auto">
+                  {landingTranslations[lang].pricingSub}
+                </p>
+              </div>
+
+              {/* Pricing Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mt-6 items-stretch">
+                
+                {/* Plan 1: Starter */}
+                <div className="glass-card rounded-2xl p-8 border border-zinc-850 flex flex-col justify-between bg-zinc-900/20 text-left hover:border-zinc-800 transition-colors relative">
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-300">{landingTranslations[lang].starter}</h3>
+                    <p className="text-xs text-zinc-500 mt-1">{landingTranslations[lang].starterDesc}</p>
+                    <div className="flex items-baseline gap-1 mt-6 mb-8">
+                      <span className="text-3xl font-black text-white">{landingTranslations[lang].free}</span>
+                    </div>
+                    
+                    <ul className="flex flex-col gap-3.5 text-xs text-zinc-450 border-t border-zinc-900 pt-6">
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-500 flex-shrink-0" /> <span>{lang === "vi" ? "Quản lý 1 Fanpage Facebook" : "Manage 1 Facebook Fanpage"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-500 flex-shrink-0" /> <span>{lang === "vi" ? "Lên lịch bài viết thủ công" : "Manual post scheduling"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-500 flex-shrink-0" /> <span>{lang === "vi" ? "50 Tín dụng AI / tháng" : "50 AI credits / month"}</span></li>
+                      <li className="flex items-center gap-2 text-zinc-650 line-through"><Check className="w-4 h-4 flex-shrink-0" /> <span>{lang === "vi" ? "Tự động phản hồi bình luận" : "Auto reply to comments"}</span></li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="w-full py-3 rounded-xl border border-zinc-800 hover:bg-zinc-800 text-zinc-300 font-bold text-xs transition-colors mt-8 cursor-pointer animate-fade-in"
+                  >
+                    {lang === "vi" ? "Dùng thử miễn phí" : "Start For Free"}
+                  </button>
+                </div>
+
+                {/* Plan 2: Pro */}
+                <div className="glass-card rounded-2xl p-8 border border-blue-500/30 flex flex-col justify-between bg-zinc-900/30 text-left hover:border-blue-500/40 transition-colors relative shadow-xl shadow-blue-500/5">
+                  <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 rounded-full bg-blue-500 text-white text-[9px] font-bold uppercase tracking-wider">
+                    {landingTranslations[lang].mostPopular}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <span>{landingTranslations[lang].pro}</span>
+                      <Sparkles className="w-4 h-4 text-blue-400" />
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1">{landingTranslations[lang].proDesc}</p>
+                    <div className="flex items-baseline gap-1 mt-6 mb-8">
+                      <span className="text-4xl font-black text-white">499k</span>
+                      <span className="text-xs text-zinc-500 font-bold">{landingTranslations[lang].month}</span>
+                    </div>
+
+                    <ul className="flex flex-col gap-3.5 text-xs text-zinc-300 border-t border-zinc-900 pt-6">
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-400 flex-shrink-0" /> <span className="font-semibold text-white">{lang === "vi" ? "Quản lý 5 Fanpage" : "Manage 5 Fanpages"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-400 flex-shrink-0" /> <span>{lang === "vi" ? "AI Campaign Hub (Tự soạn chủ đề)" : "AI Campaign Hub (Topic builder)"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-400 flex-shrink-0" /> <span>{lang === "vi" ? "AI Agent Live Chat tự động 24/7" : "24/7 Auto AI Chat Agent"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-400 flex-shrink-0" /> <span>{lang === "vi" ? "Không giới hạn nén ảnh tối ưu" : "Unlimited image compression"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-400 flex-shrink-0" /> <span>{lang === "vi" ? "Tự động thiết lập quy tắc từ khóa" : "Custom keyword triggers"}</span></li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs transition-colors mt-8 shadow-lg shadow-blue-600/10 cursor-pointer"
+                  >
+                    {landingTranslations[lang].getStarted}
+                  </button>
+                </div>
+
+                {/* Plan 3: Enterprise */}
+                <div className="glass-card rounded-2xl p-8 border border-zinc-850 flex flex-col justify-between bg-zinc-900/20 text-left hover:border-zinc-800 transition-colors relative">
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-300">{landingTranslations[lang].enterprise}</h3>
+                    <p className="text-xs text-zinc-500 mt-1">{landingTranslations[lang].enterpriseDesc}</p>
+                    <div className="flex items-baseline gap-1 mt-6 mb-8">
+                      <span className="text-3xl font-black text-white">{landingTranslations[lang].customPrice}</span>
+                    </div>
+
+                    <ul className="flex flex-col gap-3.5 text-xs text-zinc-450 border-t border-zinc-900 pt-6">
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400 flex-shrink-0" /> <span>{lang === "vi" ? "Không giới hạn số lượng Fanpage" : "Unlimited Facebook Fanpages"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400 flex-shrink-0" /> <span>{lang === "vi" ? "Kết nối API riêng & Fine-tune Model" : "Dedicated API keys & fine-tuned LLM"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400 flex-shrink-0" /> <span>{lang === "vi" ? "Quản trị viên chăm sóc tài khoản riêng" : "Dedicated Account Manager"}</span></li>
+                      <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400 flex-shrink-0" /> <span>{lang === "vi" ? "Hỗ trợ SLA cam kết phản hồi 15 phút" : "SLA 15-minute response support"}</span></li>
+                    </ul>
+                  </div>
+
+                  <a
+                    href="mailto:contact@zeflyo.com"
+                    className="w-full py-3 rounded-xl border border-zinc-850 hover:bg-zinc-800 hover:text-white text-zinc-355 font-bold text-xs transition-colors mt-8 text-center flex items-center justify-center cursor-pointer"
+                  >
+                    {lang === "vi" ? "Liên hệ với chúng tôi" : "Contact Sales"}
+                  </a>
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+
+          {/* FAQs Section */}
+          <section id="faqs" className="py-24 px-6 bg-zinc-950 border-b border-zinc-900">
+            <div className="max-w-4xl mx-auto flex flex-col items-center gap-12">
+              
+              <div className="text-center flex flex-col gap-3">
+                <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">{landingTranslations[lang].faqs}</span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                  {landingTranslations[lang].faqTitle}
+                </h2>
+                <p className="text-sm text-zinc-400">
+                  {landingTranslations[lang].faqSub}
+                </p>
+              </div>
+
+              {/* FAQ Accordion */}
+              <div className="flex flex-col gap-3.5 w-full mt-6">
+                
+                {[
+                  {
+                    q: lang === "vi" ? "Hệ thống Zeflyo có an toàn cho Fanpage không?" : "Is Zeflyo safe for my Facebook page?",
+                    a: lang === "vi" 
+                      ? "Cực kỳ an toàn. Zeflyo kết nối trực tiếp qua giao diện chính thức Meta Graph API và tuân thủ các chính sách bảo mật của Meta. Chúng tôi không thu thập thông tin mật khẩu cá nhân hay thực hiện các hành động spam phi pháp."
+                      : "Absolutely. Zeflyo connects directly using official Meta Graph API and strictly conforms to Meta Developer policies. We do not store or collect personal passwords, nor engage in illegal spam."
+                  },
+                  {
+                    q: lang === "vi" ? "Teammate của tôi vào hệ thống thì có cần cấu hình gì không?" : "Do my teammates need to do complex configuration?",
+                    a: lang === "vi"
+                      ? "Hoàn toàn không. Teammate của bạn chỉ cần truy cập vào hệ thống, nhấn đăng nhập qua tài khoản Facebook của họ và cấp quyền. Hệ thống của bạn đã tự động nạp mã ứng dụng Meta App ID ngầm định cấu hình sẵn từ máy chủ."
+                      : "Not at all. Your team members simply visit the website, click Continue with Facebook, and authorize their pages. Zeflyo dynamically resolves the app configurations in the background from the backend server."
+                  },
+                  {
+                    q: lang === "vi" ? "Thuật toán nén ảnh hoạt động thế nào? Có làm hỏng chất lượng ảnh không?" : "How does image compression work? Does it degrade quality?",
+                    a: lang === "vi"
+                      ? "Zeflyo sử dụng thư viện xử lý ảnh GD thông minh trên máy chủ. Hình ảnh tải lên sẽ được tính toán tỷ lệ khung hình chuẩn và tối ưu dung lượng (chuyển đổi định dạng, hạ quy mô kích thước nếu quá lớn). Bức ảnh vẫn giữ được độ sắc nét tối ưu nhưng dung lượng file nhẹ đi từ 50-80%, giúp tải trang cực nhanh."
+                      : "Zeflyo uses intelligent GD compression on the server. Uploaded images are proportioned correctly and scale-down optimized in-place. The output retains crystal-clear sharpness but file sizes decrease by 50-80%, saving storage space."
+                  },
+                  {
+                    q: lang === "vi" ? "Tôi có thể tùy chỉnh văn phong viết bài của AI không?" : "Can I customize the writing style of the AI?",
+                    a: lang === "vi"
+                      ? "Được chứ. Khi thiết lập chiến dịch tự động, bạn có thể lựa chọn 5 văn phong cốt lõi (Vui vẻ, Chuyên nghiệp, Thuyết phục, Hài hước, Kể chuyện) và tự điền văn bản Prompt chỉ thị riêng để AI bám sát thương hiệu của bạn."
+                      : "Yes. When creating automated campaigns, you can choose from 5 primary tones (Friendly, Professional, Persuasive, Humorous, Narrative) and define custom AI instructions so content fits your brand identity."
+                  }
+                ].map((faq, idx) => {
+                  const isOpen = activeFaq === idx;
+                  return (
+                    <div key={idx} className="glass-card rounded-xl border border-zinc-850 overflow-hidden bg-zinc-900/20">
+                      <button
+                        onClick={() => setActiveFaq(isOpen ? null : idx)}
+                        className="w-full flex items-center justify-between p-5 text-left font-bold text-sm text-white hover:bg-zinc-900/40 transition-colors cursor-pointer select-none"
+                      >
+                        <span>{faq.q}</span>
+                        <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform ${isOpen ? "rotate-180 text-blue-400" : ""}`} />
+                      </button>
+                      
+                      {isOpen && (
+                        <div className="px-5 pb-5 pt-1 text-xs text-zinc-400 leading-relaxed border-t border-zinc-900/50 bg-zinc-950/20 animate-fade-in">
+                          {faq.a}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+              </div>
+
+            </div>
+          </section>
+
+          {/* Call to Action (CTA) bottom section */}
+          <section className="py-24 px-6 bg-zinc-950">
+            <div className="max-w-5xl mx-auto rounded-3xl border border-zinc-805 bg-gradient-to-tr from-zinc-900 via-zinc-950 to-indigo-950/20 p-8 md:p-16 relative overflow-hidden text-center shadow-2xl">
+              <div className="absolute top-[-30%] right-[-30%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute bottom-[-30%] left-[-30%] w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+              
+              <div className="max-w-2xl mx-auto flex flex-col items-center gap-5 relative z-10">
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                  {landingTranslations[lang].ctaTitle}
+                </h2>
+                <p className="text-xs sm:text-sm text-zinc-450 leading-relaxed">
+                  {landingTranslations[lang].ctaSub}
+                </p>
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="mt-6 flex items-center gap-2 py-4 px-10 bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-xl shadow-blue-500/15 hover:shadow-blue-500/30 transition-all cursor-pointer active:scale-95 border border-white/10"
+                >
+                  <Zap className="w-4 h-4 fill-current" />
+                  <span>{landingTranslations[lang].getStarted}</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="py-12 px-6 border-t border-zinc-900 bg-zinc-950 text-xs text-zinc-500">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+              
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center font-extrabold text-white text-xs">Z</div>
+                <span className="font-semibold text-zinc-400 tracking-wider">ZEFLYO © {new Date().getFullYear()}</span>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-6">
+                <a href="#features" className="hover:text-zinc-350 transition-colors">{landingTranslations[lang].features}</a>
+                <a href="#workflow" className="hover:text-zinc-355 transition-colors">{landingTranslations[lang].workflow}</a>
+                <a href="#pricing" className="hover:text-zinc-350 transition-colors">{landingTranslations[lang].pricing}</a>
+                <a href="#faqs" className="hover:text-zinc-350 transition-colors">{landingTranslations[lang].faqs}</a>
+                <span>•</span>
+                <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="hover:text-zinc-350 transition-colors">Meta Dev</a>
+              </div>
+
+            </div>
+          </footer>
+
+        </div>
+      ) : !token && showLogin ? (
         /* Login Screen (Centered in the viewport) */
         <div className="flex-1 flex flex-col justify-center items-center p-6 relative z-10 min-h-screen">
           
+          {/* Back to Home button */}
+          <div className="absolute top-6 left-6">
+            <button
+              onClick={() => setShowLogin(false)}
+              className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold transition-all border border-zinc-850 cursor-pointer active:scale-95 shadow-sm"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{landingTranslations[lang].backToHome}</span>
+            </button>
+          </div>
+
           {/* Top small language/theme bar for login */}
           <div className="absolute top-6 right-6 flex items-center gap-3">
             <button
