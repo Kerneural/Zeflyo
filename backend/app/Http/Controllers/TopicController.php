@@ -86,45 +86,60 @@ class TopicController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'prompt' => 'required|string|max:8000',
-            'count' => 'nullable|integer|min:1|max:50',
-        ]);
-
-        $prompt = $request->input('prompt');
-        $count = $request->input('count', 30);
-        $language = $setup->language ?? 'vi';
-
-        $service = new GeminiService;
-        $topics = $service->generateTopicsList($prompt, $count, $language);
-
-        if ($topics === null || ! is_array($topics)) {
+        // Concurrency lock to prevent spam clicking and duplicate topic lists creation
+        $lockKey = "auto_setup_topics_lock_" . $setup->id;
+        if (\Illuminate\Support\Facades\Cache::has($lockKey)) {
             return response()->json([
-                'error' => 'Không thể sinh chủ đề bằng AI. Vui lòng thử lại sau.',
-            ], 500);
+                'error' => 'Đang xử lý sinh danh sách chủ đề bằng AI cho chiến dịch này. Vui lòng đợi.',
+            ], 429);
         }
 
-        $maxOrder = $setup->topics()->max('sort_order') ?? 0;
-        $createdTopics = [];
+        \Illuminate\Support\Facades\Cache::put($lockKey, true, 60);
 
-        foreach ($topics as $index => $title) {
-            if (! is_string($title) || trim($title) === '') {
-                continue;
+        try {
+            $request->validate([
+                'prompt' => 'required|string|max:8000',
+                'count' => 'nullable|integer|min:1|max:50',
+            ]);
+
+            $prompt = $request->input('prompt');
+            $count = $request->input('count', 30);
+            $language = $setup->language ?? 'vi';
+
+            $service = new GeminiService;
+            $topics = $service->generateTopicsList($prompt, $count, $language);
+
+            if ($topics === null || ! is_array($topics)) {
+                return response()->json([
+                    'error' => 'Không thể sinh chủ đề bằng AI. Vui lòng thử lại sau.',
+                ], 500);
             }
 
-            $createdTopics[] = Topic::create([
-                'user_id' => $request->user()->id,
-                'auto_setup_id' => $setup->id,
-                'title' => trim($title),
-                'status' => 'pending',
-                'sort_order' => $maxOrder + $index + 1,
-            ]);
-        }
+            $maxOrder = $setup->topics()->max('sort_order') ?? 0;
+            $createdTopics = [];
 
-        return response()->json([
-            'message' => 'Generated '.count($createdTopics).' topics successfully.',
-            'topics' => $createdTopics,
-        ]);
+            foreach ($topics as $index => $title) {
+                if (! is_string($title) || trim($title) === '') {
+                    continue;
+                }
+
+                $createdTopics[] = Topic::create([
+                    'user_id' => $request->user()->id,
+                    'auto_setup_id' => $setup->id,
+                    'title' => trim($title),
+                    'status' => 'pending',
+                    'sort_order' => $maxOrder + $index + 1,
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Generated '.count($createdTopics).' topics successfully.',
+                'topics' => $createdTopics,
+            ]);
+
+        } finally {
+            \Illuminate\Support\Facades\Cache::forget($lockKey);
+        }
     }
 
     /**
@@ -292,40 +307,63 @@ class TopicController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $pendingTopics = $setup->topics()->where('status', 'pending')->get();
-        if ($pendingTopics->isEmpty()) {
-            return response()->json(['message' => 'No pending topics found.'], 200);
+        // Anti-spam/Concurrency Lock: Avoid duplicate concurrent execution for the same campaign setup
+        $lockKey = "auto_setup_gen_lock_" . $setup->id;
+        if (\Illuminate\Support\Facades\Cache::has($lockKey)) {
+            return response()->json([
+                'error' => 'Chiến dịch này đang được xử lý sinh bài viết bằng AI. Vui lòng đợi trong giây lát.',
+            ], 429);
         }
 
-        $service = new GeminiService;
-        $config = [
-            'language' => $setup->language ?? 'vi',
-            'post_length' => $setup->post_length ?? 'medium',
-            'writing_style' => $setup->writing_style ?? 'professional',
-            'custom_prompt' => $setup->custom_prompt,
-            'include_contact' => $setup->include_contact,
-            'contact_info' => $setup->contact_info,
-        ];
+        // Apply concurrency lock for 3 minutes
+        \Illuminate\Support\Facades\Cache::put($lockKey, true, 180);
 
-        $generatedCount = 0;
-        foreach ($pendingTopics as $topic) {
-            try {
-                $content = $service->generatePostFromTopic($topic->title, $config);
-                if ($content) {
-                    $topic->generated_content = $content;
-                    $topic->status = 'generated';
-                    $topic->save();
-                    $generatedCount++;
-                }
-            } catch (\Exception $e) {
-                Log::error("Batch topic gen failed for Topic #{$topic->id}: " . $e->getMessage());
+        try {
+            // Anti-Spam Limit: Process maximum 15 topics in a single request to prevent execution timeout & 429 API Key exhaustion
+            $pendingTopics = $setup->topics()->where('status', 'pending')->limit(15)->get();
+            if ($pendingTopics->isEmpty()) {
+                return response()->json(['message' => 'Không tìm thấy chủ đề nào đang chờ xử lý.'], 200);
             }
-        }
 
-        return response()->json([
-            'message' => "Successfully generated content for {$generatedCount} topics.",
-            'count' => $generatedCount
-        ]);
+            $service = new GeminiService;
+            $config = [
+                'language' => $setup->language ?? 'vi',
+                'post_length' => $setup->post_length ?? 'medium',
+                'writing_style' => $setup->writing_style ?? 'professional',
+                'custom_prompt' => $setup->custom_prompt,
+                'include_contact' => $setup->include_contact,
+                'contact_info' => $setup->contact_info,
+            ];
+
+            $generatedCount = 0;
+            foreach ($pendingTopics as $topic) {
+                try {
+                    // Option 1: Throttle delay of 1.2 seconds between sequential API calls to prevent 429 Rate Limits
+                    if ($generatedCount > 0) {
+                        usleep(1200000); // 1.2 seconds
+                    }
+
+                    $content = $service->generatePostFromTopic($topic->title, $config);
+                    if ($content) {
+                        $topic->generated_content = $content;
+                        $topic->status = 'generated';
+                        $topic->save();
+                        $generatedCount++;
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Batch topic gen failed for Topic #{$topic->id}: " . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'message' => "Đã soạn thảo thành công {$generatedCount} bài viết bằng AI.",
+                'count' => $generatedCount
+            ]);
+
+        } finally {
+            // Release the concurrency lock
+            \Illuminate\Support\Facades\Cache::forget($lockKey);
+        }
     }
 
     /**
