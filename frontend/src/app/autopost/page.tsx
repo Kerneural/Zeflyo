@@ -10,6 +10,7 @@ import {
   Edit3, Eye, Send, Package, List, Settings, Wand2,
   X, GripVertical, ToggleLeft, ToggleRight, FileText
 } from "lucide-react";
+import { syncCredits, handleApiCreditError } from "@/lib/credits";
 
 // ───────── Type Definitions ─────────
 interface Fanpage {
@@ -296,10 +297,16 @@ function AutoPostPageContent() {
       if (res.ok) {
         const d = await res.json();
         setGeneratedTopics(d.topics?.map((t: TopicItem) => t.title) || []);
+        syncCredits(d.credits_remaining);
         setSetupMsg({ type: "success", text: lang === "vi" ? `Đã tạo ${d.topics?.length || 0} chủ đề thành công!` : `Generated ${d.topics?.length || 0} topics!` });
       } else {
-        const err = await res.json();
-        setSetupMsg({ type: "error", text: err.error || "Failed to generate topics." });
+        const creditErr = await handleApiCreditError(res);
+        if (creditErr) {
+          setSetupMsg({ type: "error", text: creditErr });
+        } else {
+          const err = await res.json().catch(() => ({}));
+          setSetupMsg({ type: "error", text: err.error || "Failed to generate topics." });
+        }
       }
     } catch (e) {
       setSetupMsg({ type: "error", text: "Network error." });

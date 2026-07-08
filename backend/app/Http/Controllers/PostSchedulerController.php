@@ -173,6 +173,7 @@ class PostSchedulerController extends Controller
 
         return response()->json([
             'content' => $content,
+            'credits_remaining' => $user->fresh()->credits,
         ]);
     }
 
@@ -318,6 +319,9 @@ class PostSchedulerController extends Controller
         // Deduct 1 credit on successful preset generation
         $user->decrement('credits', 1);
 
-        return response()->json(['presets' => $presets]);
+        return response()->json([
+            'presets' => $presets,
+            'credits_remaining' => $user->fresh()->credits,
+        ]);
     }
 }

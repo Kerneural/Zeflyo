@@ -145,6 +145,7 @@ class TopicController extends Controller
             return response()->json([
                 'message' => 'Generated '.count($createdTopics).' topics successfully.',
                 'topics' => $createdTopics,
+                'credits_remaining' => $user->fresh()->credits,
             ]);
 
         } finally {
@@ -313,6 +314,7 @@ class TopicController extends Controller
         return response()->json([
             'message' => 'Content generated successfully.',
             'topic' => $topic,
+            'credits_remaining' => $user->fresh()->credits,
         ]);
     }
 
@@ -392,7 +394,8 @@ class TopicController extends Controller
 
             return response()->json([
                 'message' => "Đã soạn thảo thành công {$generatedCount} bài viết bằng AI.",
-                'count' => $generatedCount
+                'count' => $generatedCount,
+                'credits_remaining' => $user->fresh()->credits,
             ]);
 
         } finally {

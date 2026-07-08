@@ -39,6 +39,7 @@ import {
   Pause,
   Play
 } from "lucide-react";
+import { syncCredits, handleApiCreditError } from "@/lib/credits";
 
 interface Fanpage {
   id: number;
@@ -329,6 +330,7 @@ function PostSchedulerContent() {
         const data = await response.json();
         if (data.presets && Array.isArray(data.presets)) {
           setPresets(data.presets);
+          syncCredits(data.credits_remaining);
           if (!setupName.trim()) {
             const today = new Date();
             const formattedDate = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -339,7 +341,12 @@ function PostSchedulerContent() {
           showNotification("error", "Không thể lấy chủ đề gợi ý.");
         }
       } else {
-        showNotification("error", "Lỗi tạo gợi ý chủ đề.");
+        const creditErr = await handleApiCreditError(response);
+        if (creditErr) {
+          showNotification("error", creditErr);
+        } else {
+          showNotification("error", "Lỗi tạo gợi ý chủ đề.");
+        }
       }
     } catch (e) {
       console.error(e);
@@ -633,10 +640,16 @@ function PostSchedulerContent() {
       if (res.ok) {
         const d = await res.json();
         setCampaignGeneratedTopics(d.topics?.map((t: TopicItem) => t.title) || []);
+        syncCredits(d.credits_remaining);
         showNotification("success", `Đã tạo ${d.topics?.length || 0} chủ đề thành công!`);
       } else {
-        const err = await res.json();
-        showNotification("error", err.error || "Không thể tạo chủ đề.");
+        const creditErr = await handleApiCreditError(res);
+        if (creditErr) {
+          showNotification("error", creditErr);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          showNotification("error", err.error || "Không thể tạo chủ đề.");
+        }
       }
     } catch (e) {
       showNotification("error", "Lỗi kết nối khi tạo chủ đề.");
@@ -766,6 +779,8 @@ function PostSchedulerContent() {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       });
       if (res.ok) {
+        const d = await res.json();
+        syncCredits(d.credits_remaining);
         showNotification("success", "Đã soạn thảo nội dung bài viết bằng AI thành công!");
         if (expandedSetup) {
           const res2 = await fetch(`${apiBaseUrl}/api/auto-setups/${expandedSetup}/topics`, {
@@ -777,8 +792,13 @@ function PostSchedulerContent() {
           }
         }
       } else {
-        const err = await res.json();
-        showNotification("error", err.error || err.message || "Không thể sinh nội dung.");
+        const creditErr = await handleApiCreditError(res);
+        if (creditErr) {
+          showNotification("error", creditErr);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          showNotification("error", err.error || err.message || "Không thể sinh nội dung.");
+        }
       }
     } catch (e) {
       showNotification("error", "Lỗi kết nối.");
@@ -796,6 +816,7 @@ function PostSchedulerContent() {
       });
       if (res.ok) {
         const d = await res.json();
+        syncCredits(d.credits_remaining);
         showNotification("success", `Đã tự động soạn thảo thành công ${d.count || 0} bài viết bằng AI!`);
         const res2 = await fetch(`${apiBaseUrl}/api/auto-setups/${setupId}/topics`, {
           headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
@@ -805,8 +826,13 @@ function PostSchedulerContent() {
           setSetupTopics(d2.topics || []);
         }
       } else {
-        const err = await res.json();
-        showNotification("error", err.error || err.message || "Không thể soạn thảo hàng loạt.");
+        const creditErr = await handleApiCreditError(res);
+        if (creditErr) {
+          showNotification("error", creditErr);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          showNotification("error", err.error || err.message || "Không thể soạn thảo hàng loạt.");
+        }
       }
     } catch (e) {
       showNotification("error", "Lỗi kết nối.");
@@ -1351,8 +1377,25 @@ function PostSchedulerContent() {
       });
 
       if (!response.ok) {
+        const creditErr = await handleApiCreditError(response);
+        if (creditErr) {
+          showNotification("error", creditErr);
+          setIsStreaming(false);
+          setAiGenerating(false);
+          setAbortController(null);
+          return;
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      // Backend deducted 1 credit upfront before the SSE stream opened.
+      // Re-fetch the user profile to get the accurate credits_remaining and update sidebar.
+      fetch(`${apiBaseUrl}/api/user`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(profile => { if (profile) syncCredits(profile.credits); })
+        .catch(() => {});
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder("utf-8");
