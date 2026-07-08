@@ -321,6 +321,17 @@ export default function Sidebar({
     return user.checkin_history.includes(todayStr);
   };
 
+  const handleLogout = () => {
+    if (propHandleLogout) {
+      propHandleLogout();
+    } else {
+      localStorage.removeItem("zeflyo_token");
+      localStorage.removeItem("zeflyo_user");
+      localStorage.removeItem("zeflyo_mock_pages");
+      window.location.href = "/";
+    }
+  };
+
   const handleCheckIn = async () => {
     if (checkInLoading || hasCheckedInToday()) return;
 
@@ -365,9 +376,15 @@ export default function Sidebar({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
           "Authorization": `Bearer ${token}`
         }
       });
+
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
 
       const data = await res.json();
 
@@ -411,9 +428,14 @@ export default function Sidebar({
     try {
       const res = await fetch(`${apiBaseUrl}/api/notifications`, {
         headers: {
+          "Accept": "application/json",
           "Authorization": `Bearer ${token}`
         }
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.status === 200) {
         const data = await res.json();
         if (data && data.length > 0) {
@@ -473,9 +495,14 @@ export default function Sidebar({
       const res = await fetch(`${apiBaseUrl}/api/admin/notifications/${id}`, {
         method: "DELETE",
         headers: {
+          "Accept": "application/json",
           "Authorization": `Bearer ${token}`
         }
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.status === 200) {
         setNotifications(prev => prev.filter(n => n.id !== id));
         if (selectedNotificationId === id) {
@@ -550,10 +577,16 @@ export default function Sidebar({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
+
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
 
       if (res.status === 201) {
         const item = await res.json();

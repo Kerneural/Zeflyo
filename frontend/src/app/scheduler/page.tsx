@@ -329,6 +329,7 @@ function PostSchedulerContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ niche: businessNiche.trim(), framework: aiFramework })
@@ -349,6 +350,10 @@ function PostSchedulerContent() {
           showNotification("error", "Không thể lấy chủ đề gợi ý.");
         }
       } else {
+        if (response.status === 401) {
+          handleLogout();
+          return;
+        }
         const creditErr = await handleApiCreditError(response);
         if (creditErr) {
           showNotification("error", creditErr);
@@ -472,6 +477,8 @@ function PostSchedulerContent() {
         if (pagesList.length > 0 && selectedPages.length === 0) {
           setSelectedPages([pagesList[0].id]);
         }
+      } else if (response.status === 401) {
+        handleLogout();
       }
     } catch (err) {
       console.error(err);
@@ -542,6 +549,8 @@ function PostSchedulerContent() {
       if (response.ok) {
         const data = await response.json();
         setScheduledPosts(data.posts || []);
+      } else if (response.status === 401) {
+        handleLogout();
       }
     } catch (err) {
       console.error("Error fetching scheduled posts:", err);
