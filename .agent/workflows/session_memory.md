@@ -1,32 +1,28 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-07-07 | Status: Triển khai thành công Zeflyo lên DigitalOcean VPS sạch bằng Terraform, Docker Compose và cấu hình HTTPS bảo mật hoàn chỉnh qua Certbot.
+> Last Checkpoint: 2026-07-08 | Status: Unified Post Scheduler & AI Campaign Optimization fully implemented, verified, and deployed on DO VPS.
 
 ---
 
-## ⚡ Active Task Completed (Những việc ĐÃ HOÀN THÀNH trong session)
-*   **Infrastructure (Terraform & VPS Sạch)**:
-    *   Xây dựng hạ tầng tự động qua [main.tf](file:///r:/_Projects/Eurus_Workspace/Zeflyo/terraform/main.tf), [variables.tf](file:///r:/_Projects/Eurus_Workspace/Zeflyo/terraform/variables.tf) để tạo Droplet `4 vCPU / 8GB RAM` tại Singapore (IP: `165.232.163.188`) thay thế cho cấu hình 1Panel cũ bị lỗi.
-    *   Tách biệt môi trường và an toàn cho website WordPress (`dailysmartlife.com`) hiện tại.
-*   **Docker Stack Optimization (Nginx & Frontend)**:
-    *   Cấu hình Next.js export tĩnh, nén cục bộ và giải nén tại thư mục `/app/frontend/out` trên máy chủ.
-    *   Nâng cấp [docker-compose.yaml](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docker-compose.yaml) và [default.conf](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docker/nginx/conf.d/default.conf) để Nginx phục vụ trực tiếp tệp tĩnh, không dùng Node.js chạy ngầm, tiết kiệm dung lượng RAM.
-    *   Cấu hình chuyển tiếp reverse proxy cho Laravel Octane API `/api` và Soketi WebSockets `/app`, `/socket.io`.
-*   **PHP Dockerfile Compilation Fixes**:
-    *   Sửa lỗi biên dịch thư viện trên ảnh Alpine trong [Dockerfile](file:///r:/_Projects/Eurus_Workspace/Zeflyo/docker/app/Dockerfile) bằng việc bổ sung `pkgconf` và `sqlite-dev` vào quy trình cài đặt apk, giúp biên dịch trơn tru `pdo_pgsql`, `gd`, `zip`, `opcache`, và `intl`.
-*   **Laravel Database Setup & Dependencies**:
-    *   Chạy thành công `composer install` có kèm dev-dependencies bên trong container để có sẵn Faker phục vụ Seed dữ liệu.
-    *   Chạy khởi tạo hệ thống gồm `key:generate`, `migrate --force` và `db:seed --force` trên PostgreSQL thành công.
-*   **SSL / HTTPS Integration**:
-    *   Cài đặt Certbot trên host VPS, tạm dừng container Nginx và chạy `certbot certonly --standalone` để cấp phát chứng chỉ HTTPS cho tên miền `zeflyo.duckdns.org`.
-    *   Mount an toàn thư mục `/etc/letsencrypt` từ host vào container Nginx dưới quyền Read-Only và định cấu hình SSL bảo mật nghiêm ngặt.
+## ⚡ Active Tasks Completed (Những việc ĐÃ HOÀN THÀNH trong session)
+*   **Post Scheduler & AI Campaign Merge [frontend]:**
+    *   Merged the separate `autopost` campaign manager and `scheduler` post scheduler into a single, cohesive route under [scheduler/page.tsx](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/scheduler/page.tsx).
+    *   Consolidated the sidebar in [Sidebar.tsx](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/components/Sidebar.tsx) to map cleanly to the subtab switchers (`/scheduler?tab=setup` and `/scheduler?tab=list`).
+    *   Implemented `mounted` hydration state check to bypass Next.js server/client hydration mismatch warnings (caused by third-party browser translator extensions injecting elements).
+*   **Facebook-Style Live Edit & Review Modal [frontend]:**
+    *   Rebuilt the edit/view modal at the bottom of [scheduler/page.tsx](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/scheduler/page.tsx) to be tall and spacious (`max-w-7xl h-[85vh] max-h-[850px] flex flex-col justify-between`).
+    *   Textarea and the mock Facebook feed card stretch dynamically to fill 100% height, using `flex-1 min-h-0 overflow-y-auto` to scroll long content gracefully.
+    *   Enlarged the editor textarea size to `text-sm` for optimal screen usability.
+*   **API & Backend Support [backend]:**
+    *   Added `/api/topics/{id}/generate-content` and `/api/auto-setups/{id}/generate-all-contents` endpoints in [TopicController.php](file:///r:/_Projects/Eurus_Workspace/Zeflyo/backend/app/Http/Controllers/TopicController.php) to stream content generation with immediate HTTP cancellation abort signals.
+*   **Deployment and Service Refresh [devops]:**
+    *   Successfully compiled the static bundle via `npm run build`, compressed `out` files into `out.zip`, pushed to VPS `165.232.163.188` `/app/`, extracted, and restarted containers `app_zeflyo` and `nginx_zeflyo`.
 
 ## 🧠 Semantic Context Essence (Tinh túy kiến thức & Quyết định thiết kế)
-*   **Lý do Nginx phục vụ Next.js trực tiếp**: Tránh chạy Node.js trong môi trường sản xuất giúp giảm thiểu RAM sử dụng, giảm thiểu rủi ro bảo mật và tối đa hóa tốc độ tải trang tĩnh của Next.js.
-*   **Lý do cần sqlite-dev**: PHP 8.4 khi biên dịch PDO trên Alpine bắt buộc cần các file headers của Sqlite3 kể cả khi chúng ta chỉ sử dụng driver pdo_pgsql.
-*   **Cơ chế lưu trữ RAM của Octane**: Do Octane chạy nạp mã nguồn Laravel vào RAM, khi có thay đổi tệp tin lớp học hoặc nạp thêm dependency mới (như Faker), cần phải chạy `docker restart app_zeflyo` để khởi động lại Octane trong container thay vì chỉ chạy composer ngoài host.
-*   **Lưu ý bảo mật**: Đã thêm các tệp tin cấu hình nhạy cảm của Terraform (`*.tfvars`, `*.tfstate`, `.terraform/`) vào [.gitignore](file:///r:/_Projects/Eurus_Workspace/Zeflyo/.gitignore) tránh lộ token DigitalOcean lên GitHub.
+*   **Next.js SSR Hydration Guard**: Standard `typeof window !== 'undefined'` checks during initial render can cause mismatch if client HTML has attributes modified by extensions (like `bis_skin_checked` or translation tags). Standardizing a `mounted` state check ensures SSR outputs a simple skeleton or matches server output until client hydration.
+*   **Spacious Viewport Constraints**: Modal interfaces with scrollable inputs must avoid absolute heights that overflow the screen. Combining `flex flex-col` and `min-h-0` inside columns ensures the editor stretches dynamically to the exact window bounds without pushing action buttons off-screen.
+*   **Git Working Integrity**: Always stage and commit files locally (`git commit`) before deploying or checking out modifications to prevent working tree resets from discarding uncommitted merges.
 
 ## 🔜 Next Steps (3 hành động kỹ thuật trực tiếp kế tiếp)
-- [ ] **Step 1:** Kiểm tra liên kết Webhook Facebook trực tiếp bằng các tương tác bình luận/tin nhắn từ fanpage thực tế xem luồng ghi nhận của Queue Worker có hoạt động chính xác.
-- [ ] **Step 2:** Thiết lập cronjob tự động sao lưu định kỳ thư mục dữ liệu PostgreSQL (`postgres_data`) trên VPS ra không gian lưu trữ ngoài (ví dụ: S3 hoặc DO Spaces).
-- [ ] **Step 3:** Thay đổi tên miền thực tế của khách hàng (cấu hình trỏ bản ghi A từ tên miền chính thay vì dùng DuckDNS) và thực hiện cấp lại chứng chỉ SSL Let's Encrypt tương ứng.
+- [ ] **Step 1:** Add test cases for campaign execution worker queue in staging environment.
+- [ ] **Step 2:** Refactor additional presets customization options if business niche prompt suggestions require specific framework modifications (AIDA, PAS, BAB).
+- [ ] **Step 3:** Support multi-image or video media upload attachments within the single scheduler queue array.
