@@ -592,6 +592,7 @@ export default function App() {
   };
 
   const t = translations[lang];
+  const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
   return (
     <div className="h-screen animated-gradient text-[#f4f4f5] flex relative overflow-hidden font-sans">
@@ -701,46 +702,48 @@ export default function App() {
               </div>
 
               {/* Collapsible settings config panel for local network custom API */}
-              <div className="mt-6 pt-5 border-t border-white/5 flex flex-col gap-4">
-                <details className="group">
-                  <summary className="list-none flex items-center justify-between text-xs text-zinc-500 hover:text-zinc-300 font-semibold cursor-pointer select-none">
-                    <span className="flex items-center gap-1.5">
-                      <Settings className="w-3.5 h-3.5 group-open:rotate-45 transition-transform" />
-                      {t.serverSettings}
-                    </span>
-                    <ChevronRight className="w-3.5 h-3.5 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  
-                  <div className="flex flex-col gap-3.5 mt-4">
-                    <div>
-                      <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">{t.apiEndpoint}</label>
-                      <input 
-                        type="text" 
-                        value={apiBaseUrl} 
-                        onChange={(e) => setApiBaseUrl(e.target.value)} 
-                        className="w-full py-1.5 px-3 rounded-lg bg-zinc-900 border border-white/5 text-sm text-zinc-300 outline-none focus:border-blue-500/50 transition-colors"
-                        placeholder="http://localhost"
-                      />
+              {isLocalhost && (
+                <div className="mt-6 pt-5 border-t border-white/5 flex flex-col gap-4">
+                  <details className="group">
+                    <summary className="list-none flex items-center justify-between text-xs text-zinc-500 hover:text-zinc-300 font-semibold cursor-pointer select-none">
+                      <span className="flex items-center gap-1.5">
+                        <Settings className="w-3.5 h-3.5 group-open:rotate-45 transition-transform" />
+                        {t.serverSettings}
+                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 group-open:rotate-90 transition-transform" />
+                    </summary>
+                    
+                    <div className="flex flex-col gap-3.5 mt-4">
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">{t.apiEndpoint}</label>
+                        <input 
+                          type="text" 
+                          value={apiBaseUrl} 
+                          onChange={(e) => setApiBaseUrl(e.target.value)} 
+                          className="w-full py-1.5 px-3 rounded-lg bg-zinc-900 border border-white/5 text-sm text-zinc-300 outline-none focus:border-blue-500/50 transition-colors"
+                          placeholder="http://localhost"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">{t.appId}</label>
+                        <input 
+                          type="text" 
+                          value={appId} 
+                          onChange={(e) => setAppId(e.target.value)} 
+                          className="w-full py-1.5 px-3 rounded-lg bg-zinc-900 border border-white/5 text-sm text-zinc-300 outline-none focus:border-blue-500/50 transition-colors"
+                          placeholder="App ID from Meta Developer console"
+                        />
+                      </div>
+                      <button
+                        onClick={saveSettings}
+                        className="w-full py-1.5 px-3 text-xs font-semibold text-white rounded-lg bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-800 transition-colors border border-white/5"
+                      >
+                        {t.saveConfig}
+                      </button>
                     </div>
-                    <div>
-                      <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">{t.appId}</label>
-                      <input 
-                        type="text" 
-                        value={appId} 
-                        onChange={(e) => setAppId(e.target.value)} 
-                        className="w-full py-1.5 px-3 rounded-lg bg-zinc-900 border border-white/5 text-sm text-zinc-300 outline-none focus:border-blue-500/50 transition-colors"
-                        placeholder="App ID from Meta Developer console"
-                      />
-                    </div>
-                    <button
-                      onClick={saveSettings}
-                      className="w-full py-1.5 px-3 text-xs font-semibold text-white rounded-lg bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-800 transition-colors border border-white/5"
-                    >
-                      {t.saveConfig}
-                    </button>
-                  </div>
-                </details>
-              </div>
+                  </details>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-center items-center gap-4 text-xs text-zinc-500">
