@@ -221,9 +221,24 @@ class ProcessFacebookWebhookJob implements ShouldQueue
 
         // When user message does not match any keyword and AI is active for the customer, call Gemini API
         if ($replyText === null && $customer->ai_active) {
+            // Load the fanpage owner user for credit check
+            $fanpageOwner = $fanpage->user;
+
+            // Check if owner has sufficient credits before calling AI
+            if (! $fanpageOwner || ($fanpageOwner->credits ?? 0) < 1) {
+                Log::warning("AI auto-reply skipped for Fanpage #{$fanpage->id}: insufficient credits (owner user_id={$fanpageOwner?->id}, credits={$fanpageOwner?->credits}).");
+                return;
+            }
+
             $systemPrompt = 'Bạn là trợ lý AI của cửa hàng chuyên bán các khóa học AI và cung cấp tài khoản AI giá rẻ (như ChatGPT Plus, Midjourney, Canva Pro, Netflix, Zoom Pro, v.v.). Hãy trả lời khách hàng một cách lịch sự, ngắn gọn, chuyên nghiệp. Nếu khách hỏi về giá hoặc sản phẩm cụ thể mà bạn không biết, hãy mời khách để lại thông tin và nhân viên sẽ liên hệ lại. Trả lời bằng tiếng Việt. Đặc biệt, không được bịa bất cứ thông tin nào về giá cả, sản phẩm nếu bạn không chắc chắn.';
             $replyText = (new GeminiService)->generateReply($text, $systemPrompt);
             $replySource = $replyText ? 'ai' : null;
+
+            // Deduct 1 credit for every successful AI-generated reply
+            if ($replyText) {
+                $fanpageOwner->decrement('credits', 1);
+                Log::info("AI auto-reply credit deducted. Owner user_id={$fanpageOwner->id}, remaining credits=" . ($fanpageOwner->credits - 1));
+            }
         }
 
         if ($replyText === null) {

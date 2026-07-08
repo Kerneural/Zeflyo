@@ -140,6 +140,13 @@ class PostSchedulerController extends Controller
             'tone' => 'nullable|string',
         ]);
 
+        $user = $request->user();
+        if ($user->credits < 1) {
+            return response()->json([
+                'error' => 'Bạn không đủ Credits để sinh bài viết bằng AI (Cần tối thiểu 1 Credit).',
+            ], 402);
+        }
+
         $topic = $request->input('topic');
         $tone = $request->input('tone', 'Thân thiện');
 
@@ -161,6 +168,9 @@ class PostSchedulerController extends Controller
             ], 500);
         }
 
+        // Deduct 1 credit
+        $user->decrement('credits', 1);
+
         return response()->json([
             'content' => $content,
         ]);
@@ -178,6 +188,16 @@ class PostSchedulerController extends Controller
             'tone' => 'nullable|string|max:100',
             'post_length' => 'nullable|string|in:short,medium,long',
         ]);
+
+        $user = $request->user();
+        if ($user->credits < 1) {
+            return response()->json([
+                'error' => 'Bạn không đủ Credits để sinh bài viết bằng AI bằng luồng SSE (Cần tối thiểu 1 Credit).',
+            ], 402);
+        }
+
+        // Deduct credit upfront before opening SSE stream
+        $user->decrement('credits', 1);
 
         $geminiService = app(GeminiService::class);
 
@@ -280,6 +300,13 @@ class PostSchedulerController extends Controller
             'niche' => 'required|string|max:255',
         ]);
 
+        $user = $request->user();
+        if ($user->credits < 1) {
+            return response()->json([
+                'error' => 'Bạn không đủ Credits để tạo gợi ý nhanh bằng AI (Cần tối thiểu 1 Credit).',
+            ], 402);
+        }
+
         $niche = $request->input('niche');
         $geminiService = app(GeminiService::class);
         $presets = $geminiService->generateQuickPresets($niche);
@@ -287,6 +314,9 @@ class PostSchedulerController extends Controller
         if ($presets === null) {
             return response()->json(['error' => 'Failed to generate quick presets.'], 500);
         }
+
+        // Deduct 1 credit on successful preset generation
+        $user->decrement('credits', 1);
 
         return response()->json(['presets' => $presets]);
     }

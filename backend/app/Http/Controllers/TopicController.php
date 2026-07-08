@@ -86,6 +86,13 @@ class TopicController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $user = $request->user();
+        if ($user->credits < 5) {
+            return response()->json([
+                'error' => 'Bạn không đủ Credits để thực hiện sinh chủ đề bằng AI (Cần tối thiểu 5 Credits).',
+            ], 402);
+        }
+
         // Concurrency lock to prevent spam clicking and duplicate topic lists creation
         $lockKey = "auto_setup_topics_lock_" . $setup->id;
         if (\Illuminate\Support\Facades\Cache::has($lockKey)) {
@@ -114,6 +121,9 @@ class TopicController extends Controller
                     'error' => 'Không thể sinh chủ đề bằng AI. Vui lòng thử lại sau.',
                 ], 500);
             }
+
+            // Deduct credits on successful generation
+            $user->decrement('credits', 5);
 
             $maxOrder = $setup->topics()->max('sort_order') ?? 0;
             $createdTopics = [];
@@ -263,6 +273,13 @@ class TopicController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $user = $request->user();
+        if ($user->credits < 1) {
+            return response()->json([
+                'error' => 'Bạn không đủ Credits để sinh bài viết bằng AI (Cần tối thiểu 1 Credit).',
+            ], 402);
+        }
+
         $setup = $topic->autoSetup;
         if (!$setup) {
             return response()->json(['error' => 'Campaign setup not found'], 404);
@@ -286,6 +303,9 @@ class TopicController extends Controller
             ], 500);
         }
 
+        // Deduct credit on successful generation
+        $user->decrement('credits', 1);
+
         $topic->generated_content = $content;
         $topic->status = 'generated';
         $topic->save();
@@ -305,6 +325,13 @@ class TopicController extends Controller
 
         if ($setup->user_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $user = $request->user();
+        if ($user->credits < 1) {
+            return response()->json([
+                'error' => 'Bạn không đủ Credits để sinh bài viết bằng AI.',
+            ], 402);
         }
 
         // Anti-spam/Concurrency Lock: Avoid duplicate concurrent execution for the same campaign setup
@@ -337,6 +364,11 @@ class TopicController extends Controller
 
             $generatedCount = 0;
             foreach ($pendingTopics as $topic) {
+                // Break loop early if user runs out of credits during batch generation
+                if ($user->fresh()->credits < 1) {
+                    break;
+                }
+
                 try {
                     // Option 1: Throttle delay of 1.2 seconds between sequential API calls to prevent 429 Rate Limits
                     if ($generatedCount > 0) {
@@ -348,6 +380,9 @@ class TopicController extends Controller
                         $topic->generated_content = $content;
                         $topic->status = 'generated';
                         $topic->save();
+
+                        // Deduct 1 credit per successfully generated post
+                        $user->decrement('credits', 1);
                         $generatedCount++;
                     }
                 } catch (\Exception $e) {
