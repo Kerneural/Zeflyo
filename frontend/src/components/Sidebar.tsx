@@ -148,6 +148,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const resolvedPath = currentPath || pathname || "/";
+  const navRef = useRef<HTMLDivElement>(null);
 
   // Menu collapse/expand states
   const [isPublishOpen, setIsPublishOpen] = useState(false);
@@ -647,6 +648,32 @@ export default function Sidebar({
   const isRulesActive = resolvedPath === "/rules";
   const isSettingsActive = resolvedPath?.startsWith("/settings");
 
+  // Sync menu open/close state with current route & maintain accordion behavior
+  useEffect(() => {
+    if (isPublishActive) {
+      setIsPublishOpen(true);
+      setIsSettingsOpenState(false);
+    } else if (isSettingsActive) {
+      setIsPublishOpen(false);
+      setIsSettingsOpenState(true);
+    } else {
+      setIsPublishOpen(false);
+      setIsSettingsOpenState(false);
+    }
+  }, [resolvedPath, isPublishActive, isSettingsActive]);
+
+  // Auto-scroll active item into view inside the scrollable nav container
+  useEffect(() => {
+    if (navRef.current) {
+      const activeLink = navRef.current.querySelector(
+        '[class*="bg-zinc-900"], [class*="bg-[#6C63FF]/10"], [class*="from-[#7c3aed]"]'
+      );
+      if (activeLink) {
+        activeLink.scrollIntoView({ block: "nearest", behavior: "auto" });
+      }
+    }
+  }, [resolvedPath, activeTab]);
+
   // Interaction handlers
   const handleToggleTheme = () => {
     if (propToggleTheme) {
@@ -815,7 +842,7 @@ export default function Sidebar({
       </div>
 
       {/* Sidebar Navigation Menu (Scrollable) */}
-      <nav className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-2.5 custom-scrollbar pr-1">
+      <nav ref={navRef} className="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-2.5 custom-scrollbar pr-1">
         {/* Trang chủ */}
         <Link
           href="/"
@@ -832,7 +859,13 @@ export default function Sidebar({
         {/* Đăng & Tự động hóa — Unified publish hub */}
         <div className="flex flex-col gap-1.5">
           <div
-            onClick={() => setIsPublishOpen(!isPublishOpen)}
+            onClick={() => {
+              const nextState = !isPublishOpen;
+              setIsPublishOpen(nextState);
+              if (nextState) {
+                setIsSettingsOpenState(false);
+              }
+            }}
             className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
               isPublishActive
                 ? "bg-zinc-900 text-zinc-200 shadow-sm"
@@ -978,7 +1011,13 @@ export default function Sidebar({
         {/* Cài đặt */}
         <div className="flex flex-col gap-1.5">
           <div
-            onClick={() => setIsSettingsOpenState(!isSettingsOpenState)}
+            onClick={() => {
+              const nextState = !isSettingsOpenState;
+              setIsSettingsOpenState(nextState);
+              if (nextState) {
+                setIsPublishOpen(false);
+              }
+            }}
             className={`flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-xs font-bold uppercase tracking-wider cursor-pointer ${
               isSettingsActive
                 ? "bg-zinc-900 text-zinc-200 shadow-sm"
