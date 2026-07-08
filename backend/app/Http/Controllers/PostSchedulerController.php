@@ -224,6 +224,7 @@ class PostSchedulerController extends Controller
             ."- Sử dụng emoji sinh động một cách tinh tế để cấu trúc bài viết.\n"
             ."- Chia nhỏ đoạn văn để người đọc dễ theo dõi trên thiết bị di động.\n"
             ."- Thêm các hashtag liên quan ở cuối bài viết.\n"
+            ."- TUYỆT ĐỐI KHÔNG sử dụng ký tự Markdown như dấu hoa thị kép (**) hay dấu gạch dưới để in đậm/in nghiêng (do Facebook không hỗ trợ hiển thị Markdown). Để nhấn mạnh các tiêu đề phụ hoặc từ khóa quan trọng, hãy dùng chữ IN HOA hoặc emoji thích hợp.\n"
             .'- Hãy CHỈ trả về nội dung bài viết đăng Facebook, tuyệt đối không thêm bất kỳ văn bản giải thích, phân tích cấu trúc hay lời chào mừng nào khác.';
 
         return [

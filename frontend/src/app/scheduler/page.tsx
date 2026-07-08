@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 import { 
@@ -84,7 +85,17 @@ const promptPresets = [
 ];
 
 export default function PostScheduler() {
+  return (
+    <Suspense fallback={null}>
+      <PostSchedulerContent />
+    </Suspense>
+  );
+}
+
+function PostSchedulerContent() {
   const [token, setToken] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("http://localhost");
   const [fanpages, setFanpages] = useState<Fanpage[]>([]);
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
@@ -139,6 +150,13 @@ export default function PostScheduler() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  // Sync tab parameter from URL reactively
+  useEffect(() => {
+    if (tab && (tab === "setup" || tab === "list" || tab === "automation")) {
+      setActiveTab(tab as "setup" | "list" | "automation");
+    }
+  }, [tab]);
+
   // Load configuration & theme
   useEffect(() => {
     const savedToken = localStorage.getItem("zeflyo_token");
@@ -192,15 +210,6 @@ export default function PostScheduler() {
         }
       } catch (e) {
         console.error("Failed to parse mock pages", e);
-      }
-    }
-
-    // Sync tab parameter from URL
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab");
-      if (tab && (tab === "setup" || tab === "list" || tab === "automation")) {
-        setActiveTab(tab as "setup" | "list" | "automation");
       }
     }
   }, []);
@@ -819,6 +828,9 @@ export default function PostScheduler() {
       setIsStreaming(false);
       setAiGenerating(false);
       setAbortController(null);
+      setQueue(prev => prev.map((item, idx) => 
+        idx === activeQueueIndex ? { ...item, content: item.content.replace(/\*\*/g, "") } : item
+      ));
     }
   };
 

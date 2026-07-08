@@ -182,7 +182,8 @@ class GeminiService
             ."3. Phong cách viết: {$style}\n"
             ."4. Sử dụng emoji phù hợp để bài viết sinh động.\n"
             ."5. Kết thúc bằng CTA (lời kêu gọi hành động) và hashtag liên quan.\n"
-            ."6. Bố cục rõ ràng, phân chia đoạn mạch lạc.\n";
+            ."6. Bố cục rõ ràng, phân chia đoạn mạch lạc.\n"
+            ."7. TUYỆT ĐỐI KHÔNG sử dụng ký tự Markdown như dấu hoa thị kép (**) hay dấu gạch dưới để in đậm/in nghiêng (do Facebook không hỗ trợ hiển thị Markdown). Để tạo điểm nhấn cho các tiêu đề phụ hoặc từ khóa quan trọng, hãy dùng chữ IN HOA hoặc emoji thích hợp.\n";
 
         if (! empty($config['custom_prompt'])) {
             $systemPrompt .= "7. Yêu cầu bổ sung từ người dùng: {$config['custom_prompt']}\n";
@@ -240,6 +241,10 @@ class GeminiService
         }
 
         $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        if (is_string($text)) {
+            // Strip any Markdown bold markers (double asterisks)
+            $text = str_replace('**', '', $text);
+        }
 
         return is_string($text) && trim($text) !== '' ? trim($text) : null;
     }
