@@ -6,20 +6,12 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-echo "Checking Users Table Schema...\n";
+echo "Checking System Notifications Table...\n";
 try {
-    $columns = Schema::getColumnListing('users');
-    print_r($columns);
-
-    $user = App\Models\User::first();
-    if ($user) {
-        echo "First User:\n";
-        echo "ID: " . $user->id . "\n";
-        echo "Email: " . $user->email . "\n";
-        echo "Credits: " . $user->credits . "\n";
-    } else {
-        echo "No users found.\n";
-    }
+    $count = DB::table('system_notifications')->count();
+    echo "Count: $count\n";
+    $notifications = DB::table('system_notifications')->get();
+    print_r($notifications);
 } catch (\Exception $e) {
     echo "ERROR: " . $e->getMessage() . "\n";
 }
