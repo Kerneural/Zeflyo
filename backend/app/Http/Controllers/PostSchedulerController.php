@@ -94,6 +94,43 @@ class PostSchedulerController extends Controller
     }
 
     /**
+     * Publish a scheduled post immediately.
+     */
+    public function publishImmediately(Request $request, $id)
+    {
+        $post = ScheduledPost::findOrFail($id);
+
+        if ($post->user_id !== $request->user()->id) {
+            return response()->json([
+                'error' => 'Unauthorized',
+            ], 403);
+        }
+
+        if ($post->status === 'published') {
+            return response()->json([
+                'error' => 'Post has already been published.',
+            ], 400);
+        }
+
+        $post->publish();
+        $post->refresh();
+
+        if ($post->status === 'published') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Post published successfully.',
+                'post' => $post,
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'error' => $post->error_log ?: 'Failed to publish post.',
+                'post' => $post,
+            ], 500);
+        }
+    }
+
+    /**
      * Generate post content using Gemini AI.
      */
     public function generateAi(Request $request)
