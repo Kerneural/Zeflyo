@@ -240,6 +240,7 @@ function PostSchedulerContent() {
   const [approvingTopic, setApprovingTopic] = useState<number | null>(null);
   const [generatingTopicId, setGeneratingTopicId] = useState<number | null>(null);
   const [batchGeneratingSetupId, setBatchGeneratingSetupId] = useState<number | null>(null);
+  const [generatingTopicsForSetupId, setGeneratingTopicsForSetupId] = useState<number | null>(null);
 
   // ── Topic Edit & Review Modal State ──
   const [reviewTopic, setReviewTopic] = useState<any | null>(null);
@@ -3276,7 +3277,93 @@ function PostSchedulerContent() {
                                     <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
                                   </div>
                                 ) : setupTopics.length === 0 ? (
-                                  <p className="text-xs text-zinc-555 italic py-2">Chiến dịch chưa có chủ đề bài viết nào.</p>
+                                  <div className="flex flex-col gap-3.5 p-5 bg-zinc-950/40 border border-zinc-850 rounded-2xl">
+                                    <p className="text-xs text-zinc-500 italic">Chiến dịch chưa có chủ đề bài viết nào.</p>
+                                    
+                                    <div className="flex flex-col gap-2 border-t border-zinc-900 pt-3">
+                                      <label className="text-[11px] font-bold text-zinc-450 uppercase tracking-wide">💡 Chủ đề hoặc Ý tưởng của chiến dịch:</label>
+                                      <textarea
+                                        id={`inline-prompt-${setup.id}`}
+                                        placeholder="Ví dụ: Chia sẻ mẹo sử dụng, so sánh tính năng, feedback khách hàng..."
+                                        defaultValue={setup.custom_prompt || ""}
+                                        className="w-full bg-zinc-950/60 border border-zinc-850 focus:border-blue-500/50 rounded-xl p-3 text-xs outline-none text-zinc-300 placeholder:text-zinc-650 resize-none transition-all"
+                                        rows={2}
+                                      />
+                                      <div className="flex items-center justify-between mt-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[11px] text-zinc-500 uppercase font-bold">Số lượng:</span>
+                                          <select
+                                            id={`inline-count-${setup.id}`}
+                                            defaultValue="10"
+                                            className="bg-zinc-950 border border-zinc-850 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 outline-none"
+                                          >
+                                            <option value="10">10 bài viết</option>
+                                            <option value="20">20 bài viết</option>
+                                            <option value="30">30 bài viết</option>
+                                          </select>
+                                        </div>
+                                        
+                                        <button
+                                          type="button"
+                                          disabled={generatingTopicsForSetupId === setup.id}
+                                          onClick={async () => {
+                                            const promptVal = (document.getElementById(`inline-prompt-${setup.id}`) as HTMLTextAreaElement)?.value || "";
+                                            const countVal = Number((document.getElementById(`inline-count-${setup.id}`) as HTMLSelectElement)?.value || "10");
+                                            if (!promptVal.trim()) {
+                                              showNotification("error", "Vui lòng nhập mô tả chủ đề.");
+                                              return;
+                                            }
+                                            setGeneratingTopicsForSetupId(setup.id);
+                                            try {
+                                              const res = await fetch(`${apiBaseUrl}/api/auto-setups/${setup.id}/generate-topics`, {
+                                                method: "POST",
+                                                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+                                                body: JSON.stringify({ prompt: promptVal, count: countVal }),
+                                              });
+                                              if (res.ok) {
+                                                const d = await res.json();
+                                                showNotification("success", `Đã tạo thành công ${d.topics?.length || 0} chủ đề cho chiến dịch!`);
+                                                // Refresh topics list for this campaign
+                                                const res2 = await fetch(`${apiBaseUrl}/api/auto-setups/${setup.id}/topics`, {
+                                                  headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+                                                });
+                                                if (res2.ok) {
+                                                  const d2 = await res2.json();
+                                                  setSetupTopics(d2.topics || []);
+                                                  setSetups(prev => prev.map(s => s.id === setup.id ? { ...s, topics_count: d2.topics?.length || 0 } : s));
+                                                }
+                                              } else {
+                                                const creditErr = await handleApiCreditError(res);
+                                                if (creditErr) {
+                                                  showNotification("error", creditErr);
+                                                } else {
+                                                  const err = await res.json().catch(() => ({}));
+                                                  showNotification("error", err.error || "Không thể tạo chủ đề.");
+                                                }
+                                              }
+                                            } catch (e) {
+                                              showNotification("error", "Lỗi kết nối.");
+                                            } finally {
+                                              setGeneratingTopicsForSetupId(null);
+                                            }
+                                          }}
+                                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
+                                        >
+                                          {generatingTopicsForSetupId === setup.id ? (
+                                            <>
+                                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                              <span>Đang tạo chủ đề...</span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Sparkles className="w-3.5 h-3.5" />
+                                              <span>Tạo chủ đề bằng AI</span>
+                                            </>
+                                          )}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
                                 ) : (
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                     {setupTopics.map((topic) => (
