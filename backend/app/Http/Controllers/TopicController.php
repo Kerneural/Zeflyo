@@ -238,6 +238,97 @@ class TopicController extends Controller
     }
 
     /**
+     * Generate content for a single topic using AI.
+     */
+    public function generateContent(Request $request, $id)
+    {
+        $topic = Topic::with('autoSetup')->findOrFail($id);
+
+        if ($topic->user_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $setup = $topic->autoSetup;
+        if (!$setup) {
+            return response()->json(['error' => 'Campaign setup not found'], 404);
+        }
+
+        $service = new GeminiService;
+        $config = [
+            'language' => $setup->language ?? 'vi',
+            'post_length' => $setup->post_length ?? 'medium',
+            'writing_style' => $setup->writing_style ?? 'professional',
+            'custom_prompt' => $setup->custom_prompt,
+            'include_contact' => $setup->include_contact,
+            'contact_info' => $setup->contact_info,
+        ];
+
+        $content = $service->generatePostFromTopic($topic->title, $config);
+
+        if (!$content) {
+            return response()->json([
+                'error' => 'Không thể sinh nội dung bằng AI. Vui lòng thử lại sau.'
+            ], 500);
+        }
+
+        $topic->generated_content = $content;
+        $topic->status = 'generated';
+        $topic->save();
+
+        return response()->json([
+            'message' => 'Content generated successfully.',
+            'topic' => $topic,
+        ]);
+    }
+
+    /**
+     * Generate content for all pending topics in an auto-setup campaign using AI.
+     */
+    public function generateAllContents(Request $request, $autoSetupId)
+    {
+        $setup = AutoSetup::findOrFail($autoSetupId);
+
+        if ($setup->user_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $pendingTopics = $setup->topics()->where('status', 'pending')->get();
+        if ($pendingTopics->isEmpty()) {
+            return response()->json(['message' => 'No pending topics found.'], 200);
+        }
+
+        $service = new GeminiService;
+        $config = [
+            'language' => $setup->language ?? 'vi',
+            'post_length' => $setup->post_length ?? 'medium',
+            'writing_style' => $setup->writing_style ?? 'professional',
+            'custom_prompt' => $setup->custom_prompt,
+            'include_contact' => $setup->include_contact,
+            'contact_info' => $setup->contact_info,
+        ];
+
+        $generatedCount = 0;
+        foreach ($pendingTopics as $topic) {
+            try {
+                $content = $service->generatePostFromTopic($topic->title, $config);
+                if ($content) {
+                    $topic->generated_content = $content;
+                    $topic->status = 'generated';
+                    $topic->save();
+                    $generatedCount++;
+                }
+            } catch (\Exception $e) {
+                Log::error("Batch topic gen failed for Topic #{$topic->id}: " . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'message' => "Successfully generated content for {$generatedCount} topics.",
+            'count' => $generatedCount
+        ]);
+    }
+
+    /**
      * Update a topic's generated content and image URL.
      */
     public function update(Request $request, $id)

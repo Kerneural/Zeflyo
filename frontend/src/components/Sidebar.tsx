@@ -889,7 +889,7 @@ export default function Sidebar({
 
               {/* --- Lên lịch --- */}
               <p className="px-2 pt-2 pb-0.5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-600">
-                {lang === "en" ? "📅 Scheduling" : "📅 Lên lịch"}
+                {lang === "en" ? "📅 Scheduling & AI" : "📅 Đăng & Lên lịch"}
               </p>
               <button
                 onClick={() => router.push("/scheduler?tab=setup")}
@@ -899,7 +899,7 @@ export default function Sidebar({
                     : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
                 }`}
               >
-                {lang === "en" ? "Schedule Posts" : "Lên lịch bài viết"}
+                {lang === "en" ? "Create & Schedule Posts" : "Lên lịch & Tạo bài AI"}
               </button>
               <button
                 onClick={() => router.push("/scheduler?tab=list")}
@@ -909,32 +909,7 @@ export default function Sidebar({
                     : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
                 }`}
               >
-                {lang === "en" ? "Manage Schedule" : "Quản lý lịch đã đặt"}
-              </button>
-
-              {/* --- Tạo bài AI --- */}
-              <p className="px-2 pt-3 pb-0.5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-600">
-                {lang === "en" ? "🤖 AI Content" : "🤖 Tạo bài AI"}
-              </p>
-              <button
-                onClick={() => router.push("/autopost?tab=setup")}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  (isAutopostActive && (activeTab === "setup" || activeTab === "topic_setup"))
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
-                }`}
-              >
-                {lang === "en" ? "AI Topic Writer" : "Tạo bài theo chủ đề"}
-              </button>
-              <button
-                onClick={() => router.push("/autopost?tab=list")}
-                className={`w-full text-left px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  (isAutopostActive && (activeTab === "list" || activeTab === "manage"))
-                    ? "bg-gradient-to-r from-[#7c3aed] to-[#4f46e5] text-white shadow-md shadow-purple-500/10"
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
-                }`}
-              >
-                {lang === "en" ? "Manage AI Posts" : "Quản lý bài AI"}
+                {lang === "en" ? "Manage Scheduled Posts" : "Quản lý lịch đăng bài"}
               </button>
 
               {/* --- Sản phẩm --- */}

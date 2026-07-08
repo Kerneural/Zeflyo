@@ -81,9 +81,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auto-setups/{id}/topics', [TopicController::class, 'index']);
     Route::post('/auto-setups/{id}/topics', [TopicController::class, 'store']);
     Route::post('/auto-setups/{id}/generate-topics', [TopicController::class, 'generateTopics']);
+    Route::post('/auto-setups/{id}/generate-all-contents', [TopicController::class, 'generateAllContents']);
     Route::delete('/topics/{id}', [TopicController::class, 'destroy']);
     Route::put('/topics/{id}', [TopicController::class, 'update']);
     Route::post('/topics/{id}/approve', [TopicController::class, 'approve']);
+    Route::post('/topics/{id}/generate-content', [TopicController::class, 'generateContent']);
 
     // Product APIs
     Route::get('/products', [ProductController::class, 'index']);
