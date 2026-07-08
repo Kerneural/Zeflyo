@@ -1,63 +1,43 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-07-08 | Status: Unified Scheduler UI, Spacious Preview Modal, Anti-Spam Rate Limiting, 5 Gemini Keys, and fully functional Credit Deduction System deployed to production.
+> Last Checkpoint: 2026-07-08 | Status: Unified Scheduler UI, Spacious Preview Modal, Anti-Spam Rate Limiting, 5 Gemini Keys, Credits System, Multi-Media Attachments, and Framework Presets deployed to production.
 
 ---
 
 ## ⚡ Active Tasks Completed (Những việc ĐÃ HOÀN THÀNH trong session)
 
-*   **Post Scheduler & AI Campaign Merge [frontend]:**
-    *   Merged `autopost` and `scheduler` into a single unified page at [scheduler/page.tsx](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/app/scheduler/page.tsx).
-    *   Consolidated sidebar in [Sidebar.tsx](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/components/Sidebar.tsx).
-    *   Implemented `mounted` hydration guard to fix SSR mismatch warnings.
+*   **Real-time Credits Synchronization [frontend & backend]:**
+    *   Added `credits_remaining` response property to all AI-related JSON endpoints (`/api/posts/generate-ai`, `/api/posts/quick-presets`, `/api/auto-setups/{id}/generate-topics`, `/api/topics/{id}/generate-content`, `/api/auto-setups/{id}/generate-all-contents`).
+    *   Created frontend credits utility at [credits.ts](file:///r:/_Projects/Eurus_Workspace/Zeflyo/frontend/src/lib/credits.ts) to handle `localStorage` updates and dispatch the `zeflyo_profile_updated` event to refresh sidebar UI dynamically.
+    *   Integrated credits sync and `402 Payment Required` checking into all AI call sites.
+    *   For SSE streams, triggered an immediate background `/api/user` profile re-fetch upon opening the stream to sync local credit balance.
 
-*   **Facebook-Style Live Edit & Review Modal [frontend]:**
-    *   Spacious `max-w-7xl h-[85vh]` 2-column modal — left column editor (flex-1 textarea), right column Facebook feed mockup.
-    *   Full-height stretch with `flex-1 min-h-0 overflow-y-auto` for both content and image areas.
+*   **Multi-image and Video Upload Support [frontend & backend]:**
+    *   Created database migration adding `media_gallery` (JSON) to `scheduled_posts` and `topics` tables.
+    *   Updated `UploadController.php` to accept video uploads up to 50MB and return correct mime and file type indicators (`image` or `video`).
+    *   Overhauled `ScheduledPost` and `Topic` models/controllers to support uploading, storing, and publishing multi-image and video posts using Facebook's multi-photo/video publishing Graph APIs.
+    *   Overhauled the scheduler's media section to support dragging/uploading multiple files, deleting items from the gallery, and typing manual URLs.
+    *   Implemented full-featured Facebook-style grid layouts in live mockup preview (displaying 1, 2, 3, or 4+ images with "+N" counters and video play tags).
 
-*   **API Anti-Spam Throttling [backend]:**
-    *   Concurrency locks: `auto_setup_topics_lock_{id}` (60s) and `auto_setup_gen_lock_{id}` (180s) using Laravel Cache.
-    *   Batch limit of **15 topics** per request to avoid PHP timeout.
-    *   **1.2s delay** (`usleep(1200000)`) between sequential Gemini API calls in batch loop.
+*   **Framework-Tailored Prompt Presets [frontend & backend]:**
+    *   Updated `/api/posts/quick-presets` endpoint and `GeminiService@generateQuickPresets` to receive `framework` parameter (`aida`, `pas`, `bab`).
+    *   Tailored suggested topic labels, detailed topic prompts, and marketing goals directly according to the chosen formula.
 
-*   **Gemini API Key Expansion [backend]:**
-    *   Configured **5 rotated API keys** in `GEMINI_API_KEY` via comma-separated list in `.env` on both local and VPS.
-    *   Combined theoretical capacity: **75 RPM / 7,500 RPD** across 5 Free Tier keys.
-
-*   **Full Credits System Implementation [backend]:**
-    All 6 AI endpoints now check and deduct credits in [PostSchedulerController.php](file:///r:/_Projects/Eurus_Workspace/Zeflyo/backend/app/Http/Controllers/PostSchedulerController.php), [TopicController.php](file:///r:/_Projects/Eurus_Workspace/Zeflyo/backend/app/Http/Controllers/TopicController.php), and [ProcessFacebookWebhookJob.php](file:///r:/_Projects/Eurus_Workspace/Zeflyo/backend/app/Jobs/ProcessFacebookWebhookJob.php):
-
-    | Endpoint / Feature | Min Credits | Deduction |
-    |---|---|---|
-    | `POST /posts/generate-ai` | 1 | -1 per call |
-    | `POST /posts/generate-ai-stream` | 1 | -1 upfront |
-    | `POST /posts/quick-presets` | 1 | -1 on success |
-    | `POST /auto-setups/{id}/generate-topics` | 5 | -5 on success |
-    | `POST /topics/{id}/generate-content` | 1 | -1 on success |
-    | `POST /auto-setups/{id}/generate-all-contents` | 1 | -1 per post, stops if credits run out |
-    | AI Auto-Reply (Webhook Job) | 1 | -1 per AI reply; keyword replies = FREE |
-
-    - Returns HTTP `402 Payment Required` if user has insufficient credits.
-    - Batch generation uses `$user->fresh()->credits` inside loop to refresh DB value mid-loop.
-    - AI Auto-Reply skips silently and logs a warning if the fanpage owner has 0 credits.
-
-*   **Deployment and Service Refresh [devops]:**
-    *   All changes pulled via `git pull` on VPS, then `docker compose restart app worker` applied.
+*   **Deployment and Test Validation [devops]:**
+    *   Fixed PHPUnit tests by configuring the default test factory user to start with 100 credits, ensuring all 49 automated tests pass.
+    *   Pushed changes to GitHub `main` branch, successfully pulled and executed migrations on production VPS, and restarted OCTANE/worker app containers.
 
 ---
 
 ## 🧠 Semantic Context Essence (Tinh túy kiến thức & Quyết định thiết kế)
 
-*   **Credit HTTP Status**: Used `402 Payment Required` (not `403 Forbidden`) for insufficient-credit errors. This is semantically correct and lets the frontend distinguish payment issues from authorization issues.
-*   **Batch Credit Deduction**: In `generateAllContents`, credit is deducted **per successfully generated post** inside the loop (not upfront), and the loop calls `$user->fresh()` before each iteration to prevent race conditions from stale in-memory state.
-*   **SSE Stream Credit**: For streaming, credit must be deducted **before** opening the stream (not inside the closure) because once `response()->stream()` starts, PHP headers are sent and a 402 response can no longer be issued.
-*   **AI Auto-Reply Credit Ownership**: The fanpage `user` (owner) is charged, not the customer. Keyword rules trigger zero-cost replies.
-*   **Next.js SSR Hydration Guard**: A `mounted` state check prevents browser extension attribute injection from triggering React hydration mismatch warnings.
-*   **Spacious Modal Viewport Pattern**: `flex flex-col min-h-0` on column containers + `flex-1 min-h-0 overflow-y-auto` on content areas ensures full-height stretch without overflow.
+*   **Facebook Multi-photo Publishing Flow**: To publish multiple photos in a single feed post, you must upload each photo individually with `published=false` to obtain the `media_fbid`, and then publish the main status to `/feed` with `attached_media` containing the list of photo IDs.
+*   **Facebook Video Publishing**: To publish a video post, call `POST /{fbPageId}/videos` with `file_url` (direct public link) and `description` containing the post caption text.
+*   **Credits synchronization in SSE**: Because SSE returns stream content chunk-by-chunk rather than raw JSON, we fetch `/api/user` instantly on stream startup to refresh the user's credits balance in the sidebar.
 
 ---
 
 ## 🔜 Next Steps (3 hành động kỹ thuật trực tiếp kế tiếp)
 
-- [ ] **Step 1:** Show real-time credit balance in frontend UI after each AI action (re-fetch `/api/user/profile` or return updated credits in AI response payloads).
-- [ ] **Step 2:** Add test cases for campaign execution worker queue in staging environment.
-- [ ] **Step 3:** Support multi-image or video media upload attachments within the single scheduler post queue.
+- [ ] **Step 1:** Add media upload size and type limit indicators in UI to guide users.
+- [ ] **Step 2:** Test full campaign scheduling of a mixed-media queue (images/videos) in production.
+- [ ] **Step 3:** Implement customizable publishing notifications for successful/failed schedules.
