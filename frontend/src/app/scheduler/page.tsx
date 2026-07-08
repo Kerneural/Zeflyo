@@ -1768,7 +1768,7 @@ function PostSchedulerContent() {
                         </div>
 
                         {/* AI Writer Panel */}
-                        <div className="flex flex-col gap-4 bg-blue-650/[0.03] border border-blue-500/10 rounded-2xl p-5 mt-2">
+                        <div className="flex flex-col gap-4 bg-blue-600/[0.03] border border-blue-500/10 rounded-2xl p-5 mt-2">
                           <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-wider">
                             <Sparkles className="w-4 h-4 text-blue-550" />
                             <span>Trình viết bài bằng AI</span>
@@ -2292,7 +2292,7 @@ function PostSchedulerContent() {
                           )}
 
                           {scheduleMode === "fixed" && (
-                            <div className="flex flex-col gap-2 bg-blue-650/[0.03] border border-blue-500/10 rounded-xl p-3.5 mt-1 animate-fade-in">
+                            <div className="flex flex-col gap-2 bg-blue-600/[0.03] border border-blue-500/10 rounded-xl p-3.5 mt-1 animate-fade-in">
                               <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Ngày đăng bài (Cố định)</label>
                               <input
                                 type="date"
@@ -3800,7 +3800,7 @@ function PostSchedulerContent() {
                 <button
                   onClick={handleSaveAndPublishTopic}
                   disabled={reviewSubmitting || uploadingImage || !reviewContent.trim()}
-                  className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-blue-650 to-indigo-650 hover:from-blue-600 hover:to-indigo-600 text-white text-xs font-bold shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-50 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5"
+                   className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-50 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5"
                 >
                   {reviewSubmitting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
