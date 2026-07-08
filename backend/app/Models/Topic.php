@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'user_id', 'auto_setup_id', 'title', 'status', 'generated_content',
-    'generated_image_url', 'fb_post_id', 'error_log', 'sort_order',
+    'generated_image_url', 'media_gallery', 'fb_post_id', 'error_log', 'sort_order',
 ])]
 class Topic extends Model
 {
@@ -16,6 +16,7 @@ class Topic extends Model
     {
         return [
             'sort_order' => 'integer',
+            'media_gallery' => 'array',
         ];
     }
 

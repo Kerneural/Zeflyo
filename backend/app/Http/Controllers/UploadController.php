@@ -12,7 +12,7 @@ class UploadController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'file' => 'nullable|file|image|max:5120',
+            'file' => 'nullable|file|mimes:jpeg,jpg,png,gif,webp,mp4,mov,avi,mpeg|max:51200', // max 50MB for images/videos
             'image' => 'nullable|file|image|max:5120',
         ]);
 
@@ -24,9 +24,15 @@ class UploadController extends Controller
 
             // Get public URL
             $url = asset('storage/'.$path);
+            
+            // Determine type
+            $mimeType = $file->getMimeType();
+            $type = str_starts_with($mimeType, 'video/') ? 'video' : 'image';
 
             return response()->json([
                 'url' => $url,
+                'type' => $type,
+                'mime_type' => $mimeType,
                 'message' => 'Upload successful',
             ]);
         }

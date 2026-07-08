@@ -34,6 +34,9 @@ class PostSchedulerController extends Controller
             'fanpage_ids.*' => 'integer|exists:fanpages,id',
             'content' => 'required|string',
             'image_url' => 'nullable|url',
+            'media_gallery' => 'nullable|array',
+            'media_gallery.*.url' => 'required|url',
+            'media_gallery.*.type' => 'required|string|in:image,video',
             'scheduled_at' => 'required|date',
             'status' => 'nullable|string|in:draft,pending,published,failed',
         ]);
@@ -63,6 +66,7 @@ class PostSchedulerController extends Controller
             'fanpage_ids' => $request->input('fanpage_ids'),
             'content' => $request->input('content'),
             'image_url' => $request->input('image_url'),
+            'media_gallery' => $request->input('media_gallery'),
             'scheduled_at' => $scheduledAt,
             'status' => $status,
         ]);
@@ -299,6 +303,7 @@ class PostSchedulerController extends Controller
     {
         $request->validate([
             'niche' => 'required|string|max:255',
+            'framework' => 'nullable|string|in:aida,pas,bab',
         ]);
 
         $user = $request->user();
@@ -309,8 +314,9 @@ class PostSchedulerController extends Controller
         }
 
         $niche = $request->input('niche');
+        $framework = $request->input('framework', 'aida');
         $geminiService = app(GeminiService::class);
-        $presets = $geminiService->generateQuickPresets($niche);
+        $presets = $geminiService->generateQuickPresets($niche, $framework);
 
         if ($presets === null) {
             return response()->json(['error' => 'Failed to generate quick presets.'], 500);

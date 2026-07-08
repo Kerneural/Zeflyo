@@ -50,12 +50,18 @@ interface Fanpage {
   is_active: boolean;
 }
 
+interface MediaItem {
+  url: string;
+  type: "image" | "video";
+}
+
 interface ScheduledPost {
   id: number;
   user_id: string | number;
   fanpage_ids: number[];
   content: string;
   image_url: string | null;
+  media_gallery?: MediaItem[];
   scheduled_at: string;
   status: "draft" | "pending" | "published" | "failed";
   error_log: string | null;
@@ -66,6 +72,7 @@ interface QueuePost {
   id: string;
   imageUrl: string;
   content: string;
+  mediaGallery?: MediaItem[];
 }
 
 const promptPresets = [
@@ -176,6 +183,7 @@ function PostSchedulerContent() {
   ]);
   const [activeQueueIndex, setActiveQueueIndex] = useState<number>(0);
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
+  const [mediaUrlInput, setMediaUrlInput] = useState<string>("");
 
   // AI Generator state
   const [aiTopic, setAiTopic] = useState<string>("");
@@ -323,7 +331,7 @@ function PostSchedulerContent() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ niche: businessNiche.trim() })
+        body: JSON.stringify({ niche: businessNiche.trim(), framework: aiFramework })
       });
 
       if (response.ok) {
@@ -1008,51 +1016,119 @@ function PostSchedulerContent() {
     setQueue(prev => prev.map((item, idx) => idx === activeQueueIndex ? { ...item, imageUrl: val } : item));
   };
 
-  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleDeleteMediaItem = (itemIdx: number) => {
+    setQueue(prev => prev.map((item, idx) => {
+      if (idx === activeQueueIndex) {
+        const updatedGallery = (item.mediaGallery || []).filter((_: MediaItem, i: number) => i !== itemIdx);
+        return {
+          ...item,
+          imageUrl: updatedGallery[0]?.url || "",
+          mediaGallery: updatedGallery
+        };
+      }
+      return item;
+    }));
+  };
 
-    if (token && token.startsWith("mock_")) {
-      setUploadingImage(true);
-      await new Promise(resolve => setTimeout(resolve, 800));
-      const mockImages = [
-        "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80"
-      ];
-      const randomImg = mockImages[Math.floor(Math.random() * mockImages.length)];
-      handleImageUrlChange(randomImg);
-      showNotification("success", "Đã tải hình ảnh lên hàng chờ (Mẫu)!");
-      setUploadingImage(false);
-      return;
-    }
+  const handleAddManualMediaUrl = (url: string) => {
+    if (!url.trim()) return;
+    const type: "image" | "video" = (url.endsWith(".mp4") || url.endsWith(".mov") || url.includes("video")) ? "video" : "image";
+    const newMedia: MediaItem = { url: url.trim(), type };
+    setQueue(prev => prev.map((item, idx) => {
+      if (idx === activeQueueIndex) {
+        const gallery = item.mediaGallery || [];
+        const updatedGallery = [...gallery, newMedia];
+        return {
+          ...item,
+          imageUrl: updatedGallery[0]?.url || "",
+          mediaGallery: updatedGallery
+        };
+      }
+      return item;
+    }));
+  };
+
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     if (!token) return;
     setUploadingImage(true);
 
-    const formData = new FormData();
-    formData.append("image", file);
-
     try {
-      const res = await fetch(`${apiBaseUrl}/api/upload`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-        body: formData,
-      });
+      const isMock = token.startsWith("mock_");
 
-      if (res.ok) {
-        const d = await res.json();
-        handleImageUrlChange(d.url);
-        showNotification("success", "Tải hình ảnh lên thành công!");
-      } else {
-        const err = await res.json();
-        showNotification("error", err.error || "Tải ảnh lên thất bại");
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        if (isMock) {
+          await new Promise(resolve => setTimeout(resolve, 400));
+          const mockImages = [
+            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80"
+          ];
+          const randomImg = mockImages[Math.floor(Math.random() * mockImages.length)];
+          const newMedia: MediaItem = {
+            url: randomImg,
+            type: file.type.startsWith("video/") ? ("video" as const) : ("image" as const)
+          };
+          
+          setQueue(prev => prev.map((item, idx) => {
+            if (idx === activeQueueIndex) {
+              const gallery = item.mediaGallery || [];
+              const updatedGallery = [...gallery, newMedia];
+              return {
+                ...item,
+                imageUrl: updatedGallery[0]?.url || "",
+                mediaGallery: updatedGallery
+              };
+            }
+            return item;
+          }));
+          showNotification("success", `Đã tải ${file.name} lên thành công (Giả lập)!`);
+        } else {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const res = await fetch(`${apiBaseUrl}/api/upload`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+            body: formData,
+          });
+
+          if (res.ok) {
+            const d = await res.json();
+            const mediaType: "image" | "video" = (d.type === "video" || file.type.startsWith("video/")) ? "video" : "image";
+            const newMedia: MediaItem = {
+              url: d.url,
+              type: mediaType
+            };
+            
+            setQueue(prev => prev.map((item, idx) => {
+              if (idx === activeQueueIndex) {
+                const gallery = item.mediaGallery || [];
+                const updatedGallery = [...gallery, newMedia];
+                return {
+                  ...item,
+                  imageUrl: updatedGallery[0]?.url || "",
+                  mediaGallery: updatedGallery
+                };
+              }
+              return item;
+            }));
+            showNotification("success", `Tải file ${file.name} thành công!`);
+          } else {
+            const err = await res.json();
+            showNotification("error", err.error || `Tải file ${file.name} thất bại`);
+          }
+        }
       }
     } catch (err) {
-      showNotification("error", "Lỗi kết nối khi tải ảnh");
+      showNotification("error", "Lỗi kết nối khi tải file");
     } finally {
       setUploadingImage(false);
     }
@@ -1185,6 +1261,7 @@ function PostSchedulerContent() {
         fanpage_ids: selectedPages,
         content: finalContent,
         image_url: postItem.imageUrl || null,
+        media_gallery: postItem.mediaGallery || (postItem.imageUrl ? [{ url: postItem.imageUrl, type: "image" as const }] : []),
         scheduled_at: slot.toISOString(),
         status: "pending"
       });
@@ -1199,6 +1276,7 @@ function PostSchedulerContent() {
         fanpage_ids: p.fanpage_ids,
         content: p.content,
         image_url: p.image_url,
+        media_gallery: p.media_gallery,
         scheduled_at: p.scheduled_at,
         status: "pending" as const,
         error_log: null,
@@ -1862,56 +1940,93 @@ function PostSchedulerContent() {
 
                         {/* Media Attach Section */}
                         <div className="flex flex-col gap-3">
-                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Liên kết media (Ảnh hoặc Video)</label>
-                          <input
-                            type="text"
-                            value={activePost.imageUrl}
-                            onChange={(e) => handleImageUrlChange(e.target.value)}
-                            placeholder="Nhập URL video hoặc ảnh..."
-                            className="w-full bg-zinc-950/40 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2.5 text-xs focus:ring-1 focus:ring-blue-500/30 outline-none transition-all text-zinc-350 placeholder:text-zinc-700"
-                          />
-
-                          {/* Media preview */}
-                          {uploadingImage ? (
-                            <div className="border-2 border-dashed border-zinc-850 rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-zinc-950/20">
-                              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                              <p className="text-xs text-zinc-400">Đang tải ảnh từ thiết bị lên...</p>
-                            </div>
-                          ) : activePost.imageUrl ? (
-                            <div className="relative rounded-xl overflow-hidden border border-zinc-850 bg-zinc-950/60 p-2 animate-fade-in">
-                              <img
-                                src={activePost.imageUrl}
-                                alt="Upload preview"
-                                className="w-full max-h-[160px] object-cover rounded-lg"
-                              />
-                              <button
-                                onClick={() => handleImageUrlChange("")}
-                                className="absolute top-4 right-4 bg-zinc-950/80 hover:bg-red-950/80 text-zinc-400 hover:text-red-400 w-8 h-8 rounded-lg flex items-center justify-center border border-zinc-850 hover:border-red-900 transition-all cursor-pointer"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div
-                              className="border-2 border-dashed border-zinc-850 rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer bg-zinc-950/20 hover:bg-zinc-900/10 hover:border-zinc-800 transition-all"
-                              onClick={() => document.getElementById("scheduler-file-upload")?.click()}
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Đính kèm Media (Ảnh hoặc Video)</label>
+                          
+                          {/* Manual URL Input */}
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={mediaUrlInput}
+                              onChange={(e) => setMediaUrlInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleAddManualMediaUrl(mediaUrlInput);
+                                  setMediaUrlInput("");
+                                }
+                              }}
+                              placeholder="Nhập URL video hoặc ảnh rồi nhấn Enter..."
+                              className="flex-1 bg-zinc-950/40 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500/30 outline-none transition-all text-zinc-350 placeholder:text-zinc-700"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleAddManualMediaUrl(mediaUrlInput);
+                                setMediaUrlInput("");
+                              }}
+                              className="px-3.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 text-zinc-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
                             >
-                              <input
-                                type="file"
-                                id="scheduler-file-upload"
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleUploadImage}
-                              />
-                              <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-850">
-                                <ImageIcon className="w-5 h-5 text-zinc-500" />
+                              Thêm
+                            </button>
+                          </div>
+
+                          {/* Media Preview Grid */}
+                          <div className="flex flex-wrap gap-3 mt-1">
+                            {/* Render existing items in mediaGallery */}
+                            {(activePost.mediaGallery || (activePost.imageUrl ? [{ url: activePost.imageUrl, type: "image" as const }] : [])).map((item, idx) => (
+                              <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950/60 flex items-center justify-center group animate-fade-in">
+                                {item.type === "video" ? (
+                                  <div className="w-full h-full relative">
+                                    <video src={item.url} muted className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                      <span className="text-[10px] font-extrabold uppercase bg-blue-600/90 text-white px-1.5 py-0.5 rounded shadow">VIDEO</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={item.url}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                                {/* Overlay hover delete button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteMediaItem(idx)}
+                                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-black/85 hover:bg-red-950/90 text-zinc-400 hover:text-red-400 w-6 h-6 rounded-lg flex items-center justify-center border border-zinc-800 hover:border-red-900/50 transition-all cursor-pointer"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
                               </div>
-                              <div className="text-center">
-                                <p className="text-xs font-semibold text-zinc-350">Tải ảnh hoặc video từ thiết bị</p>
-                                <p className="text-[10px] text-zinc-650 mt-1">Hỗ trợ JPG, PNG, WEBP, MP4 (Cloudinary, Imgur, v.v.)</p>
+                            ))}
+
+                            {/* Upload Area Box */}
+                            {uploadingImage ? (
+                              <div className="w-24 h-24 border-2 border-dashed border-zinc-850 rounded-xl flex flex-col items-center justify-center gap-1 bg-zinc-950/20">
+                                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                                <span className="text-[9px] text-zinc-500">Đang tải...</span>
                               </div>
-                            </div>
-                          )}
+                            ) : (
+                              <div
+                                className="w-24 h-24 border-2 border-dashed border-zinc-850 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-zinc-950/20 hover:bg-zinc-900/10 hover:border-zinc-800 transition-all"
+                                onClick={() => document.getElementById("scheduler-file-upload")?.click()}
+                              >
+                                <input
+                                  type="file"
+                                  id="scheduler-file-upload"
+                                  className="hidden"
+                                  accept="image/*,video/*"
+                                  multiple
+                                  onChange={handleUploadImage}
+                                />
+                                <div className="w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-850">
+                                  <Plus className="w-4 h-4 text-zinc-500" />
+                                </div>
+                                <span className="text-[9px] font-semibold text-zinc-400">Tải tệp lên</span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-zinc-650 mt-0.5">Bạn có thể đính kèm nhiều ảnh (tạo Album đăng cùng lúc) hoặc 1 Video lên Facebook.</p>
                         </div>
 
                         {/* Real-time Facebook Post Mockup Preview */}
@@ -1956,15 +2071,96 @@ function PostSchedulerContent() {
                             </div>
 
                             {/* Post Media */}
-                            {activePost.imageUrl && (
-                              <div className="w-full border-y border-zinc-850 max-h-[320px] overflow-hidden flex items-center justify-center bg-zinc-950">
-                                <img
-                                  src={activePost.imageUrl}
-                                  alt="Post Media Preview"
-                                  className="w-full object-cover"
-                                />
-                              </div>
-                            )}
+                            {(() => {
+                              const mediaItems = activePost.mediaGallery || (activePost.imageUrl ? [{ url: activePost.imageUrl, type: "image" as const }] : []);
+                              if (mediaItems.length === 0) return null;
+
+                              if (mediaItems.length === 1) {
+                                const item = mediaItems[0];
+                                if (item.type === "video") {
+                                  return (
+                                    <div className="w-full border-y border-zinc-850 bg-zinc-950 flex items-center justify-center relative">
+                                      <video src={item.url} controls className="w-full object-cover max-h-[320px]" />
+                                    </div>
+                                  );
+                                } else {
+                                  return (
+                                    <div className="w-full border-y border-zinc-850 max-h-[320px] overflow-hidden flex items-center justify-center bg-zinc-950">
+                                      <img src={item.url} alt="Post Media Preview" className="w-full object-cover" />
+                                    </div>
+                                  );
+                                }
+                              }
+
+                              if (mediaItems.length === 2) {
+                                return (
+                                  <div className="grid grid-cols-2 gap-0.5 border-y border-zinc-850 bg-zinc-950 max-h-[320px] overflow-hidden">
+                                    {mediaItems.map((item, idx) => (
+                                      <div key={idx} className="h-[240px] w-full relative flex items-center justify-center overflow-hidden">
+                                        {item.type === "video" ? (
+                                          <video src={item.url} muted className="w-full h-full object-cover" />
+                                        ) : (
+                                          <img src={item.url} alt="" className="w-full h-full object-cover" />
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              }
+
+                              if (mediaItems.length === 3) {
+                                return (
+                                  <div className="grid grid-cols-3 gap-0.5 border-y border-zinc-850 bg-zinc-950 max-h-[320px] overflow-hidden">
+                                    <div className="col-span-2 h-[260px] relative overflow-hidden">
+                                      {mediaItems[0].type === "video" ? (
+                                        <video src={mediaItems[0].url} muted className="w-full h-full object-cover" />
+                                      ) : (
+                                        <img src={mediaItems[0].url} alt="" className="w-full h-full object-cover" />
+                                      )}
+                                    </div>
+                                    <div className="grid grid-rows-2 gap-0.5 h-[260px]">
+                                      {mediaItems.slice(1, 3).map((item, idx) => (
+                                        <div key={idx} className="h-[129px] relative overflow-hidden">
+                                          {item.type === "video" ? (
+                                            <video src={item.url} muted className="w-full h-full object-cover" />
+                                          ) : (
+                                            <img src={item.url} alt="" className="w-full h-full object-cover" />
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div className="grid grid-cols-3 gap-0.5 border-y border-zinc-850 bg-zinc-950 max-h-[320px] overflow-hidden">
+                                  <div className="col-span-2 h-[260px] relative overflow-hidden">
+                                    {mediaItems[0].type === "video" ? (
+                                      <video src={mediaItems[0].url} muted className="w-full h-full object-cover" />
+                                    ) : (
+                                      <img src={mediaItems[0].url} alt="" className="w-full h-full object-cover" />
+                                    )}
+                                  </div>
+                                  <div className="grid grid-rows-3 gap-0.5 h-[260px]">
+                                    {mediaItems.slice(1, 4).map((item, idx) => (
+                                      <div key={idx} className="h-[86px] relative overflow-hidden">
+                                        {item.type === "video" ? (
+                                          <video src={item.url} muted className="w-full h-full object-cover" />
+                                        ) : (
+                                          <img src={item.url} alt="" className="w-full h-full object-cover" />
+                                        )}
+                                        {idx === 2 && mediaItems.length > 4 && (
+                                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg font-bold">
+                                            +{mediaItems.length - 4}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                             {/* Post Actions Mock */}
                             <div className="px-4 py-2 border-t border-zinc-850 flex items-center justify-between text-zinc-500 text-xs">
@@ -2837,11 +3033,31 @@ function PostSchedulerContent() {
 
                               <p className="text-xs text-zinc-350 leading-relaxed whitespace-pre-wrap line-clamp-4">{post.content}</p>
 
-                              {post.image_url && (
-                                <div className="mt-3 rounded-lg overflow-hidden border border-zinc-850 max-h-[120px]">
-                                  <img src={post.image_url} alt="Post Attachment" className="w-full h-full object-cover" />
-                                </div>
-                              )}
+                              {(() => {
+                                const gallery = post.media_gallery || (post.image_url ? [{ url: post.image_url, type: "image" as const }] : []);
+                                if (gallery.length === 0) return null;
+
+                                const first = gallery[0];
+                                return (
+                                  <div className="mt-3 rounded-lg overflow-hidden border border-zinc-850 max-h-[120px] relative bg-zinc-950 flex items-center justify-center">
+                                    {first.type === "video" ? (
+                                      <div className="w-full h-[120px] relative">
+                                        <video src={first.url} muted className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                          <span className="text-[9px] font-extrabold uppercase bg-blue-600/90 text-white px-1.5 py-0.5 rounded shadow">VIDEO</span>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <img src={first.url} alt="Post Attachment" className="w-full h-full object-cover" />
+                                    )}
+                                    {gallery.length > 1 && (
+                                      <div className="absolute bottom-1 right-1 bg-black/75 text-[9px] font-bold text-white px-1.5 py-0.5 rounded shadow-sm border border-zinc-800">
+                                        +{gallery.length - 1} ảnh
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </div>
 
                             <div>

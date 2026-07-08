@@ -31,6 +31,7 @@ class AutomationTest extends TestCase
             'name' => 'Test User',
             'email' => 'test@zeflyo.io',
             'password' => bcrypt('password'),
+            'credits' => 100,
         ]);
 
         $this->fanpage = Fanpage::create([

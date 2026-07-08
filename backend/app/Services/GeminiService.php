@@ -147,17 +147,26 @@ class GeminiService
     }
 
     /**
-     * Generate 4 custom presets based on business niche / industry.
+     * Generate 4 custom presets based on business niche / industry and marketing framework.
      */
-    public function generateQuickPresets(string $niche): ?array
+    public function generateQuickPresets(string $niche, string $framework = 'aida'): ?array
     {
-        $prompt = "Bạn là chuyên gia marketing cao cấp. Dựa trên ngành hàng, lĩnh vực hoặc sản phẩm kinh doanh: '{$niche}', hãy đề xuất 4 gợi ý chủ đề viết bài nhanh cho Facebook dưới định dạng JSON array chứa đúng 4 object.\n"
+        $frameworkDesc = '';
+        if ($framework === 'aida') {
+            $frameworkDesc = 'AIDA (Attention - Interest - Desire - Action: Thu hút chú ý, Tạo quan tâm, Kích thích khao khát, Kêu gọi hành động)';
+        } elseif ($framework === 'pas') {
+            $frameworkDesc = 'PAS (Problem - Agitate - Solve: Xác định vấn đề, Xoáy sâu nỗi đau, Đưa ra giải pháp)';
+        } elseif ($framework === 'bab') {
+            $frameworkDesc = 'BAB (Before - After - Bridge: Tình trạng trước khi dùng, Kết quả sau khi dùng, Cầu nối chuyển đổi)';
+        }
+
+        $prompt = "Bạn là chuyên gia marketing cao cấp. Dựa trên ngành hàng, lĩnh vực hoặc sản phẩm kinh doanh: '{$niche}' và định hướng theo công thức Marketing: '{$frameworkDesc}', hãy đề xuất 4 gợi ý chủ đề viết bài nhanh cho Facebook dưới định dạng JSON array chứa đúng 4 object.\n"
             ."Mỗi object đại diện cho một chủ đề và phải có chính xác các trường sau:\n"
             ."- 'label': nhãn cực kỳ ngắn gọn (2-4 từ, kèm emoji đại diện phù hợp)\n"
-            ."- 'topic': chủ đề viết bài chi tiết và có chiều sâu dài khoảng 1-2 câu\n"
-            ."- 'goal': mục tiêu viết bài cụ thể cho chủ đề đó (ví dụ: tăng tương tác, trao giá trị, thúc giục mua hàng, xây dựng uy tín)\n\n"
+            ."- 'topic': chủ đề viết bài chi tiết và có chiều sâu dài khoảng 1-2 câu phù hợp cấu trúc {$framework}\n"
+            ."- 'goal': mục tiêu viết bài cụ thể cho chủ đề đó tương ứng với các bước trong công thức {$framework} (ví dụ: kích thích Desire/kêu gọi hành động, xoáy sâu nỗi đau, giới thiệu giải pháp/cầu nối)\n\n"
             ."YÊU CẦU BẮT BUỘC:\n"
-            ."1. Danh sách đề xuất phải đa dạng (ví dụ: 1 minigame/tương tác, 1 chia sẻ mẹo vặt/hướng dẫn hữu ích, 1 bài quảng cáo/ưu đãi sản phẩm, 1 bài giới thiệu thương hiệu/đội ngũ).\n"
+            ."1. Danh sách đề xuất phải đa dạng (ví dụ: 1 bài tương tác/thu hút chú ý, 1 bài chia sẻ giá trị/giải pháp nỗi đau, 1 bài quảng cáo/kêu gọi hành động trực tiếp, 1 bài kể chuyện chuyển đổi khách hàng).\n"
             ."2. Phải tạo ra các gợi ý phù hợp CHÍNH XÁC với ngành nghề hoặc sản phẩm: '{$niche}'.\n"
             ."3. Trả về toàn bộ nội dung bằng tiếng Việt.\n"
             ."4. Phản hồi của bạn chỉ được chứa chuỗi JSON array hợp lệ, không chứa thẻ Markdown ```json hay bất kỳ văn bản chào hỏi nào.";

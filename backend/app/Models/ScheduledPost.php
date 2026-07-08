@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-#[Fillable(['user_id', 'fanpage_ids', 'content', 'image_url', 'scheduled_at', 'status', 'error_log'])]
+#[Fillable(['user_id', 'fanpage_ids', 'content', 'image_url', 'media_gallery', 'scheduled_at', 'status', 'error_log'])]
 class ScheduledPost extends Model
 {
     /**
@@ -20,6 +20,7 @@ class ScheduledPost extends Model
     {
         return [
             'fanpage_ids' => 'array',
+            'media_gallery' => 'array',
             'scheduled_at' => 'datetime',
         ];
     }
@@ -64,18 +65,67 @@ class ScheduledPost extends Model
                 $fbPageId = $fanpage->fb_page_id;
 
                 if ($pageToken === 'mock_page_token_123') {
-                    Log::info("Mock Facebook Publish: Page ID {$fbPageId}, Content=\"{$this->content}\", Image=\"{$this->image_url}\"");
+                    Log::info("Mock Facebook Publish: Page ID {$fbPageId}, Content=\"{$this->content}\", Image=\"{$this->image_url}\", Media Gallery=" . json_encode($this->media_gallery));
                     $successPages[] = $fbPageId;
                     continue;
                 }
 
-                if ($this->image_url) {
-                    $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/photos", [
-                        'url' => $this->image_url,
-                        'caption' => $this->content,
-                        'access_token' => $pageToken,
-                    ]);
+                $mediaItems = $this->media_gallery ?? [];
+                
+                // Fallback to image_url if media_gallery is empty
+                if (empty($mediaItems) && $this->image_url) {
+                    $mediaItems = [['url' => $this->image_url, 'type' => 'image']];
+                }
+
+                if (count($mediaItems) > 0) {
+                    // Check if there's a video item. If yes, publish the first video.
+                    $videoItem = collect($mediaItems)->first(fn($item) => ($item['type'] ?? '') === 'video');
+
+                    if ($videoItem) {
+                        $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/videos", [
+                            'file_url' => $videoItem['url'],
+                            'description' => $this->content,
+                            'access_token' => $pageToken,
+                        ]);
+                    } elseif (count($mediaItems) === 1) {
+                        $imgUrl = $mediaItems[0]['url'] ?? $mediaItems[0];
+                        $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/photos", [
+                            'url' => $imgUrl,
+                            'caption' => $this->content,
+                            'access_token' => $pageToken,
+                        ]);
+                    } else {
+                        // Multi-photo publication flow
+                        $attachedMedia = [];
+                        $uploadErrors = [];
+
+                        foreach ($mediaItems as $item) {
+                            $imgUrl = $item['url'] ?? $item;
+                            $photoRes = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/photos", [
+                                'url' => $imgUrl,
+                                'published' => false,
+                                'access_token' => $pageToken,
+                            ]);
+
+                            if ($photoRes->successful() && $photoRes->json('id')) {
+                                $attachedMedia[] = ['media_fbid' => $photoRes->json('id')];
+                            } else {
+                                $uploadErrors[] = "Failed uploading photo {$imgUrl}: " . $photoRes->body();
+                            }
+                        }
+
+                        if (count($attachedMedia) > 0) {
+                            $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/feed", [
+                                'message' => $this->content,
+                                'attached_media' => $attachedMedia,
+                                'access_token' => $pageToken,
+                            ]);
+                        } else {
+                            throw new \Exception("All photo uploads failed: " . implode('; ', $uploadErrors));
+                        }
+                    }
                 } else {
+                    // Text-only post
                     $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/feed", [
                         'message' => $this->content,
                         'access_token' => $pageToken,

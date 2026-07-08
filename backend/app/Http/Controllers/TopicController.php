@@ -205,21 +205,68 @@ class TopicController extends Controller
                 $pageToken = $fanpage->access_token;
                 $fbPageId = $fanpage->fb_page_id;
 
+                $mediaItems = $topic->media_gallery ?? [];
+                
+                // Fallback to single legacy image if media_gallery is empty
+                if (empty($mediaItems) && $topic->generated_image_url) {
+                    $mediaItems = [['url' => $topic->generated_image_url, 'type' => 'image']];
+                }
+
                 if ($pageToken === 'mock_page_token_123') {
-                    Log::info("Mock Approve Publish: Page {$fbPageId}, Content=\"{$topic->generated_content}\", Image=\"{$topic->generated_image_url}\"");
+                    Log::info("Mock Approve Publish: Page {$fbPageId}, Content=\"{$topic->generated_content}\", Image=\"{$topic->generated_image_url}\", Media Gallery=" . json_encode($mediaItems));
                     $successPages[] = $fbPageId;
                     $topic->fb_post_id = 'mock_post_'.time();
 
                     continue;
                 }
 
-                $imageUrl = $this->getPublicImageUrl($topic->generated_image_url);
-                if ($imageUrl) {
-                    $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/photos", [
-                        'url' => $imageUrl,
-                        'caption' => $topic->generated_content,
-                        'access_token' => $pageToken,
-                    ]);
+                if (count($mediaItems) > 0) {
+                    // Check for video item
+                    $videoItem = collect($mediaItems)->first(fn($item) => ($item['type'] ?? '') === 'video');
+
+                    if ($videoItem) {
+                        $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/videos", [
+                            'file_url' => $this->getPublicImageUrl($videoItem['url']),
+                            'description' => $topic->generated_content,
+                            'access_token' => $pageToken,
+                        ]);
+                    } elseif (count($mediaItems) === 1) {
+                        $imgUrl = $this->getPublicImageUrl($mediaItems[0]['url'] ?? $mediaItems[0]);
+                        $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/photos", [
+                            'url' => $imgUrl,
+                            'caption' => $topic->generated_content,
+                            'access_token' => $pageToken,
+                        ]);
+                    } else {
+                        // Multi-photo publishing flow
+                        $attachedMedia = [];
+                        $uploadErrors = [];
+
+                        foreach ($mediaItems as $item) {
+                            $imgUrl = $this->getPublicImageUrl($item['url'] ?? $item);
+                            $photoRes = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/photos", [
+                                'url' => $imgUrl,
+                                'published' => false,
+                                'access_token' => $pageToken,
+                            ]);
+
+                            if ($photoRes->successful() && $photoRes->json('id')) {
+                                $attachedMedia[] = ['media_fbid' => $photoRes->json('id')];
+                            } else {
+                                $uploadErrors[] = "Failed uploading photo {$imgUrl}: " . $photoRes->body();
+                            }
+                        }
+
+                        if (count($attachedMedia) > 0) {
+                            $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/feed", [
+                                'message' => $topic->generated_content,
+                                'attached_media' => $attachedMedia,
+                                'access_token' => $pageToken,
+                            ]);
+                        } else {
+                            throw new \Exception("All photo uploads failed: " . implode('; ', $uploadErrors));
+                        }
+                    }
                 } else {
                     $response = Http::post("https://graph.facebook.com/v20.0/{$fbPageId}/feed", [
                         'message' => $topic->generated_content,
@@ -418,6 +465,9 @@ class TopicController extends Controller
         $request->validate([
             'content' => 'nullable|string',
             'image_url' => 'nullable|string|max:1000',
+            'media_gallery' => 'nullable|array',
+            'media_gallery.*.url' => 'required|url',
+            'media_gallery.*.type' => 'required|string|in:image,video',
             'status' => 'nullable|string|in:pending,generated,published,failed',
         ]);
 
@@ -426,6 +476,9 @@ class TopicController extends Controller
         }
         if ($request->has('image_url')) {
             $topic->generated_image_url = $request->input('image_url');
+        }
+        if ($request->has('media_gallery')) {
+            $topic->media_gallery = $request->input('media_gallery');
         }
         if ($request->has('status')) {
             $topic->status = $request->input('status');
