@@ -3295,10 +3295,10 @@ function PostSchedulerContent() {
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200 animate-fade-in">
-            <div className="w-full max-w-5xl rounded-3xl border border-zinc-800 p-6 sm:p-8 shadow-2xl space-y-6 bg-zinc-900 text-zinc-100 dark:bg-[#0c0c12]">
+            <div className="w-full max-w-7xl h-[85vh] max-h-[850px] rounded-3xl border border-zinc-800 shadow-2xl bg-zinc-900 text-zinc-100 dark:bg-[#0c0c12] flex flex-col justify-between overflow-hidden">
 
               {/* Modal Header */}
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="flex items-center justify-between border-b border-zinc-800 p-6 flex-shrink-0">
                 <h3 className="text-lg font-extrabold flex items-center gap-2.5 text-zinc-150 uppercase tracking-wider">
                   <Sparkles className="w-5 h-5 text-blue-500 animate-pulse" />
                   <span>Duyệt & Chỉnh sửa bài viết</span>
@@ -3309,137 +3309,143 @@ function PostSchedulerContent() {
               </div>
 
               {reviewError && (
-                <div className="p-4 text-xs font-semibold rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-3 animate-fade-in">
+                <div className="mx-6 my-2 p-4 text-xs font-semibold rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-3 animate-fade-in flex-shrink-0">
                   <AlertTriangle className="w-5 h-5 animate-bounce text-red-500" />
                   <span>{reviewError}</span>
                 </div>
               )}
 
               {/* Side-by-Side Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="flex-1 min-h-0 px-6 pb-6 overflow-hidden">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full min-h-0">
 
-                {/* Left Column: Form Editor (7 cols) */}
-                <div className="lg:col-span-7 flex flex-col gap-5">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Nội dung bài viết</label>
-                    <textarea
-                      value={reviewContent}
-                      onChange={e => setReviewContent(e.target.value)}
-                      rows={10}
-                      className="w-full bg-zinc-950 border border-zinc-850 rounded-2xl p-4 text-xs outline-none text-zinc-250 placeholder:text-zinc-650 resize-none focus:border-blue-500/50 leading-relaxed custom-scrollbar"
-                      placeholder="Nhập nội dung bài viết..."
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Đường dẫn hình ảnh (URL)</label>
-                    <input
-                      type="text"
-                      value={reviewImageUrl}
-                      onChange={e => setReviewImageUrl(e.target.value)}
-                      className="w-full bg-zinc-955 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-3 py-2 text-xs outline-none text-zinc-350 placeholder:text-zinc-655"
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="flex items-center justify-center border border-dashed border-zinc-800 hover:border-blue-500/40 rounded-2xl p-5 cursor-pointer transition-all hover:bg-blue-500/5 bg-zinc-955/20 dark:bg-zinc-950/20">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleUploadReviewImage}
-                        className="hidden"
+                  {/* Left Column: Form Editor (7 cols) */}
+                  <div className="lg:col-span-7 flex flex-col gap-4 h-full min-h-0">
+                    <div className="flex flex-col gap-1.5 flex-1 min-h-0">
+                      <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex-shrink-0">Nội dung bài viết</label>
+                      <textarea
+                        value={reviewContent}
+                        onChange={e => setReviewContent(e.target.value)}
+                        className="flex-1 w-full bg-zinc-955 border border-zinc-850 rounded-2xl p-5 text-sm outline-none text-zinc-200 placeholder:text-zinc-655 resize-none focus:border-blue-500/50 leading-relaxed custom-scrollbar shadow-inner"
+                        placeholder="Nhập nội dung bài viết..."
                       />
-                      {uploadingImage ? (
-                        <span className="flex items-center gap-2.5 text-xs font-bold text-blue-400">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Đang tải ảnh lên hệ thống...</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-2.5 text-xs font-bold text-blue-400">
-                          <ImageIcon className="w-5 h-5" />
-                          <span>Tải ảnh từ máy tính</span>
-                        </span>
-                      )}
-                    </label>
-                  </div>
-                </div>
+                    </div>
 
-                {/* Right Column: Facebook Post Live Mockup (5 cols) */}
-                <div className="lg:col-span-5 flex flex-col gap-3 lg:sticky lg:top-0">
-                  <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Facebook Live Preview</label>
+                    <div className="flex flex-col gap-4 flex-shrink-0">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Đường dẫn hình ảnh (URL)</label>
+                        <input
+                          type="text"
+                          value={reviewImageUrl}
+                          onChange={e => setReviewImageUrl(e.target.value)}
+                          className="w-full bg-zinc-955 border border-zinc-850 focus:border-blue-500/50 rounded-xl px-4 py-2.5 text-xs outline-none text-zinc-300 placeholder:text-zinc-655"
+                          placeholder="https://example.com/image.jpg"
+                        />
+                      </div>
 
-                  <div className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl text-zinc-200">
-
-                    {/* Post Author Header */}
-                    <div className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-sm shadow-md overflow-hidden">
-                          {previewPageAvatar ? (
-                            <img src={previewPageAvatar} alt="" className="w-full h-full object-cover" />
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center justify-center border border-dashed border-zinc-800 hover:border-blue-500/40 rounded-2xl p-4 cursor-pointer transition-all hover:bg-blue-500/5 bg-zinc-955/20 dark:bg-zinc-950/20">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleUploadReviewImage}
+                            className="hidden"
+                          />
+                          {uploadingImage ? (
+                            <span className="flex items-center gap-2.5 text-xs font-bold text-blue-400">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Đang tải ảnh lên hệ thống...</span>
+                            </span>
                           ) : (
-                            previewPageName.charAt(0).toUpperCase()
+                            <span className="flex items-center gap-2.5 text-xs font-bold text-blue-400">
+                              <ImageIcon className="w-5 h-5" />
+                              <span>Tải ảnh từ máy tính</span>
+                            </span>
                           )}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-zinc-100">{previewPageName}</span>
-                          <span className="text-[10px] text-zinc-550 flex items-center gap-1">
-                            <span>Vừa xong</span>
-                            <span>•</span>
-                            <Globe className="w-3 h-3 text-zinc-550" />
-                          </span>
-                        </div>
+                        </label>
                       </div>
                     </div>
-
-                    {/* Post Message Body */}
-                    <div className="px-4 pb-3.5 text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed max-h-[160px] overflow-y-auto custom-scrollbar">
-                      {reviewContent || <span className="text-zinc-650 italic">Nhập hoặc sinh nội dung nháp để xem thử tại đây...</span>}
-                    </div>
-
-                    {/* Post Image Preview */}
-                    {reviewImageUrl ? (
-                      <div className="relative w-full h-[200px] bg-black/60 border-t border-zinc-850 flex items-center justify-center overflow-hidden">
-                        <img src={reviewImageUrl} alt="Post preview image" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => setReviewImageUrl("")}
-                          className="absolute top-3 right-3 p-1.5 bg-red-500/80 hover:bg-red-600 rounded-full text-white transition-all shadow-md cursor-pointer"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="w-full h-[120px] bg-zinc-950/40 border-t border-dashed border-zinc-850 flex flex-col items-center justify-center text-zinc-650 gap-2">
-                        <ImageIcon className="w-7 h-7 text-zinc-700" />
-                        <span className="text-[10px] italic">Bài đăng chưa có hình ảnh đính kèm</span>
-                      </div>
-                    )}
-
-                    {/* Facebook Action Bar Mock */}
-                    <div className="px-4 py-2.5 border-t border-zinc-850 flex items-center justify-between text-[11px] font-bold text-zinc-500 select-none">
-                      <span className="hover:text-zinc-300 cursor-pointer">👍 Thích</span>
-                      <span className="hover:text-zinc-300 cursor-pointer">💬 Bình luận</span>
-                      <span className="hover:text-zinc-300 cursor-pointer">↩️ Chia sẻ</span>
-                    </div>
-
                   </div>
-                </div>
 
+                  {/* Right Column: Facebook Post Live Mockup (5 cols) */}
+                  <div className="lg:col-span-5 flex flex-col gap-3 h-full min-h-0">
+                    <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex-shrink-0">Facebook Live Preview</label>
+
+                    <div className="flex-1 min-h-0 bg-[#18181b] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl text-zinc-200 flex flex-col">
+
+                      {/* Post Author Header */}
+                      <div className="p-4 flex items-center justify-between border-b border-zinc-850/30 flex-shrink-0">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white text-sm shadow-md overflow-hidden flex-shrink-0">
+                            {previewPageAvatar ? (
+                              <img src={previewPageAvatar} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              previewPageName.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-zinc-100">{previewPageName}</span>
+                            <span className="text-[10px] text-zinc-550 flex items-center gap-1">
+                              <span>Vừa xong</span>
+                              <span>•</span>
+                              <Globe className="w-3 h-3 text-zinc-550" />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Scrollable Message & Image Area */}
+                      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar flex flex-col bg-zinc-955/10">
+                        {/* Post Message Body */}
+                        <div className="p-4 text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                          {reviewContent || <span className="text-zinc-650 italic">Nhập hoặc sinh nội dung nháp để xem thử tại đây...</span>}
+                        </div>
+
+                        {/* Post Image Preview */}
+                        {reviewImageUrl ? (
+                          <div className="relative w-full h-[260px] bg-black/60 border-t border-zinc-850 flex items-center justify-center overflow-hidden flex-shrink-0 mt-auto">
+                            <img src={reviewImageUrl} alt="Post preview image" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => setReviewImageUrl("")}
+                              className="absolute top-3 right-3 p-1.5 bg-red-500/80 hover:bg-red-600 rounded-full text-white transition-all shadow-md cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-full h-[120px] bg-zinc-950/40 border-t border-dashed border-zinc-850 flex flex-col items-center justify-center text-zinc-650 gap-2 flex-shrink-0 mt-auto">
+                            <ImageIcon className="w-7 h-7 text-zinc-700" />
+                            <span className="text-[10px] italic">Bài đăng chưa có hình ảnh đính kèm</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Facebook Action Bar Mock */}
+                      <div className="px-4 py-3 border-t border-zinc-850 flex items-center justify-between text-[11px] font-bold text-zinc-500 select-none flex-shrink-0 bg-[#18181b]">
+                        <span className="hover:text-zinc-300 cursor-pointer">👍 Thích</span>
+                        <span className="hover:text-zinc-300 cursor-pointer">💬 Bình luận</span>
+                        <span className="hover:text-zinc-300 cursor-pointer">↩️ Chia sẻ</span>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
               </div>
 
               {/* Action Footer */}
-              <div className="flex gap-4 border-t border-zinc-800 pt-5 mt-4">
+              <div className="flex gap-4 border-t border-zinc-800 p-6 flex-shrink-0 bg-zinc-950/40">
                 <button
                   onClick={handleSaveDraftTopic}
                   disabled={reviewSubmitting || uploadingImage}
-                  className="flex-1 py-3 rounded-xl border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-3.5 rounded-xl border border-zinc-800 hover:bg-zinc-800 text-zinc-400 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                 >
                   Lưu bản nháp
                 </button>
                 <button
                   onClick={handleSaveAndPublishTopic}
                   disabled={reviewSubmitting || uploadingImage || !reviewContent.trim()}
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-650 to-indigo-650 hover:from-blue-600 hover:to-indigo-600 text-white text-xs font-bold shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-50 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-blue-650 to-indigo-650 hover:from-blue-600 hover:to-indigo-600 text-white text-xs font-bold shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-50 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5"
                 >
                   {reviewSubmitting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
