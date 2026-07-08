@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/posts/schedule', [PostSchedulerController::class, 'index']);
     Route::post('/posts/schedule', [PostSchedulerController::class, 'store']);
     Route::delete('/posts/schedule/{id}', [PostSchedulerController::class, 'destroy']);
+    Route::post('/posts/schedule/{id}/publish', [PostSchedulerController::class, 'publishImmediately']);
     Route::post('/posts/generate-ai', [PostSchedulerController::class, 'generateAi']);
     Route::post('/posts/generate-ai-stream', [PostSchedulerController::class, 'generateAiStream'])->middleware('throttle:ai_generator');
     Route::post('/posts/quick-presets', [PostSchedulerController::class, 'getQuickPresets']);
