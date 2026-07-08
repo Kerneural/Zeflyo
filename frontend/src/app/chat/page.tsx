@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
-import Footer from "@/components/Footer";
 import { 
   ArrowLeft, 
   Send, 
@@ -1312,9 +1311,6 @@ export default function ChatHub() {
           </div>
         </section>
       </main>
-
-      {/* Footer Branding */}
-      <Footer />
 
       </div>
     </div>
