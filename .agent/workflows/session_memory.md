@@ -1,5 +1,5 @@
 # 💾 SESSION MEMORY — Zeflyo Project
-> Last Checkpoint: 2026-07-08 | Status: Unified Post Scheduler, Spacious Preview Modal, and AI Concurrency Anti-Spam protection fully deployed.
+> Last Checkpoint: 2026-07-08 | Status: Unified Post Scheduler, Spacious Preview Modal, and AI Concurrency Anti-Spam protection (5 rotated keys) fully deployed.
 
 ---
 
@@ -15,7 +15,9 @@
 *   **API Concurrency Lock & Anti-Spam Throttling [backend]:**
     *   Added a Cache-based concurrency locking check (`auto_setup_topics_lock_{id}` and `auto_setup_gen_lock_{id}`) in [TopicController.php](file:///r:/_Projects/Eurus_Workspace/Zeflyo/backend/app/Http/Controllers/TopicController.php) to prevent duplicate clicks and concurrent API spamming for the same campaign.
     *   Imposed a strict limit of **15 pending topics max** processed in a single batch content generation call to avoid request timeout and API key rate limit exhaustion.
-    *   Introduced a **1.2s delay (`usleep(1200000)`)** between sequential AI generations in the batch loop. This distributes API load evenly and fits perfectly within the rotated 3 Free API keys' 45 RPM combined capacity.
+    *   Introduced a **1.2s delay (`usleep(1200000)`)** between sequential AI generations in the batch loop. This distributes API load evenly and fits perfectly within the rotated **5 Free API keys'** combined capacity.
+*   **Gemini API Key Expansion [backend]:**
+    *   Configured **5 rotated API keys** in `GEMINI_API_KEY` (local and VPS `.env`) to handle higher concurrency traffic.
 *   **Deployment and Service Refresh [devops]:**
     *   Successfully compiled the static bundle via `npm run build`, packaged into `out.zip`, and deployed changes to DO VPS `165.232.163.188` using direct `git pull` + container restarts.
 
