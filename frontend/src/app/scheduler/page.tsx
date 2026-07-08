@@ -31,7 +31,8 @@ import {
   Power,
   RefreshCw,
   LogOut,
-  HelpCircle
+  HelpCircle,
+  Send
 } from "lucide-react";
 
 interface Fanpage {
@@ -111,6 +112,7 @@ function PostSchedulerContent() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [lang, setLang] = useState<"en" | "vi">("vi");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [publishingId, setPublishingId] = useState<string | number | null>(null);
   const [logs, setLogs] = useState<Array<{ id: string; page: string; event: string; time: string; status: "success" | "pending" | "info" }>>([
     { id: "1", page: "Zeflyo Fashion", event: "Webhook handshake verified", time: "2 minutes ago", status: "success" },
     { id: "2", page: "Zeflyo Food & Beverage", event: "Auto-reply sent: 'Hi! Thank you for contacting...'", time: "5 minutes ago", status: "success" },
@@ -143,6 +145,7 @@ function PostSchedulerContent() {
   
   // Extra options
   const [includeContactInfo, setIncludeContactInfo] = useState<boolean>(false);
+  const [contactText, setContactText] = useState<string>("📞 Hotline: 0987-654-321 | 🌐 Website: shop.com");
   const [repeatQueue, setRepeatQueue] = useState<boolean>(false);
   const [autoWritePost, setAutoWritePost] = useState<boolean>(false);
 
@@ -236,6 +239,11 @@ function PostSchedulerContent() {
         const data = await response.json();
         if (data.presets && Array.isArray(data.presets)) {
           setPresets(data.presets);
+          if (!setupName.trim()) {
+            const today = new Date();
+            const formattedDate = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}`;
+            setSetupName(`Chiến dịch ${businessNiche.trim()} - ${formattedDate}`);
+          }
           showNotification("success", "Đã tạo 4 gợi ý viết bài mới theo sản phẩm của bạn!");
         } else {
           showNotification("error", "Không thể lấy chủ đề gợi ý.");
@@ -648,7 +656,7 @@ function PostSchedulerContent() {
       
       let finalContent = postItem.content;
       if (includeContactInfo) {
-        finalContent += "\n\n📞 Liên hệ đặt hàng: 0987-654-321 | 🌐 Website: zeflyo.vn";
+        finalContent += "\n\n" + contactText;
       }
       
       postsToSchedule.push({
@@ -738,6 +746,38 @@ function PostSchedulerContent() {
         }
       } catch (err) {
         showNotification("error", "Lỗi kết nối.");
+      }
+    }
+  };
+
+  const handlePublishImmediately = async (id: number | string) => {
+    setPublishingId(id);
+    if (token && token.startsWith("mock_")) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setScheduledPosts(prev => prev.map(p => p.id === id ? { ...p, status: "published" as const } : p));
+      showNotification("success", "Đã đăng bài thành công lên Facebook (Chế độ giả lập).");
+      setPublishingId(null);
+    } else {
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/posts/schedule/${id}/publish`, {
+          method: "POST",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          showNotification("success", "Xuất bản bài viết thành công lên trang Facebook!");
+          fetchScheduledPosts();
+        } else {
+          const data = await response.json();
+          showNotification("error", data.error || "Không thể đăng bài viết ngay.");
+        }
+      } catch (err) {
+        showNotification("error", "Lỗi kết nối.");
+      } finally {
+        setPublishingId(null);
       }
     }
   };
@@ -1387,7 +1427,7 @@ function PostSchedulerContent() {
                 </div>
 
                 {/* Right Column: Schedule Settings */}
-                <div className="xl:col-span-5 flex flex-col gap-6">
+                <div className="xl:col-span-5 flex flex-col gap-6 xl:sticky xl:top-24 self-start">
                   
                   <div className="glass-panel rounded-2xl p-6 flex flex-col gap-6">
                     <h2 className="text-base font-bold text-zinc-200 border-b border-zinc-850 pb-4">Lịch đăng & thiết lập</h2>
@@ -1558,57 +1598,86 @@ function PostSchedulerContent() {
                     )}
 
                     {/* Switches */}
-                    <div className="flex flex-col gap-4 border-t border-zinc-850 pt-5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-zinc-300">Thêm thông tin liên hệ</span>
-                        <button
-                          type="button"
-                          onClick={() => setIncludeContactInfo(!includeContactInfo)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 outline-none cursor-pointer ${
-                            includeContactInfo ? "bg-blue-600" : "bg-zinc-850"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 ${
-                              includeContactInfo ? "translate-x-6" : "translate-x-1"
+                    <div className="flex flex-col gap-5 border-t border-zinc-200 dark:border-zinc-850 pt-5">
+                      
+                      {/* Thêm thông tin liên hệ */}
+                      <div className="flex flex-col gap-2.5">
+                        <div className="flex items-start justify-between">
+                          <div className="flex flex-col gap-0.5 max-w-[80%]">
+                            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Thêm thông tin liên hệ</span>
+                            <span className="text-[10px] text-zinc-550 dark:text-zinc-400 leading-relaxed">Tự động chèn hotline, website hoặc địa chỉ vào cuối mỗi bài viết khi đăng.</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setIncludeContactInfo(!includeContactInfo)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 outline-none cursor-pointer flex-shrink-0 ${
+                              includeContactInfo ? "bg-blue-600" : "bg-zinc-200 dark:bg-zinc-800"
                             }`}
-                          />
-                        </button>
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-all duration-300 ${
+                                includeContactInfo ? "translate-x-6" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                        
+                        {includeContactInfo && (
+                          <div className="flex flex-col gap-1.5 bg-zinc-100 dark:bg-zinc-950/40 border border-zinc-200 dark:border-zinc-850/60 rounded-xl p-3 animate-fade-in">
+                            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider">Nội dung liên hệ tùy chỉnh</span>
+                            <textarea
+                              value={contactText}
+                              onChange={(e) => setContactText(e.target.value)}
+                              placeholder="Ví dụ: 📞 Hotline: 09xx-xxx-xxx | 🌐 Website: shop.com"
+                              rows={2}
+                              className="w-full bg-white dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-850/80 focus:border-blue-500/50 rounded-lg p-2 text-xs outline-none text-zinc-850 dark:text-zinc-300 placeholder:text-zinc-500 dark:placeholder:text-zinc-650 resize-none shadow-inner"
+                            />
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-zinc-300">Lặp lại hàng chờ khi hết bài</span>
+                      {/* Lặp lại hàng chờ khi hết bài */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex flex-col gap-0.5 max-w-[80%]">
+                          <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Xoay vòng lặp lại hàng chờ</span>
+                          <span className="text-[10px] text-zinc-550 dark:text-zinc-400 leading-relaxed">Tự động xoay vòng đăng lại các bài viết cũ nếu số lượng giờ đăng nhiều hơn bài viết.</span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setRepeatQueue(!repeatQueue)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 outline-none cursor-pointer ${
-                            repeatQueue ? "bg-blue-600" : "bg-zinc-850"
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 outline-none cursor-pointer flex-shrink-0 ${
+                            repeatQueue ? "bg-blue-600" : "bg-zinc-200 dark:bg-zinc-800"
                           }`}
                         >
                           <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 ${
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-all duration-300 ${
                               repeatQueue ? "translate-x-6" : "translate-x-1"
                             }`}
                           />
                         </button>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-zinc-300">Tự động viết và đăng bài</span>
+                      {/* Tự động viết và đăng bài */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex flex-col gap-0.5 max-w-[80%]">
+                          <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Tự động viết bài bằng AI</span>
+                          <span className="text-[10px] text-zinc-550 dark:text-zinc-400 leading-relaxed">AI tự sinh nội dung mới dựa trên chủ đề khi đến khung giờ đăng tiếp theo.</span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setAutoWritePost(!autoWritePost)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 outline-none cursor-pointer ${
-                            autoWritePost ? "bg-blue-600" : "bg-zinc-850"
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 outline-none cursor-pointer flex-shrink-0 ${
+                            autoWritePost ? "bg-blue-600" : "bg-zinc-200 dark:bg-zinc-800"
                           }`}
                         >
                           <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 ${
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-all duration-300 ${
                               autoWritePost ? "translate-x-6" : "translate-x-1"
                             }`}
                           />
                         </button>
                       </div>
+
                     </div>
 
                     {/* Submit Button */}
@@ -1715,13 +1784,36 @@ function PostSchedulerContent() {
                               </span>
                             </div>
 
-                            <button 
-                              onClick={() => handleDeletePost(post.id)}
-                              className="text-zinc-600 hover:text-red-400 p-1.5 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
-                              title="Hủy lịch & Xóa"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              {post.status !== "published" && (
+                                <button
+                                  onClick={() => handlePublishImmediately(post.id)}
+                                  disabled={publishingId === post.id}
+                                  className="px-2.5 py-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg text-[10px] font-bold transition-all disabled:opacity-50 flex items-center gap-1 cursor-pointer active:scale-95 border border-blue-500/10 hover:border-transparent flex-shrink-0"
+                                  title="Đăng ngay lập tức lên các trang đã chọn"
+                                >
+                                  {publishingId === post.id ? (
+                                    <>
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      Đang đăng...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Send className="w-3 h-3" />
+                                      Đăng ngay
+                                    </>
+                                  )}
+                                </button>
+                              )}
+
+                              <button 
+                                onClick={() => handleDeletePost(post.id)}
+                                className="text-zinc-600 hover:text-red-400 p-1.5 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
+                                title="Hủy lịch & Xóa"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                           
                           {/* Error Log if failed */}
