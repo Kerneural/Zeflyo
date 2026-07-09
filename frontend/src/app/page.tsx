@@ -739,7 +739,7 @@ export default function App() {
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg border border-white/10">
                   <span className="font-extrabold text-white text-base">Z</span>
                 </div>
-                <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+                <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent logo-text">
                   ZEFLYO
                 </span>
               </div>
@@ -814,7 +814,7 @@ export default function App() {
             <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 relative z-10">
               
               {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold tracking-wide shadow-sm animate-float">
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold tracking-wide shadow-sm animate-float badge-pulse">
                 <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                 <span>{landingTranslations[lang].badge}</span>
               </div>
@@ -824,14 +824,14 @@ export default function App() {
                 {lang === "vi" ? (
                   <>
                     Tự Động Hóa Quản Lý Fanpage <br className="hidden sm:inline" />
-                    <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-violet-400 bg-clip-text text-transparent">
+                    <span className="gradient-text-animated">
                       Bằng Trí Tuệ Nhân Tạo
                     </span>
                   </>
                 ) : (
                   <>
                     Automate Your Fanpage <br className="hidden sm:inline" />
-                    <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-violet-400 bg-clip-text text-transparent">
+                    <span className="gradient-text-animated">
                       With Gemini AI
                     </span>
                   </>
@@ -864,7 +864,7 @@ export default function App() {
               </div>
 
               {/* Visual Mock Dashboard preview */}
-              <div className="w-full max-w-5xl mt-12 md:mt-16 rounded-2xl border border-zinc-850 bg-zinc-900/40 p-3.5 md:p-5 backdrop-blur-sm relative shadow-2xl">
+              <div className="w-full max-w-5xl mt-12 md:mt-16 rounded-2xl border border-zinc-850 bg-zinc-900/40 p-3.5 md:p-5 backdrop-blur-sm relative shadow-2xl mockup-zoom shimmer-effect">
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60 rounded-2xl pointer-events-none z-20" />
                 
                 {/* Header bar of mockup */}
@@ -955,7 +955,7 @@ export default function App() {
             <div className="max-w-7xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
                 
-                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm">
+                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm hover-glow shimmer-effect">
                   <span className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">
                     10,000+
                   </span>
@@ -964,7 +964,7 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm">
+                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm hover-glow shimmer-effect">
                   <span className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
                     99.99%
                   </span>
@@ -973,7 +973,7 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm">
+                <div className="flex flex-col items-center text-center p-6 bg-zinc-900/20 rounded-2xl border border-zinc-900/60 backdrop-blur-sm hover-glow shimmer-effect">
                   <span className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                     10x
                   </span>
@@ -1003,7 +1003,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6">
                 
                 {/* Feature 1 */}
-                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-blue-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4">
+                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-blue-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4 hover-glow shimmer-effect">
                   <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-105 transition-transform flex-shrink-0">
                     <Zap className="w-5 h-5" />
                   </div>
@@ -1014,7 +1014,7 @@ export default function App() {
                 </div>
 
                 {/* Feature 2 */}
-                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-indigo-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4">
+                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-indigo-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4 hover-glow shimmer-effect">
                   <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform flex-shrink-0">
                     <MessageSquare className="w-5 h-5" />
                   </div>
@@ -1025,7 +1025,7 @@ export default function App() {
                 </div>
 
                 {/* Feature 3 */}
-                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-violet-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4">
+                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-violet-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4 hover-glow shimmer-effect">
                   <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:scale-105 transition-transform flex-shrink-0">
                     <Sliders className="w-5 h-5" />
                   </div>
@@ -1036,7 +1036,7 @@ export default function App() {
                 </div>
 
                 {/* Feature 4 */}
-                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-fuchsia-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4">
+                <div className="glass-card rounded-2xl p-6 border border-zinc-850 hover:border-fuchsia-500/20 bg-zinc-900/30 hover:bg-zinc-900/50 transition-all group flex gap-4 hover-glow shimmer-effect">
                   <div className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 group-hover:scale-105 transition-transform flex-shrink-0">
                     <ImageIcon className="w-5 h-5" />
                   </div>
@@ -1135,7 +1135,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mt-6 items-stretch">
                 
                 {/* Plan 1: Starter */}
-                <div className="glass-card rounded-2xl p-8 border border-zinc-850 flex flex-col justify-between bg-zinc-900/20 text-left hover:border-zinc-800 transition-colors relative">
+                <div className="glass-card rounded-2xl p-8 border border-zinc-850 flex flex-col justify-between bg-zinc-900/20 text-left hover:border-zinc-800 transition-colors relative hover-glow shimmer-effect">
                   <div>
                     <h3 className="text-lg font-bold text-zinc-300">{landingTranslations[lang].starter}</h3>
                     <p className="text-xs text-zinc-500 mt-1">{landingTranslations[lang].starterDesc}</p>
@@ -1160,7 +1160,7 @@ export default function App() {
                 </div>
 
                 {/* Plan 2: Pro */}
-                <div className="glass-card rounded-2xl p-8 border border-blue-500/30 flex flex-col justify-between bg-zinc-900/30 text-left hover:border-blue-500/40 transition-colors relative shadow-xl shadow-blue-500/5">
+                <div className="glass-card rounded-2xl p-8 border border-blue-500/30 flex flex-col justify-between bg-zinc-900/30 text-left hover:border-blue-500/40 transition-colors relative shadow-xl shadow-blue-500/5 hover-glow shimmer-effect">
                   <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 rounded-full bg-blue-500 text-white text-[9px] font-bold uppercase tracking-wider">
                     {landingTranslations[lang].mostPopular}
                   </div>
@@ -1193,7 +1193,7 @@ export default function App() {
                 </div>
 
                 {/* Plan 3: Enterprise */}
-                <div className="glass-card rounded-2xl p-8 border border-zinc-850 flex flex-col justify-between bg-zinc-900/20 text-left hover:border-zinc-800 transition-colors relative">
+                <div className="glass-card rounded-2xl p-8 border border-zinc-850 flex flex-col justify-between bg-zinc-900/20 text-left hover:border-zinc-800 transition-colors relative hover-glow shimmer-effect">
                   <div>
                     <h3 className="text-lg font-bold text-zinc-300">{landingTranslations[lang].enterprise}</h3>
                     <p className="text-xs text-zinc-500 mt-1">{landingTranslations[lang].enterpriseDesc}</p>
@@ -1292,7 +1292,7 @@ export default function App() {
 
           {/* Call to Action (CTA) bottom section */}
           <section className="py-24 px-6 bg-zinc-950">
-            <div className="max-w-5xl mx-auto rounded-3xl border border-zinc-805 bg-gradient-to-tr from-zinc-900 via-zinc-950 to-indigo-950/20 p-8 md:p-16 relative overflow-hidden text-center shadow-2xl">
+            <div className="max-w-5xl mx-auto rounded-3xl border border-zinc-805 bg-gradient-to-tr from-zinc-900 via-zinc-950 to-indigo-950/20 p-8 md:p-16 relative overflow-hidden text-center shadow-2xl shimmer-effect hover-glow">
               <div className="absolute top-[-30%] right-[-30%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
               <div className="absolute bottom-[-30%] left-[-30%] w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
               
