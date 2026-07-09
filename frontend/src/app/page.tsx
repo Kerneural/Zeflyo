@@ -283,6 +283,61 @@ export default function App() {
     { id: "3", page: "Tech Support", event: "AI Agent assigned to customer thread", time: "12 minutes ago", status: "info" }
   ]);
 
+  // Chat playground simulator
+  const [chatMessages, setChatMessages] = useState<Array<{ sender: "customer" | "ai" | "typing"; text: string; time: string }>>([
+    { sender: "customer", text: "Tư vấn giá gói Pro của Zeflyo với ạ.", time: "2m ago" },
+    { sender: "ai", text: "Chào bạn! Gói Pro của Zeflyo đang có ưu đãi đặc biệt chỉ 499k/tháng với đầy đủ tính năng: AI tự viết bài, nén ảnh thông minh và tự động chat trả lời khách hàng 24/7.", time: "1m ago" }
+  ]);
+  const [chatInput, setChatInput] = useState<string>("");
+
+  const handlePlaygroundSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userMessage = chatInput;
+    setChatInput(userMessage); // Store temporarily, but we'll clear it
+    setChatInput("");
+    
+    // Add user message
+    setChatMessages((prev) => [...prev, { sender: "customer", text: userMessage, time: "Just now" }]);
+    
+    // Add typing state
+    setTimeout(() => {
+      setChatMessages((prev) => [...prev, { sender: "typing", text: "...", time: "" }]);
+      
+      setTimeout(() => {
+        // Remove typing state and add AI answer
+        setChatMessages((prev) => {
+          const filtered = prev.filter(m => m.sender !== "typing");
+          let aiText = lang === "vi" 
+            ? "Zeflyo AI Agent sẵn sàng phản hồi thông tin chiến dịch, tư vấn chốt đơn và lên lịch tự động cho Fanpage của bạn!"
+            : "Zeflyo AI Agent is ready to answer questions, support sales, and automate scheduling for your Fanpages!";
+            
+          const msgLower = userMessage.toLowerCase();
+          if (msgLower.includes("giá") || msgLower.includes("tiền") || msgLower.includes("price") || msgLower.includes("cost") || msgLower.includes("bao nhiêu")) {
+            aiText = lang === "vi"
+              ? "Zeflyo có gói Starter Miễn phí hoàn toàn và gói Pro nâng cấp chỉ 499k/tháng. Gói Pro bao gồm AI Agent trả lời inbox/comment 24/7."
+              : "Zeflyo offers a completely Free Starter plan and a Pro plan at only 499k/month, which includes 24/7 AI inbox and comment auto-replies.";
+          } else if (msgLower.includes("page") || msgLower.includes("fanpage") || msgLower.includes("kết nối")) {
+            aiText = lang === "vi"
+              ? "Bạn có thể kết nối nhiều Fanpage cùng lúc qua giao thức Graph API chính thức của Meta cực kỳ bảo mật, an toàn."
+              : "You can connect multiple Fanpages simultaneously via Meta's official Graph API securely and safely.";
+          } else if (msgLower.includes("ảnh") || msgLower.includes("image") || msgLower.includes("nén")) {
+            aiText = lang === "vi"
+              ? "Zeflyo tích hợp sẵn bộ nén ảnh thông minh trước khi đăng bài, giảm dung lượng file 50-80% mà vẫn giữ nguyên độ nét."
+              : "Zeflyo integrates smart image compression, reducing file size by 50-80% while retaining crystal-clear quality.";
+          } else if (msgLower.includes("đăng") || msgLower.includes("lịch") || msgLower.includes("post") || msgLower.includes("schedule")) {
+            aiText = lang === "vi"
+              ? "Hệ thống hỗ trợ lên lịch đăng bài theo tuần, tháng và tự soạn thảo nội dung gợi ý bằng trí tuệ nhân tạo Gemini AI."
+              : "The system supports scheduling posts for weeks or months ahead, and auto-writes detailed content using Gemini AI.";
+          }
+          
+          return [...filtered, { sender: "ai", text: aiText, time: "Just now" }];
+        });
+      }, 800);
+    }, 400);
+  };
+
   // Read config & credentials from localStorage
   useEffect(() => {
     const savedToken = localStorage.getItem("zeflyo_token");
@@ -728,7 +783,7 @@ export default function App() {
         </div>
       ) : !token && !showLogin ? (
         /* Marketing Landing Page */
-        <div className="flex-1 flex flex-col min-h-screen w-full relative z-10 overflow-y-auto bg-zinc-950 text-zinc-100 font-sans selection:bg-blue-500/30 selection:text-blue-200">
+        <div className="flex-1 flex flex-col min-h-screen w-full relative z-10 overflow-y-auto bg-zinc-950 text-zinc-100 font-sans selection:bg-blue-500/30 selection:text-blue-200 mesh-grid">
           
           {/* Header/Navbar */}
           <header className="sticky top-0 z-50 w-full border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md">
@@ -924,24 +979,62 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Right panel: live preview mock interaction */}
-                  <div className="glass-card rounded-xl p-4 flex flex-col gap-3.5 border border-zinc-850 bg-zinc-900/50">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Real-time AI Chat Agent</span>
-                    
-                    <div className="flex flex-col gap-2 bg-zinc-950/60 p-2.5 rounded-lg border border-zinc-850 text-[10px]">
-                      <div className="text-zinc-500 font-bold">👤 Customer (2m ago)</div>
-                      <div className="text-zinc-300">"Tư vấn giá khóa học Claude AI cho em với ạ."</div>
+                  {/* Right panel: live preview mock interaction (Playground) */}
+                  <div className="glass-card rounded-xl p-4 flex flex-col justify-between min-h-[220px] border border-zinc-850 bg-zinc-900/50">
+                    <div className="flex flex-col gap-3">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center justify-between">
+                        <span>Real-time AI Chat Agent</span>
+                        <span className="text-[8px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-mono">PLAYGROUND</span>
+                      </span>
+                      
+                      <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto pr-1">
+                        {chatMessages.map((msg, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`flex flex-col gap-1 p-2 rounded-lg border text-[10px] transition-all ${
+                              msg.sender === "customer" 
+                                ? "bg-zinc-950/60 border-zinc-850" 
+                                : msg.sender === "typing"
+                                ? "bg-blue-600/[0.02] border-blue-500/10 text-blue-400 italic"
+                                : "bg-blue-600/[0.04] border-blue-500/10"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between font-bold">
+                              <span className={msg.sender === "customer" ? "text-zinc-400" : "text-blue-400 flex items-center gap-1"}>
+                                {msg.sender === "customer" ? "👤 Customer" : (
+                                  <>
+                                    <Sparkles className="w-3 h-3 text-blue-400 animate-pulse" />
+                                    <span>Zeflyo AI Agent</span>
+                                  </>
+                                )}
+                              </span>
+                              <span className="text-[8px] text-zinc-500 font-normal">{msg.time}</span>
+                            </div>
+                            <div className={msg.sender === "typing" ? "animate-pulse" : "text-zinc-300"}>
+                              {msg.text}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 bg-blue-600/[0.04] p-2.5 rounded-lg border border-blue-500/10 text-[10px] animate-pulse">
-                      <div className="text-blue-400 font-bold flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-blue-400" />
-                        <span>Zeflyo AI Agent (Just now)</span>
-                      </div>
-                      <div className="text-zinc-300">
-                        "Chào bạn! Khóa học Claude code đang được ưu đãi còn 499k. Bạn đăng ký luôn nha?"
-                      </div>
-                    </div>
+                    {/* Interactive Input Form */}
+                    <form onSubmit={handlePlaygroundSend} className="flex gap-1.5 mt-3 border-t border-zinc-850 pt-2.5">
+                      <input 
+                        type="text" 
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder={lang === "vi" ? "Nhập thử hỏi AI: giá, ảnh, đăng bài..." : "Ask AI: price, post, image..."}
+                        className="flex-1 !py-1 !px-2.5 !text-[10px] rounded-lg bg-zinc-950 border border-zinc-850 text-zinc-300 outline-none focus:border-blue-500/30"
+                      />
+                      <button 
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-2.5 py-1 text-[9px] font-bold active:scale-95 transition-all flex items-center gap-0.5 cursor-pointer shadow-sm shadow-blue-500/10 border border-white/5"
+                      >
+                        <span>Send</span>
+                        <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </form>
                   </div>
 
                 </div>
@@ -1160,19 +1253,21 @@ export default function App() {
                 </div>
 
                 {/* Plan 2: Pro */}
-                <div className="glass-card rounded-2xl p-8 border border-blue-500/30 flex flex-col justify-between bg-zinc-900/30 text-left hover:border-blue-500/40 transition-colors relative shadow-xl shadow-blue-500/5 hover-glow shimmer-effect">
-                  <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 rounded-full bg-blue-500 text-white text-[9px] font-bold uppercase tracking-wider">
-                    {landingTranslations[lang].mostPopular}
-                  </div>
+                <div className="glass-card rounded-2xl p-8 border-2 border-indigo-500 flex flex-col justify-between bg-zinc-900/35 text-left hover:border-indigo-400 transition-colors relative shadow-2xl shadow-indigo-500/10 hover-glow shimmer-effect">
                   <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <span>{landingTranslations[lang].pro}</span>
-                      <Sparkles className="w-4 h-4 text-blue-400" />
-                    </h3>
-                    <p className="text-xs text-zinc-400 mt-1">{landingTranslations[lang].proDesc}</p>
-                    <div className="flex items-baseline gap-1 mt-6 mb-8">
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <h3 className="text-lg font-bold text-white flex items-center gap-1.5">
+                        <span>{landingTranslations[lang].pro}</span>
+                        <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-bold uppercase tracking-wider badge-pulse">
+                        {landingTranslations[lang].mostPopular}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-450 mt-1">{landingTranslations[lang].proDesc}</p>
+                    <div className="flex items-baseline gap-1 mt-5 mb-7">
                       <span className="text-4xl font-black text-white">499k</span>
-                      <span className="text-xs text-zinc-500 font-bold">{landingTranslations[lang].month}</span>
+                      <span className="text-xs text-zinc-550 font-bold">{landingTranslations[lang].month}</span>
                     </div>
 
                     <ul className="flex flex-col gap-3.5 text-xs text-zinc-300 border-t border-zinc-900 pt-6">
@@ -1270,7 +1365,7 @@ export default function App() {
                     <div key={idx} className="glass-card rounded-xl border border-zinc-850 overflow-hidden bg-zinc-900/20">
                       <button
                         onClick={() => setActiveFaq(isOpen ? null : idx)}
-                        className="w-full flex items-center justify-between p-5 text-left font-bold text-sm text-white hover:bg-zinc-900/40 transition-colors cursor-pointer select-none"
+                        className="w-full flex items-center justify-between p-5 text-left font-bold text-sm text-zinc-150 dark:text-zinc-100 hover:bg-zinc-900/40 transition-colors cursor-pointer select-none"
                       >
                         <span>{faq.q}</span>
                         <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform ${isOpen ? "rotate-180 text-blue-400" : ""}`} />
@@ -1292,7 +1387,7 @@ export default function App() {
 
           {/* Call to Action (CTA) bottom section */}
           <section className="py-24 px-6 bg-zinc-950">
-            <div className="max-w-5xl mx-auto rounded-3xl border border-zinc-805 bg-gradient-to-tr from-zinc-900 via-zinc-950 to-indigo-950/20 p-8 md:p-16 relative overflow-hidden text-center shadow-2xl shimmer-effect hover-glow">
+            <div className="max-w-5xl mx-auto rounded-3xl border border-zinc-850 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-zinc-900 dark:via-zinc-950 dark:to-indigo-950/20 p-8 md:p-16 relative overflow-hidden text-center shadow-2xl shimmer-effect hover-glow">
               <div className="absolute top-[-30%] right-[-30%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
               <div className="absolute bottom-[-30%] left-[-30%] w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
               
