@@ -879,14 +879,14 @@ export default function App() {
                 {lang === "vi" ? (
                   <>
                     Tự Động Hóa Quản Lý Fanpage <br className="hidden sm:inline" />
-                    <span className="gradient-text-animated">
+                    <span className="gradient-text-animated inline-block pb-1">
                       Bằng Trí Tuệ Nhân Tạo
                     </span>
                   </>
                 ) : (
                   <>
                     Automate Your Fanpage <br className="hidden sm:inline" />
-                    <span className="gradient-text-animated">
+                    <span className="gradient-text-animated inline-block pb-1">
                       With Gemini AI
                     </span>
                   </>
@@ -1387,7 +1387,7 @@ export default function App() {
 
           {/* Call to Action (CTA) bottom section */}
           <section className="py-24 px-6 bg-zinc-950">
-            <div className="max-w-5xl mx-auto rounded-3xl border border-zinc-850 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-zinc-900 dark:via-zinc-950 dark:to-indigo-950/20 p-8 md:p-16 relative overflow-hidden text-center shadow-2xl shimmer-effect hover-glow">
+            <div className="max-w-5xl mx-auto rounded-3xl border border-indigo-100/80 dark:border-zinc-850 bg-indigo-50/40 dark:bg-gradient-to-tr dark:from-zinc-900 dark:via-zinc-950 dark:to-indigo-950/20 p-8 md:p-16 relative overflow-hidden text-center shadow-xl shadow-indigo-500/5 dark:shadow-2xl shimmer-effect hover-glow">
               <div className="absolute top-[-30%] right-[-30%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
               <div className="absolute bottom-[-30%] left-[-30%] w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
               
