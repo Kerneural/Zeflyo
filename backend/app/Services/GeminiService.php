@@ -203,22 +203,35 @@ class GeminiService
         $style = $styleMap[$config['writing_style'] ?? 'professional'] ?? $config['writing_style'];
 
         $systemPrompt = "Bạn là chuyên gia marketing viết bài quảng cáo Facebook chuyên nghiệp.\n"
-            ."Nhiệm vụ: Viết MỘT bài đăng Facebook hấp dẫn dựa trên chủ đề: \"{$topic}\"\n\n"
+            ."Nhiệm vụ: Viết MỘT bài đăng Facebook hấp dẫn và tự nhiên như con người tự viết, hoàn toàn không mang \"mùi AI\" sáo rỗng, dựa trên chủ đề: \"{$topic}\"\n\n"
             ."YÊU CẦU BẮT BUỘC:\n"
             ."1. Ngôn ngữ: {$langName}\n"
             ."2. Độ dài: {$length}\n"
             ."3. Phong cách viết: {$style}\n"
-            ."4. Sử dụng emoji phù hợp để bài viết sinh động.\n"
-            ."5. Kết thúc bằng CTA (lời kêu gọi hành động) và hashtag liên quan.\n"
-            ."6. Bố cục rõ ràng, phân chia đoạn mạch lạc.\n"
-            ."7. TUYỆT ĐỐI KHÔNG sử dụng ký tự Markdown như dấu hoa thị kép (**) hay dấu gạch dưới để in đậm/in nghiêng (do Facebook không hỗ trợ hiển thị Markdown). Để tạo điểm nhấn cho các tiêu đề phụ hoặc từ khóa quan trọng, hãy dùng chữ IN HOA hoặc emoji thích hợp.\n";
+            ."4. TUYỆT ĐỐI BẮT BUỘC KHÔNG SỬ DỤNG các từ ngữ quảng cáo sáo rỗng thường thấy của AI (Anti-AI Buzzwords Blocklist) như: \"đột phá\", \"hoàn hảo\", \"tuyệt diệu\", \"độc nhất vô nhị\", \"chào mừng bạn đến với\", \"hãy cùng trải nghiệm\". Thay vào đó, hãy viết tự nhiên, chân thực.\n"
+            ."5. GIỌNG ĐIỆU VÀ TỪ VỰNG TỰ NHIÊN (Social Media Tone & Vocabulary):\n"
+            ."   - Đối với tiếng Việt: Hãy viết bằng văn phong nói đời thường, tự nhiên và thân mật. Cho phép và khuyến khích sử dụng một vài từ viết tắt/từ lóng phổ biến trên MXH Việt Nam khi thích hợp (như: mn, hnay, k, thui, ib, rep, đc, lẹ, thề luôn, các bác, nói chung là, nhìn vậy chứ) để tăng tính chân thật và giảm cảm giác công thức máy móc.\n"
+            ."   - Cho phép xen kẽ một vài từ tiếng Anh thông dụng trên MXH (như: sale, deal, voucher, skincare, combo, order) nếu phù hợp với ngữ cảnh ngành hàng.\n"
+            ."6. CẤU TRÚC ĐOẠN VÀ KHOẢNG TRỐNG:\n"
+            ."   - Mỗi đoạn văn tối đa chỉ dài từ 2-3 câu. Tránh viết các khối văn bản lớn liên tục.\n"
+            ."   - Luôn sử dụng dòng trống đôi (double line breaks) để phân tách các đoạn rõ ràng giúp người đọc dễ lướt trên di động.\n"
+            ."7. MẬT ĐỘ EMOJI THẤP VÀ TINH TẾ: Chỉ sử dụng emoji để cấu trúc đầu dòng hoặc nhấn mạnh cảm xúc cuối câu. Không chèn emoji dày đặc vào giữa câu.\n"
+            ."8. TUYỆT ĐỐI KHÔNG sử dụng ký tự Markdown như dấu hoa thị kép (**) hay dấu gạch dưới để in đậm/in nghiêng (do Facebook không hỗ trợ hiển thị Markdown). Để tạo điểm nhấn cho các tiêu đề phụ hoặc từ khóa quan trọng, hãy dùng chữ IN HOA hoặc emoji thích hợp.\n"
+            ."9. TUÂN THỦ KHUNG SƯỜN MARKETING SKELETONS:\n"
+            ."   - Nếu chủ đề hoặc yêu cầu nhắc đến AIDA/Bán hàng: Hook (Nỗi đau thực tế/Câu hỏi giật mình) -> Introduce Solution (Giới thiệu giải pháp tinh gọn) -> Offer (Ưu đãi) -> CTA (Inbox tư vấn nhẹ nhàng).\n"
+            ."   - Nếu chủ đề nhắc đến PAS (Problem - Agitate - Solve): Xác định vấn đề -> Xoáy sâu nỗi đau -> Đưa ra giải pháp thuyết phục.\n"
+            ."   - Nếu chủ đề nhắc đến BAB (Before - After - Bridge): Tình trạng trước khi dùng -> Kết quả sung sướng sau khi dùng -> Cầu nối chuyển đổi.\n"
+            ."   - Nếu chủ đề là chia sẻ giá trị/mẹo: Hook cuốn hút -> 2-3 gạch đầu dòng mộc mạc -> CTA thảo luận nhẹ nhàng.\n"
+            ."   - Nếu chủ đề là minigame: Tên phần quà in hoa nổi bật -> Thể lệ chơi rõ ràng, đơn giản -> Deadline hối thúc.\n"
+            ."   - Nếu chủ đề là kể chuyện (Storytelling): Hook khơi gợi -> Kể hành trình chân thực cảm xúc -> Giá trị cốt lõi -> CTA tự nhiên.\n"
+            ."10. Kết thúc bằng CTA (lời kêu gọi hành động) tự nhiên (không gượng ép) và hashtag liên quan.\n";
 
         if (! empty($config['custom_prompt'])) {
-            $systemPrompt .= "7. Yêu cầu bổ sung từ người dùng: {$config['custom_prompt']}\n";
+            $systemPrompt .= "11. Yêu cầu bổ sung từ người dùng: {$config['custom_prompt']}\n";
         }
 
         if (! empty($config['include_contact']) && ! empty($config['contact_info'])) {
-            $systemPrompt .= "8. Thêm thông tin liên hệ ở cuối bài: {$config['contact_info']}\n";
+            $systemPrompt .= "12. Thêm thông tin liên hệ ở cuối bài: {$config['contact_info']}\n";
         }
 
         $systemPrompt .= "\nHãy CHỈ trả về nội dung bài đăng Facebook. Không thêm giải thích hay chào hỏi.";
