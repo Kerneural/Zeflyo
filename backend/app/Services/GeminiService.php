@@ -128,7 +128,7 @@ class GeminiService
      * Generate a list of N topics from a user prompt.
      * Returns an array of topic title strings, or null on failure.
      */
-    public function generateTopicsList(string $prompt, int $count = 30, string $language = 'vi'): ?array
+    public function generateTopicsList(string $prompt, int $count = 10, string $language = 'vi'): ?array
     {
         $langName = $language === 'vi' ? 'tiếng Việt' : 'English';
 

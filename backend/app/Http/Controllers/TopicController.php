@@ -110,7 +110,7 @@ class TopicController extends Controller
             ]);
 
             $prompt = $request->input('prompt');
-            $count = $request->input('count', 30);
+            $count = $request->input('count', 10);
             $language = $setup->language ?? 'vi';
 
             $service = new GeminiService;

@@ -212,7 +212,7 @@ function PostSchedulerContent() {
   const [campaignNiche, setCampaignNiche] = useState<string>("");
   const [isOptimizingCampaign, setIsOptimizingCampaign] = useState<boolean>(false);
   const [campaignTopicPrompt, setCampaignTopicPrompt] = useState<string>("");
-  const [campaignTopicCount, setCampaignTopicCount] = useState<number>(30);
+  const [campaignTopicCount, setCampaignTopicCount] = useState<number>(10);
   const [campaignGeneratedTopics, setCampaignGeneratedTopics] = useState<string[]>([]);
   const [campaignNewTopicInput, setCampaignNewTopicInput] = useState<string>("");
 
